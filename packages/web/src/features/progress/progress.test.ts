@@ -14,7 +14,6 @@ const VALID: SavedProgress = {
   line: 42,
   entries: new Array<number>(81).fill(0),
   notes: new Array<number>(81).fill(0),
-  elapsedMs: 123456,
   difficulty: "easy",
   formatVersion: 1,
   generator: "0.1.0",
@@ -39,6 +38,13 @@ describe("normalizeProgress", () => {
     expect(normalizeProgress(JSON.parse(JSON.stringify(VALID)))).toEqual(VALID);
   });
 
+  it("経過時間を持つ古い保存もそのまま読める(遊びかけが消えない)", () => {
+    // 2026-08-06 に経過時間を消した。古い保存には elapsedMs が残っているが、
+    // 検査していないので落ちず、余分な鍵は結果へ持ち込まれない。
+    const old = { ...VALID, elapsedMs: 123456 };
+    expect(normalizeProgress(JSON.parse(JSON.stringify(old)))).toEqual(VALID);
+  });
+
   it.each([
     ["パックが無い", { ...VALID, packPath: undefined }],
     ["パックが空文字", { ...VALID, packPath: "" }],
@@ -47,7 +53,6 @@ describe("normalizeProgress", () => {
     ["入力が 81 要素でない", { ...VALID, entries: [0, 0] }],
     ["入力に負の数", { ...VALID, entries: new Array<number>(81).fill(-1) }],
     ["メモが配列でない", { ...VALID, notes: "0" }],
-    ["経過時間が数でない", { ...VALID, elapsedMs: "123" }],
     ["版が無い", { ...VALID, formatVersion: undefined }],
     ["生成器が無い", { ...VALID, generator: undefined }],
     ["難易度が未知", { ...VALID, difficulty: "insane" }],

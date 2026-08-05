@@ -168,7 +168,7 @@ solveWithTechniques(board) => {
 
 ## ヒントへの流用
 
-⚠️ **2026-08-05 時点で、これは「`core` 側だけ用意してある」状態である。**
+⚠️ **2026-08-06 時点で、これは「`core` 側だけ用意してある」状態である。**
 
 `findHint`(`technique-solver.ts`)は実装済みだが、**`packages/web` からの参照は 0 件**で、
 [画面構成と操作仕様](../ui/screens-and-interactions.md) にヒントの記述も無い。
