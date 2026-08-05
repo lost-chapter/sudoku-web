@@ -27,6 +27,7 @@ import "@mantine/core/styles/Card.layer.css";
 import "@mantine/core/styles/CloseButton.layer.css"; // Modal のヘッダ
 import "@mantine/core/styles/Container.layer.css";
 import "@mantine/core/styles/Group.layer.css";
+import "@mantine/core/styles/List.layer.css";
 import "@mantine/core/styles/Overlay.layer.css"; // Modal の背景
 import "@mantine/core/styles/ScrollArea.layer.css"; // Modal の中身
 import "@mantine/core/styles/ModalBase.layer.css";

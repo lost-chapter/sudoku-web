@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>数独</title>
     <!--
+      ⚠️ **`%BASE_URL%` を使う。**指定が無いとブラウザが `/favicon.ico` を勝手に要求し、
+      サブパスへ置いたときだけ 404 になる(2026-08-06 に `preview:subpath` で検出)。
+      Vite が変換時に base(手元は `/`、Pages は `/sudoku-web/`)へ置き換える。
+    -->
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <!--
       テーマのフラッシュ防止(ADR 0002)。
 
       React が動く前に data-mantine-color-scheme を決めておく。

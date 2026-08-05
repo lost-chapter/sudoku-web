@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Group, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
 import { readProgress, type StorageLike } from "../features/progress/progressStorage";
 import { isStale, type SavedProgress } from "../features/progress/progress";
 import { availableDifficulties } from "../features/puzzle/packSelection";
 import { loadManifest } from "../features/puzzle/loadPuzzle";
+import { ReleaseNotesModal } from "../features/releaseNotes/ReleaseNotesModal";
+import { useReleaseNotes } from "../features/releaseNotes/useReleaseNotes";
 import type { Difficulty } from "@sudoku/core";
 
 import { Icon } from "../ui/Icon";
@@ -29,6 +32,8 @@ export interface HomeScreenProps {
 export function HomeScreen({ onStart, storage }: HomeScreenProps) {
   const [difficulties, setDifficulties] = useState<readonly Difficulty[] | null>(null);
   const [saved] = useState<SavedProgress | null>(() => readProgress(storage));
+  const { notes, unread, markRead } = useReleaseNotes({ storage });
+  const [releaseNotesOpened, releaseNotes] = useDisclosure(false);
 
   const [stale, setStale] = useState(false);
 
@@ -99,6 +104,43 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
           ))}
         </Group>
       </Stack>
+
+      {/*
+        ⚠️ **更新情報はホームに置く。**遊技中に押してほしくないものの置き場所は
+        「あきらめる」と同じ考え方で決める(ADR 0005)。
+        **設定の中には入れない** —— あそこは「遊び方を変えるところ」で、性質が違う。
+
+        ⚠️ **取れなかったときは入口ごと出さない。**押しても何も出ないボタンは、
+        壊れているのか中身が無いのかが分からない。
+      */}
+      {notes && (
+        <>
+          <Group>
+            <Button
+              variant="default"
+              h={TOUCH_TARGET}
+              leftSection={<Icon name="bell" />}
+              onClick={() => {
+                markRead();
+                releaseNotes.open();
+              }}
+            >
+              {/*
+                🎯 **しるしは文字で出す。**色や点だけに載せると、
+                **色を見分けられない人へ届かない**(仕様の「色だけに情報を載せない」)。
+                読み上げでも「更新情報(新着)」と読まれる。
+              */}
+              更新情報{unread ? "(新着)" : ""}
+            </Button>
+          </Group>
+
+          <ReleaseNotesModal
+            opened={releaseNotesOpened}
+            notes={notes}
+            onClose={releaseNotes.close}
+          />
+        </>
+      )}
     </Stack>
   );
 }
