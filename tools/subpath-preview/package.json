@@ -1,0 +1,10 @@
+{
+  "name": "@sudoku/subpath-preview",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "本番ビルドをサブパスの下で配り、GitHub Pages の置かれ方を手元で再現する",
+  "bin": {
+    "subpath-preview": "./serve.mjs"
+  }
+}
