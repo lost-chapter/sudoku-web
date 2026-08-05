@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "cc/**"]
+  pull_request:
+    branches: [main, develop]
+
+# 同じブランチへ続けて push したときは古い実行を打ち切る
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 静的検査とテスト
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm の版は package.json の packageManager から読まれる
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: 整形の確認
+        run: pnpm format:check
+
+      - name: 型チェック
+        run: pnpm typecheck
+
+      - name: テスト
+        run: pnpm test
+
+      - name: 本番ビルド
+        run: pnpm build
+
+  docs:
+    name: ドキュメント変換の決定性
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # docs-markdown-to-html は「同じ入力から常に同じ出力」を契約にしている。
+      # 2 回流して差が出たら、決定性が壊れている。
+      - name: 2 回変換して出力が一致することを確認
+        run: |
+          pnpm docs:html
+          find docs-html -type f | sort | xargs shasum > /tmp/docs-a.txt
+          pnpm docs:html
+          find docs-html -type f | sort | xargs shasum > /tmp/docs-b.txt
+          diff /tmp/docs-a.txt /tmp/docs-b.txt
+
+      # 生成物は Git 管理外。追跡されていたら .gitignore が効いていない。
+      - name: 生成物が Git を汚していないことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "生成物が Git に出ている:"
+            git status --short
+            exit 1
+          fi
