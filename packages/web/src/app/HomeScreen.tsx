@@ -8,6 +8,7 @@ import { loadManifest } from "../features/puzzle/loadPuzzle";
 import type { Difficulty } from "@sudoku/core";
 
 import { DIFFICULTY_LABELS } from "./GameHeader";
+import { TOUCH_TARGET } from "./layout";
 
 /**
  * ホーム画面。**難易度を選ぶ。遊びかけがあれば「続きから」を出す**
@@ -60,7 +61,9 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
             <Text size="sm" c="dimmed">
               {DIFFICULTY_LABELS[saved.difficulty]}
             </Text>
-            <Button onClick={() => onStart(saved.difficulty, true)}>続きから</Button>
+            <Button h={TOUCH_TARGET} onClick={() => onStart(saved.difficulty, true)}>
+              続きから
+            </Button>
           </Stack>
         </Card>
       )}
@@ -79,7 +82,12 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
         )}
         <Group gap="sm">
           {difficulties?.map((difficulty) => (
-            <Button key={difficulty} variant="default" onClick={() => onStart(difficulty, false)}>
+            <Button
+              key={difficulty}
+              variant="default"
+              h={TOUCH_TARGET}
+              onClick={() => onStart(difficulty, false)}
+            >
               {DIFFICULTY_LABELS[difficulty]}
             </Button>
           ))}

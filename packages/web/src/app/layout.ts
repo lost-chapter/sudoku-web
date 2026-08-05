@@ -39,6 +39,19 @@ export const LANDSCAPE_QUERY = "(orientation: landscape)";
  */
 export const MIN_ONE_SCREEN_HEIGHT = 442;
 
+/**
+ * **押せるものの下限**(WCAG 2.2 のターゲットサイズ 最小の推奨値)。
+ *
+ * ⚠️ **盤面のセルだけが例外である。**9 列あるので幅 375px では原理的に届かない
+ * (docs/ui/screens-and-interactions.md の「押せる大きさ」)。
+ * **それ以外は大きさを自由に取れるので、下げる理由が無い。**
+ *
+ * ⚠️ **入力パッドのキーはこれより大きい 48px。**
+ * 「44 を守れる最小」ではなく「狭い端末で盤面の 24px を守れる最大」として決めた値で、
+ * **由来が違うので同じ定数にしない**(`TouchPad.module.css` の `--pad-key-height`)。
+ */
+export const TOUCH_TARGET = 44;
+
 export type Layout = "desktop" | "phone-portrait" | "phone-landscape";
 
 /**
