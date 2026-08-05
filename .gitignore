@@ -1,9 +1,9 @@
 # Claude Code の個人設定(環境依存の絶対パスを含む)
 .claude/settings.local.json
 
-# docs-markdown-to-html スキルが .md から生成する HTML
-# (正本は .md。HTML は再生成できる派生物なのでコミットしない)
-docs/**/*.html
+# docs-markdown-to-html スキルが docs/ から生成する HTML サイト
+# (正本は docs/ の .md。HTML は再生成できる派生物なのでコミットしない)
+/docs-html/
 
 # git worktree の置き場(端末ごとに作り直す)
 /.claude/worktrees/

@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs:html": "node tools/docs-html/render.mjs docs"
+    "docs:html": "node tools/docs-html/render.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
