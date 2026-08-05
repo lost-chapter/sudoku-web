@@ -120,6 +120,11 @@ function toLoaded(
   };
 }
 
+/** マニフェストだけを取る。**ホーム画面が難易度の一覧を作るのに使う。** */
+export function loadManifest(options: LoadPuzzleOptions = {}): Promise<Manifest | null> {
+  return fetchManifest(options.fetch ?? globalThis.fetch, options.baseUrl ?? DEFAULT_BASE_URL);
+}
+
 async function fetchManifest(
   fetch: typeof globalThis.fetch,
   baseUrl: string,

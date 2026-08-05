@@ -15,6 +15,7 @@ const VALID: SavedProgress = {
   entries: new Array<number>(81).fill(0),
   notes: new Array<number>(81).fill(0),
   elapsedMs: 123456,
+  difficulty: "easy",
   formatVersion: 1,
   generator: "0.1.0",
 };
@@ -49,6 +50,7 @@ describe("normalizeProgress", () => {
     ["経過時間が数でない", { ...VALID, elapsedMs: "123" }],
     ["版が無い", { ...VALID, formatVersion: undefined }],
     ["生成器が無い", { ...VALID, generator: undefined }],
+    ["難易度が未知", { ...VALID, difficulty: "insane" }],
     ["オブジェクトでない", "progress"],
     ["null", null],
   ])("壊れていたら捨てる: %s", (_name, value) => {

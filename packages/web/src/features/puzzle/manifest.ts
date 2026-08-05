@@ -27,6 +27,14 @@ export interface Manifest {
   readonly generator: string;
   readonly techniques: readonly number[];
   readonly packs: readonly PackInfo[];
+  /**
+   * 難易度クラスごとの収録数。
+   *
+   * **難易度の選択はこれで作る。画面にクラスを固定で書かない**
+   * (docs/ui/screens-and-interactions.md「難易度の選択」)。
+   * 実装済みの手筋が増えて上のクラスが埋まったとき、UI を直さずに選べるようになる。
+   */
+  readonly totals: Readonly<Record<Difficulty, number>>;
 }
 
 /**
@@ -55,12 +63,50 @@ export function decodeManifest(value: unknown): Manifest | null {
 
   const packs = value.packs.filter(isPackInfo);
 
-  return { formatVersion: value.formatVersion, generator, techniques, packs };
+  return {
+    formatVersion: value.formatVersion,
+    generator,
+    techniques,
+    packs,
+    totals: decodeTotals(value.totals, packs),
+  };
 }
 
 /** その難易度のパックだけを取り出す。**遊技者は 1 クラスしか使わない。** */
 export function packsFor(manifest: Manifest, difficulty: Difficulty): readonly PackInfo[] {
   return manifest.packs.filter((pack) => pack.difficulty === difficulty && pack.count > 0);
+}
+
+/**
+ * いま遊べる難易度。**0 件のクラスは出さない。**
+ *
+ * ⚠️ 実装済みの手筋によっては上のクラスが 1 問も作れない
+ * (docs/algorithms/difficulty-rating.md「実装していない手筋の扱い」)。
+ * **画面にクラスを固定で書くと、手筋が増えるたびに UI を直すことになる。**
+ */
+export function availableDifficulties(manifest: Manifest): readonly Difficulty[] {
+  return DIFFICULTIES.filter((difficulty) => manifest.totals[difficulty] > 0);
+}
+
+/**
+ * `totals` を読む。**壊れていればパックの件数から数え直す。**
+ * どちらも読めなければ 0 件として扱い、そのクラスを出さない。
+ */
+function decodeTotals(value: unknown, packs: readonly PackInfo[]): Record<Difficulty, number> {
+  const stored = isRecord(value) ? value : {};
+  const totals = {} as Record<Difficulty, number>;
+
+  for (const difficulty of DIFFICULTIES) {
+    const declared = stored[difficulty];
+    totals[difficulty] =
+      Number.isInteger(declared) && (declared as number) >= 0
+        ? (declared as number)
+        : packs
+            .filter((pack) => pack.difficulty === difficulty)
+            .reduce((sum, pack) => sum + pack.count, 0);
+  }
+
+  return totals;
 }
 
 function isPackInfo(value: unknown): value is PackInfo {

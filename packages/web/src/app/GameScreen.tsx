@@ -11,33 +11,30 @@ import { Game } from "./Game";
 /**
  * ゲーム画面。**アプリの本体**(docs/ui/screens-and-interactions.md)。
  *
- * ここが持つのは「どの問題を遊ぶか」と設定だけで、盤面の中身は {@link Game} が持つ。
- * 問題が変わったら `key` で作り直す。
+ * ここが持つのは「どの問題を遊ぶか」と設定だけで、
+ * 盤面とヘッダ(難易度 / 経過時間 / 設定)は {@link Game} が持つ。
+ * 経過時間を止める条件(完成したか)がそちらにしか無いためである。
  *
- * 難易度の選択(ホーム画面)と経過時間の表示は工程 4 の最後の区切り。
+ * 問題が変わったら `key` で作り直す。
  */
-const DIFFICULTY: Difficulty = "easy";
+export interface GameScreenProps {
+  readonly difficulty: Difficulty;
+  /** 遊びかけから始めるか。 */
+  readonly resume: boolean;
+  readonly onHome: () => void;
+}
 
-export function GameScreen() {
-  const { status, puzzle, source, restored, elapsedMs, puzzleKey, next } = usePuzzle(DIFFICULTY);
+export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
+  const { status, puzzle, source, restored, elapsedMs, puzzleKey, next } = usePuzzle({
+    difficulty,
+    resume,
+  });
   const { settings, setSetting } = useSettings();
   const [settingsOpened, settingsModal] = useDisclosure(false);
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center">
-        <Text fw={500}>難易度: {DIFFICULTY_LABELS[DIFFICULTY]}</Text>
-        <Group gap="sm" align="center">
-          <Text size="sm" c="dimmed" role="status" aria-live="polite">
-            {statusMessage(status, source?.packPath)}
-          </Text>
-          <Button variant="default" size="xs" onClick={settingsModal.open}>
-            設定
-          </Button>
-        </Group>
-      </Group>
-
-      {puzzle && (
+      {puzzle ? (
         <Game
           key={puzzleKey}
           puzzle={puzzle}
@@ -46,8 +43,23 @@ export function GameScreen() {
           restored={restored}
           initialElapsedMs={elapsedMs}
           onNext={next}
+          onOpenSettings={settingsModal.open}
         />
+      ) : (
+        <Text size="sm" c="dimmed" role="status" aria-live="polite">
+          問題を読み込んでいます
+        </Text>
       )}
+
+      <Group justify="space-between" align="center">
+        {/* `subtle` は文字色が primary になり白地で 3.4:1 と本文の目安を割る。使わない。 */}
+        <Button variant="default" size="xs" onClick={onHome}>
+          難易度を選び直す
+        </Button>
+        <Text size="xs" c="dimmed" role="status" aria-live="polite">
+          {statusMessage(status, source?.packPath)}
+        </Text>
+      </Group>
 
       <SettingsModal
         opened={settingsOpened}
@@ -66,7 +78,7 @@ export function GameScreen() {
 function statusMessage(status: PuzzleStatus, packPath?: string): string {
   switch (status) {
     case "loading":
-      return "問題を読み込んでいます";
+      return "";
     case "loaded":
       return packPath ?? "";
     case "resumed":
@@ -75,15 +87,3 @@ function statusMessage(status: PuzzleStatus, packPath?: string): string {
       return "問題を取得できないので、同梱の 1 問で遊びます";
   }
 }
-
-/**
- * 表示名。**docs/algorithms/difficulty-rating.md の「難易度クラス」の表に合わせる。**
- * ファイル上の値は英語で固定なので、対応付けは UI 側の責務である。
- */
-const DIFFICULTY_LABELS = {
-  easy: "やさしい",
-  normal: "ふつう",
-  hard: "むずかしい",
-  expert: "難問",
-  extreme: "最難関",
-} as const;
