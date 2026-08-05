@@ -17,6 +17,10 @@ coverage/
 # 同梱パック puzzles/packs/ はコミットする
 /puzzles/generated/
 
+# puzzles/ から写した配信用の複製(tools/puzzles-sync が作る)
+# 正本は puzzles/。ここを手で編集しても次の同期で消える
+/packages/web/public/puzzles/
+
 # 環境ごとの接続情報
 .env
 

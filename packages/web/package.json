@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "pnpm sync:puzzles && vite",
+    "build": "pnpm sync:puzzles && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "sync:puzzles": "node ../../tools/puzzles-sync/sync.mjs"
   },
   "dependencies": {
     "@mantine/core": "^9.5.1",

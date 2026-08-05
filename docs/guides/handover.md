@@ -90,13 +90,13 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **98 件**(core 46 / docs-html 19 / web 33。generator は 0 件) |
+| テスト | **123 件**(core 46 / docs-html 19 / web 58。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
-| 本番ビルド | 成功(JS gzip 約 73 KB / CSS gzip 約 34 KB。工程 1 の実測値) |
+| 本番ビルド | 成功(JS 306.34 KB / gzip 95.27 KB、CSS 232.38 KB / gzip 34.12 KB) |
 
-`cc/agent-b` に工程 2 の 1〜2(盤面の表現・探索ソルバ)が入った時点の値。
-**`feature/agent-a` へ寄せたら測り直す**(各自の手元の値を足しても合わない)。
+**`feature/agent-a` に工程 2 の 1〜2 と工程 3 が入った時点の値。**
+統合のたびに測り直す(各自の手元の値を足しても合わない)。
 
 詳細と前提(Node 22 以上・pnpm 11 系)は [ローカル環境の構築](local-setup.md)。
 
@@ -110,9 +110,9 @@ pnpm build
 
 | 呼び名 | ブランチ | 作業場所 | 担当 | 状態 |
 |--------|---------|---------|------|------|
-| agent-a | `feature/agent-a` | メインの作業ディレクトリ | **管理役。**統合・文書更新・判断の集約。**例外として工程 1(開発基盤)は agent-a が通す** | 🔜 工程 1 に着手できる |
-| agent-b | `cc/agent-b` | `.claude/worktrees/agent-b-7e214c` | **`core` + `generator`。**盤面表現 → 探索ソルバ → 完成盤の生成 → 穴あけ → 手筋ソルバ → 難易度評価 → パック出力(工程 2) | 🚧 **着手済み。盤面表現と探索ソルバまで完了** |
-| agent-c | `cc/agent-c` | `.claude/worktrees/agent-c-baa07a` | **`web`。**盤面の描画 → セル入力 → 状態管理 → 問題の取得 → 進行の保存(工程 3〜4) | ⏸ **worktree 作成済み。工程 1 の完了待ち** |
+| agent-a | `feature/agent-a` | メインの作業ディレクトリ | **管理役。**統合・文書更新・判断の集約。**例外として工程 1(開発基盤)と CI は agent-a が通す** | ✅ 工程 1 と CI 完了。統合と裁定を継続 |
+| agent-b | `cc/agent-b` | `.claude/worktrees/agent-b-7e214c` | **`core` + `generator`。**盤面表現 → 探索ソルバ → 完成盤の生成 → 穴あけ → 手筋ソルバ → 難易度評価 → パック出力(工程 2) | 🚧 **工程 2 の 1〜2 まで統合済み。**次は 3+4(生成・穴あけ) |
+| agent-c | `cc/agent-c` | `.claude/worktrees/agent-c-baa07a` | **`web`。**盤面の描画 → セル入力 → 状態管理 → 問題の取得 → 進行の保存(工程 3〜4) | ✅ **工程 3 完了・統合済み。**次は工程 4 |
 
 **ブランチの規約と統合の権限は [ブランチ戦略](branch-strategy.md) にある。**
 worktree のディレクトリ名の末尾は Claude Code が付けたもので、意味は無い。
@@ -160,16 +160,7 @@ agent-b は `core` / `generator` の担当なので開発サーバを立てな�
 工程 2 → 工程 3 を直列にやれば設計上どこも破綻しない。
 
 **worktree は Git 管理外である。** ディレクトリ名の末尾のハッシュに意味は無いので、
-別の端末では好きな名前で作り直してよい。
-
-```bash
-git worktree add .claude/worktrees/<名前> cc/agent-b
-```
-
-作ったあと **`node_modules` と `.claude/settings.local.json` は worktree ごとに要る**
-(`ops-dev-environment-setup`)。
-
-**1 人で進めるなら worktree は要らない。** `feature/agent-a` の 1 本で足りる。
+別の端末では `git worktree add .claude/worktrees/<名前> cc/agent-b` で作り直してよい。
 
 ### 運用のルールは別文書にある
 
@@ -234,7 +225,8 @@ git worktree add .claude/worktrees/<名前> cc/agent-b
 
 ### ⚠️ 開発用に仮置きしてある問題パック(agent-c・2026-08-05)
 
-**`packages/web/public/puzzles/` は agent-b の生成器ができるまでの足場である。**
+**`puzzles/` の中身は agent-b の生成器ができるまでの足場である**
+(2026-08-05 に `packages/web/public/` から設計どおりの場所へ移した)。
 `manifest.json` と `packs/easy-000.txt`(3 問)が入っていて、
 これがあるので取得の経路をブラウザで実際に動かせる。
 
@@ -243,10 +235,17 @@ git worktree add .claude/worktrees/<名前> cc/agent-b
 [盤面の生成](../algorithms/board-generation.md) が禁じているのはまさにこれなので、
 **本物のパックができたら丸ごと差し替えて消す。**
 
-差し替えるとき決めることが 1 つある。**設計では問題パックは
-リポジトリ直下の `puzzles/` に置くことになっている**が、
-`web` のビルドへ含める経路がまだ無い(いまは `packages/web/public/` にあるので
-Vite が自動で `dist/puzzles/` へ入れている)。**この配線は管理役の判断が要る。**
+**配線は決着した(2026-08-05・管理役)。** 正本は設計どおり**リポジトリ直下の `puzzles/`** で、
+`tools/puzzles-sync/sync.mjs` が `packages/web/public/puzzles/` へ写す
+(`pnpm dev` と `pnpm build` の先頭で走る)。
+
+| 場所 | 扱い |
+|------|------|
+| `puzzles/manifest.json` と `puzzles/packs/` | **正本。**Git 管理下 |
+| `puzzles/generated/` | 大量生成した追加分。**Git 管理外。配信物にも含めない** |
+| `packages/web/public/puzzles/` | **複製。**Git 管理外。**手で編集しない**(次の同期で消える) |
+
+**⇒ agent-b は `puzzles/` へ書き出せばよい。**`web` 側の配線は済んでいる。
 
 ### agent-c が上げた設計との食い違い 2 件 —— ✅ 決着(2026-08-05・管理役)
 
