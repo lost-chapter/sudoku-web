@@ -50,3 +50,5 @@ export { countSolutions, findSolutions, hasUniqueSolution, solveBoard } from "./
 
 export type { Random } from "./random";
 export { createRandom, randomInt, shuffled } from "./random";
+
+export { generateSolvedBoard } from "./generate";
