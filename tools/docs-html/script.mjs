@@ -105,6 +105,8 @@ export const PAGE_SCRIPT = `
 
   // 5. 画面より高い表だけ、器の高さを止めて見出し行を固定する。
   //    ⚠️ 短い表まで器へ閉じ込めない。ページのスクロールが二重になって読みにくい。
+  //    ⚠️ **この挙動は自動では見張っていない。**vitest は DOM を持たないため、
+  //    変えたら実ブラウザで長い表(guides/handover.html)を開いて確かめること。
   function markTallTables() {
     // 画面の高さが取れない環境では何もしない(全部を器へ閉じ込めてしまうため)
     var viewport = doc.documentElement.clientHeight || window.innerHeight || 0;
