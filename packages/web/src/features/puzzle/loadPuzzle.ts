@@ -1,6 +1,12 @@
-import { decodeManifest, packsFor, type Manifest } from "./manifest";
-import { decodePack } from "./pack";
-import type { Difficulty, Puzzle } from "./types";
+import {
+  decodePack,
+  tryParseManifest,
+  type Difficulty,
+  type Manifest,
+  type Puzzle,
+} from "@sudoku/core";
+
+import { packsFor } from "./packSelection";
 
 /**
  * 問題を 1 問取ってくる。
@@ -116,7 +122,7 @@ function toLoaded(
     packPath,
     line,
     formatVersion: manifest.formatVersion,
-    generator: manifest.generator,
+    generator: manifest.generatedWith.generator,
   };
 }
 
@@ -129,8 +135,8 @@ async function fetchManifest(
   fetch: typeof globalThis.fetch,
   baseUrl: string,
 ): Promise<Manifest | null> {
-  const value = await fetchJson(fetch, join(baseUrl, "manifest.json"));
-  return value === null ? null : decodeManifest(value);
+  const text = await fetchText(fetch, join(baseUrl, "manifest.json"));
+  return text === null ? null : tryParseManifest(text);
 }
 
 /** 壊れた行はここで落ちる。パック全体は捨てない。 */
@@ -154,18 +160,6 @@ async function fetchText(fetch: typeof globalThis.fetch, url: string): Promise<s
     return response.ok ? await response.text() : null;
   } catch {
     // 通信の失敗も「取得できなかった」として同じに扱う。
-    return null;
-  }
-}
-
-async function fetchJson(fetch: typeof globalThis.fetch, url: string): Promise<unknown> {
-  const text = await fetchText(fetch, url);
-  if (text === null) {
-    return null;
-  }
-  try {
-    return JSON.parse(text);
-  } catch {
     return null;
   }
 }

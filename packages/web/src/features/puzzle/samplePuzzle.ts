@@ -1,13 +1,12 @@
-import { decodePuzzleLine } from "./puzzleLine";
-import type { Puzzle } from "./types";
+import { decodePuzzleLine, type Puzzle } from "@sudoku/core";
 
 /**
- * 開発用に手書きした 1 問。
+ * 同梱の 1 問。
  *
- * **generator(agent-b)の完成を待たずに UI を作りきるための足場である。**
- * 問題ファイルの形式が契約として先に決まっているので、
- * 実物のパックが来ても読み込み口を差し替えるだけで済む
- * (docs/guides/implementation-roadmap.md の「並列化の単位と前提」)。
+ * **パックを取得できないときの退避先である**
+ * (docs/architecture/system-architecture.md「エラーハンドリングの方針」)。
+ * 遊技を止めてよいのは「問題が 1 問も無いとき」だけなので、
+ * ここに 1 問だけ抱えておく。
  *
  * 中身は数独の例題として広く使われている盤面で、
  * docs/api/puzzle-file-format.md の例と同じ行である。
@@ -20,7 +19,7 @@ export const SAMPLE_PUZZLE_LINE =
 const decoded = decodePuzzleLine(SAMPLE_PUZZLE_LINE);
 if (!decoded) {
   // 手書きの定数なので、ここに来るのは書き間違いだけである。
-  throw new Error("開発用の問題が問題ファイルの形式に合っていない");
+  throw new Error("同梱の問題が問題ファイルの形式に合っていない");
 }
 
 export const SAMPLE_PUZZLE: Puzzle = decoded;

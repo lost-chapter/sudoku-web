@@ -11,7 +11,15 @@ import { SAMPLE_PUZZLE_LINE } from "./samplePuzzle";
 const MANIFEST = {
   formatVersion: 1,
   generatedWith: { generator: "0.1.0", techniques: [1] },
-  packs: [{ path: "packs/easy-000.txt", difficulty: "easy", count: 2 }],
+  packs: [
+    {
+      path: "packs/easy-000.txt",
+      difficulty: "easy",
+      count: 2,
+      seed: "easy-000",
+      bytes: 336,
+    },
+  ],
   totals: { easy: 2, normal: 0, hard: 0, expert: 0, extreme: 0 },
 };
 
