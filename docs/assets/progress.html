@@ -333,9 +333,9 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      工程 0〜6 が完了し、<b>工程 7（UI の作り込み）</b>と <b>工程 8（リリースの仕組み）</b>が走っている。
-      リポジトリは public になり、Pages の設定も済んだ。
-      残るのは <b>サブパスの URL 修正</b>で、これが入れば出せる。
+      <b>工程 8（リリースの仕組み）が完了した。</b>サブパスで 1 問遊べることを実測済みで、
+      リポジトリも Pages の設定も整っている。<b>残るのは工程 7 の 2 件と、
+      <code>main</code> へ出すことだけ。</b>
     </p>
     <dl class="figures">
       <div class="figure">
@@ -344,7 +344,7 @@
       </div>
       <div class="figure">
         <dt>E2E</dt>
-        <dd>38<small>件</small></dd>
+        <dd>43<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>CI ジョブ</dt>
@@ -360,7 +360,7 @@
       </div>
       <div class="figure alert">
         <dt>未プッシュ</dt>
-        <dd>24<small>コミット</small></dd>
+        <dd>35<small>コミット</small></dd>
       </div>
     </dl>
   </header>
@@ -399,15 +399,15 @@
         <span class="no">7</span><span class="name">UI の作り込み</span
         ><span class="state">2 / 4</span>
       </div>
-      <div class="phase active">
+      <div class="phase">
         <span class="no">8</span><span class="name">リリースの仕組み</span
-        ><span class="state">4 / 6</span>
+        ><span class="state">6 / 6</span>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>工程 8 の内訳（いまここ）</h2>
+    <h2>工程 8 の内訳（完了）</h2>
     <div class="scroll">
       <table>
         <thead>
@@ -449,16 +449,20 @@
           <tr>
             <td>リリースノートの閲覧機能と既読チェック</td>
             <td>agent-c</td>
-            <td><span class="pill wait">工程 7 の後</span></td>
-            <td>既読は「最後に読んだ版」だけを覚える。初回は既読として扱う</td>
+            <td><span class="pill done">完了</span></td>
+            <td>
+              ホーム画面から開く。<b>しるしは文字で出す</b>（色や点だけに載せない）。
+              既読は「最後に読んだ版」だけを覚え、初回は既読として扱う
+            </td>
           </tr>
           <tr>
             <td>サブパスで組み立てる URL の修正</td>
             <td>agent-c</td>
-            <td><span class="pill stop">未修正</span></td>
+            <td><span class="pill done">完了</span></td>
             <td>
-              <b>直さないと Pages で 1 問も遊べない。</b>
-              <code>/puzzles/manifest.json</code> が 404 になることを実測済み
+              サブパスで 1 問遊べることを実測。
+              ⚠️ <code>/favicon.ico</code> は<b>誰も書いていないので探しても見つからず</b>、
+              しかもサブパスでは直せない（実害なし）
             </td>
           </tr>
         </tbody>
@@ -599,9 +603,18 @@
   <section>
     <h2>未解決</h2>
     <div class="issues">
+      <div class="issue critical">
+        <span class="who"><span class="pill stop">最優先</span></span>
+        <h3>メモが「入」か「切」か分からない</h3>
+        <p>
+          発注者の FB。<b>「✏ 切」は「いま切です」とも「押すと切ります」とも読める。</b>
+          記号だけにしないよう手当てしたが、文字を足しても曖昧さは消えなかった。
+          <b>状態を持つものは、状態を表す形にする</b>（agent-c・工程 7 の 3）。
+        </p>
+      </div>
       <div class="issue">
         <span class="who"><span class="pill wait">判断待ち</span></span>
-        <h3>24 コミットが手元に留まっている</h3>
+        <h3>35 コミットが手元に留まっている</h3>
         <p>
           Pages は <code>main</code> への push で出る。<b>まだ 1 度も出していない</b>ので、
           <code>ops-release</code> の手順は机上のままである。0.1.0 が最初の通し実行になる。
