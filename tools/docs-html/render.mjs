@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 
 import MarkdownIt from "markdown-it";
 
+import { applyCjkEmphasis } from "./cjk-emphasis.mjs";
 import { buildNav, extractTitle, toHref } from "./nav.mjs";
 import { PAGE_SCRIPT } from "./script.mjs";
 import { PAGE_STYLE } from "./style.mjs";
@@ -51,6 +52,23 @@ function slugify(text, used) {
   const seen = used.get(base) ?? 0;
   used.set(base, seen + 1);
   return seen === 0 ? base : `${base}-${seen + 1}`;
+}
+
+/**
+ * 見出しの表示用テキストを取り出す。
+ *
+ * ⚠️ **`inline.content` をそのまま使わない。** 記法の記号が入っており、
+ * 目次に `**決定(2026-08-05)**` のように出てしまう。
+ * 解析済みの子トークンから地の文とコードの中身だけを集める。
+ */
+function plainText(inline) {
+  if (!inline || inline.type !== "inline" || !inline.children) return "";
+
+  return inline.children
+    .filter((child) => child.type === "text" || child.type === "code_inline")
+    .map((child) => child.content)
+    .join("")
+    .trim();
 }
 
 /**
@@ -88,7 +106,7 @@ function transform(tokens, dirIndex) {
 
     if (token.type === "heading_open") {
       const inline = tokens[i + 1];
-      const text = inline && inline.type === "inline" ? inline.content : "";
+      const text = plainText(inline);
       const id = slugify(text, usedIds);
       token.attrSet("id", id);
 
@@ -198,6 +216,9 @@ export function renderPage({
   dirIndex = {},
 }) {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+
+  // 和文は「。**」のような閉じ方をすると強調が効かない(CommonMark の flanking 規則)。
+  applyCjkEmphasis(md);
 
   // 表は横に溢れたら表だけがスクロールする。ページ全体を横スクロールさせない。
   md.renderer.rules.table_open = () => '<div class="table-scroll">\n<table>\n';
