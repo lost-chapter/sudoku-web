@@ -104,12 +104,35 @@ const DEFAULT_BASE_URL = `${import.meta.env.BASE_URL}puzzles`;
 
 ⚠️ **`BASE_URL` は末尾がスラッシュである。** `/` を足すと `//puzzles` になる。
 
-**該当するのは 2 つ。**
+**該当するのは 3 つ。**
 
 | 何 | 置き場所 |
 |----|---------|
 | 問題パック(`manifest.json` / `packs/*.txt`) | `packages/web/src/features/puzzle/loadPuzzle.ts` |
 | リリースノート(`release-notes.json`) | 閲覧機能([リリースノートの形式](../api/release-notes-format.md)) |
+| 🔴 **favicon** | `packages/web/index.html`(**`%BASE_URL%` で書く**) |
+
+### ⚠️ ブラウザが勝手に要求するものもある(2026-08-06 に検出)
+
+**`.ts` を全部直しても 1 件残った。**
+
+```
+🔴 本番で 404 になるものが 2 件ある
+  /favicon.ico            ← 誰も書いていない
+  /puzzles/manifest.json
+```
+
+⚠️ **指定が無いと、ブラウザは `/favicon.ico` をドメイン直下へ要求する。**
+**コードを検索しても出てこない**ので、**`preview:subpath` で実際に配らないと見つからない。**
+
+🎯 **`import.meta.env.BASE_URL` の検索では足りない。**
+**「外へ出た要求」の一覧が空になることを見ること。**
+
+**直し方**(`index.html` は `%BASE_URL%` が使える)。
+
+```html
+<link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+```
 
 ## 配信物の作られ方
 

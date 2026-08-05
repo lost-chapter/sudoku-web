@@ -53,7 +53,20 @@ export interface LoadPuzzleAtOptions extends LoadPuzzleOptions {
   readonly line: number;
 }
 
-const DEFAULT_BASE_URL = "/puzzles";
+/**
+ * 問題を置く場所。**配信先の基準 URL からの相対で組み立てる。**
+ *
+ * 🔴 **`"/puzzles"` と書いてはいけない。** GitHub Pages は
+ * リポジトリ名のサブパス(`/sudoku-web/`)へ置かれるので、
+ * **先頭の `/` はドメイン直下を指してしまい 404 になる**(2026-08-06 に実測)。
+ *
+ * ⚠️ **`vite.config.ts` の `base` は HTML が参照する資産しか直さない。**
+ * **アプリの中で組み立てる URL は自分で `BASE_URL` を起点にすること。**
+ *
+ * ⚠️ **`BASE_URL` は末尾がスラッシュである**(手元は `"/"`、Pages は `"/sudoku-web/"`)。
+ * `/` を足すと `//puzzles` になる。
+ */
+const DEFAULT_BASE_URL = `${import.meta.env.BASE_URL}puzzles`;
 
 /** 難易度を指定して 1 問を乱択する。 */
 export async function loadRandomPuzzle(

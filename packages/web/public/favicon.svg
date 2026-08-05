@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    数独の盤面。**3×3 のブロックだけを描く。**81 マスは 32px では潰れる。
+    色は指定せず、背景は透明のまま(ブラウザのタブの地色に馴染ませる)。
+  -->
+  <rect x="2" y="2" width="28" height="28" rx="3" fill="#228be6" />
+  <g stroke="#fff" stroke-width="2" stroke-linecap="round">
+    <path d="M12.7 5v22M21.3 5v22M5 12.7h22M5 21.3h22" />
+  </g>
+</svg>
