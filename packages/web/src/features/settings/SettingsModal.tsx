@@ -1,6 +1,29 @@
-import { Modal, SegmentedControl, Stack, Switch, Text, useMantineColorScheme } from "@mantine/core";
+import {
+  Group,
+  Modal,
+  SegmentedControl,
+  Stack,
+  Switch,
+  Text,
+  useMantineColorScheme,
+} from "@mantine/core";
+
+import { Icon, type IconName } from "../../ui/Icon";
 
 import type { Settings } from "./settings";
+
+/**
+ * テーマの選択肢。**記号に文字を添える。**
+ * ⚠️ **文字を落とさない。**「自動」は絵で表しにくく、記号だけでは意味が伝わらない。
+ */
+function ThemeLabel({ icon, text }: { readonly icon: IconName; readonly text: string }) {
+  return (
+    <Group gap={6} wrap="nowrap" justify="center">
+      <Icon name={icon} size={16} />
+      {text}
+    </Group>
+  );
+}
 
 /**
  * 設定。**ゲーム画面からモーダルで開く**(docs/ui/screens-and-interactions.md)。
@@ -58,9 +81,9 @@ export function SettingsModal({ opened, settings, onChange, onClose }: SettingsM
             value={colorScheme}
             aria-label="テーマ"
             data={[
-              { value: "auto", label: "自動" },
-              { value: "light", label: "ライト" },
-              { value: "dark", label: "ダーク" },
+              { value: "auto", label: <ThemeLabel icon="desktop" text="自動" /> },
+              { value: "light", label: <ThemeLabel icon="sun" text="ライト" /> },
+              { value: "dark", label: <ThemeLabel icon="moon" text="ダーク" /> },
             ]}
             onChange={(value) => setColorScheme(value as "auto" | "light" | "dark")}
           />

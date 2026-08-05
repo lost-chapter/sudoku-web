@@ -1,6 +1,8 @@
 import { Button, Group, SimpleGrid, Stack } from "@mantine/core";
 import { BOARD_SIZE } from "@sudoku/core";
 
+import { Icon } from "../../ui/Icon";
+
 /**
  * 画面の入力パッド。
  *
@@ -57,14 +59,26 @@ export function NumberPad({
         ))}
       </SimpleGrid>
 
-      {/* 「消す」と「メモ」は数字と並べると幅が足りず文字が折り返す。別の行に置く。 */}
+      {/*
+        「消す」と「メモ」は数字と並べると幅が足りず文字が折り返す。別の行に置く。
+
+        ⚠️ **PC 版は記号に文字を添える。**幅に余裕があるので文字を落とす理由が無い。
+        **スマホ版は幅が無いので記号だけにしてある** —— そこだけが違う。
+      */}
       <Group grow gap="xs">
-        <Button variant="default" size="lg" disabled={disabled} onClick={onClear}>
+        <Button
+          variant="default"
+          size="lg"
+          leftSection={<Icon name="backspace" />}
+          disabled={disabled}
+          onClick={onClear}
+        >
           消す
         </Button>
         <Button
           variant={noteMode ? "filled" : "default"}
           size="lg"
+          leftSection={<Icon name="pencil" />}
           aria-pressed={noteMode}
           onClick={onToggleNoteMode}
         >
@@ -78,10 +92,22 @@ export function NumberPad({
         本文の目安を割るため使わない。
       */}
       <Group grow gap="xs">
-        <Button variant="default" size="sm" disabled={!canUndo} onClick={onUndo}>
+        <Button
+          variant="default"
+          size="sm"
+          leftSection={<Icon name="undo" size={18} />}
+          disabled={!canUndo}
+          onClick={onUndo}
+        >
           取り消し
         </Button>
-        <Button variant="default" size="sm" disabled={!canRedo} onClick={onRedo}>
+        <Button
+          variant="default"
+          size="sm"
+          leftSection={<Icon name="redo" size={18} />}
+          disabled={!canRedo}
+          onClick={onRedo}
+        >
           やり直し
         </Button>
       </Group>

@@ -49,10 +49,16 @@ async function expectAllButtonsAreTouchable(page: Page): Promise<void> {
 
   for (let index = 0; index < count; index += 1) {
     const button = buttons.nth(index);
-    const [box, label] = await Promise.all([button.boundingBox(), button.textContent()]);
+    // ⚠️ **記号だけのボタンは `textContent` が空になる。**どれが落ちたか分からなくなるので、
+    // **読み上げの名前を先に見る**(記号だけのボタンはそこにしか名前が無い)。
+    const [box, label] = await Promise.all([
+      button.boundingBox(),
+      button.getAttribute("aria-label"),
+    ]);
+    const name = label ?? (await button.textContent());
 
-    expect(box?.width ?? 0, `「${label}」の幅`).toBeGreaterThanOrEqual(44);
-    expect(box?.height ?? 0, `「${label}」の高さ`).toBeGreaterThanOrEqual(44);
+    expect(box?.width ?? 0, `「${name}」の幅`).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0, `「${name}」の高さ`).toBeGreaterThanOrEqual(44);
   }
 }
 
