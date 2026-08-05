@@ -77,12 +77,12 @@ sudoku-web で共有される見込みがあるのは次の 3 つ。
 
 | 対象 | 扱い | 担当 |
 |------|------|------|
-| `packages/core/src/` | **b が持つ。**c は読むだけ | agent-b |
+| `packages/core/src/` | **b が持つ**。c は読むだけ | agent-b |
 | `packages/generator/src/` | **b が持つ** | agent-b |
-| `packages/web/src/` | **c が持つ。**b は触らない | agent-c |
-| `puzzles/packs/` | **b が生成して置く。**c は読むだけ | agent-b |
-| ルートの設定(`package.json` / `pnpm-workspace.yaml` / `tsconfig.base.json` / ESLint / Prettier / CI) | **触らない。**変更が要るときは管理役へ上げる | agent-a |
-| 各パッケージの `package.json` | **依存の追加は自分のパッケージだけ。**追加したら区切り報告で必ず伝える | 各自 |
+| `packages/web/src/` | **c が持つ**。b は触らない | agent-c |
+| `puzzles/packs/` | **b が生成して置く**。c は読むだけ | agent-b |
+| ルートの設定(`package.json` / `pnpm-workspace.yaml` / `tsconfig.base.json` / ESLint / Prettier / CI) | **触らない**。変更が要るときは管理役へ上げる | agent-a |
+| 各パッケージの `package.json` | **依存の追加は自分のパッケージだけ**。追加したら区切り報告で必ず伝える | 各自 |
 | `tools/` | **管理役が持つ** | agent-a |
 | ロードマップ・引き継ぎ | 全員が更新する(競合は解決しやすい) | 全員 |
 | 判断が要る事項 | [保留中の判断事項](../reference/pending-decisions.md) へ全員が追記する | 全員 |
