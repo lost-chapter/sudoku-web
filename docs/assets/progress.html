@@ -334,8 +334,8 @@
     </div>
     <p class="now">
       工程 0〜6 が完了し、<b>工程 7（UI の作り込み）</b>と <b>工程 8（リリースの仕組み）</b>が走っている。
-      配信は GitHub Pages に決まった。
-      <b>公開の前に、リポジトリを public にする操作がユーザー側で要る。</b>
+      リポジトリは public になり、Pages の設定も済んだ。
+      残るのは <b>サブパスの URL 修正</b>で、これが入れば出せる。
     </p>
     <dl class="figures">
       <div class="figure">
@@ -360,7 +360,7 @@
       </div>
       <div class="figure alert">
         <dt>未プッシュ</dt>
-        <dd>7<small>コミット</small></dd>
+        <dd>15<small>コミット</small></dd>
       </div>
     </dl>
   </header>
@@ -397,7 +397,7 @@
       </div>
       <div class="phase active">
         <span class="no">7</span><span class="name">UI の作り込み</span
-        ><span class="state">0 / 2</span>
+        ><span class="state">1 / 2</span>
       </div>
       <div class="phase active">
         <span class="no">8</span><span class="name">リリースの仕組み</span
@@ -482,19 +482,27 @@
           <tr>
             <td>文字ボタンをアイコンにする</td>
             <td>agent-c</td>
-            <td><span class="pill work">作業中</span></td>
+            <td><span class="pill done">完了</span></td>
             <td>
-              ヘッダ 3 個・パッド 4 個 × 2 系統・ホーム・設定。数字キーは対象外。
-              調達方法（<code>@tabler/icons-react</code> か自前 SVG）は gzip の増加量を実測して決める
+              記号 11 個を自前で持つ。<b>ライブラリは入れなかった</b>——
+              バンドルの差は gzip 0.64 KB、<code>node_modules</code> は 140 MB 増える
             </td>
           </tr>
           <tr>
             <td>スマホでのフリック操作の検討</td>
             <td>agent-c</td>
-            <td><span class="pill wait">アイコンの後</span></td>
+            <td><span class="pill work">作業中</span></td>
             <td>
-              比較レポートと有望案の試作まで。<b>採否は発注者が決める</b>。
-              同じファイルを触るのでアイコンと並列にしない
+              比較レポートと有望案の試作まで。<b>採否は発注者が決める</b>
+            </td>
+          </tr>
+          <tr>
+            <td>PC 版でも押せる大きさを走査する</td>
+            <td>agent-c</td>
+            <td><span class="pill wait">フリックの後</span></td>
+            <td>
+              裏取りで見つかった食い違い。<b>アイコン化で入ったものではない</b>。
+              下限は 24px（スマホは 44px のまま）
             </td>
           </tr>
         </tbody>
@@ -571,15 +579,12 @@
   <section>
     <h2>未解決</h2>
     <div class="issues">
-      <div class="issue critical">
-        <span class="who"><span class="pill stop">要判断</span></span>
-        <h3>公開するには、ユーザーの操作が 2 つ要る</h3>
+      <div class="issue">
+        <span class="who"><span class="pill wait">判断待ち</span></span>
+        <h3>15 コミットが手元に留まっている</h3>
         <p>
-          <b>1. リポジトリを public にする。</b><code>lost-chapter</code> は Free プランなので、
-          private のままでは Pages を使えない（2026-08-06 実測）。コード・ドキュメント・コミット履歴が
-          すべて公開される。
-          <b>2. Settings → Pages → Source を GitHub Actions にする。</b>
-          既定の「Deploy from a branch」のままだと、workflow が成功してもサイトが更新されない。
+          Pages は <code>main</code> への push で出る。<b>まだ 1 度も出していない</b>ので、
+          <code>ops-release</code> の手順は机上のままである。0.1.0 が最初の通し実行になる。
         </p>
       </div>
       <div class="issue critical">
