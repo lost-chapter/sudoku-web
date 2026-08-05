@@ -202,22 +202,22 @@ function renderNodeShape(node) {
 }
 
 /**
- * 線の中点を求める。
+ * 線の上の点を求める(`at` は 0〜1 の位置。0.5 で中点)。
  *
  * ⚠️ **dagre が返す矢印ラベルの座標は使わない。** dagre はラベルのぶんだけ
  * 場所を空けて返すので、線から離れた位置になる。線の上へ置くほうが読める。
  */
-function midpoint(points) {
+function pointOnPath(points, at = 0.5) {
   const lengths = points.slice(1).map((point, index) => {
     const previous = points[index];
     return Math.hypot(point.x - previous.x, point.y - previous.y);
   });
-  const half = lengths.reduce((sum, length) => sum + length, 0) / 2;
+  const target = lengths.reduce((sum, length) => sum + length, 0) * at;
 
   let walked = 0;
   for (const [index, length] of lengths.entries()) {
-    if (walked + length >= half) {
-      const ratio = length === 0 ? 0 : (half - walked) / length;
+    if (walked + length >= target) {
+      const ratio = length === 0 ? 0 : (target - walked) / length;
       const from = points[index];
       const to = points[index + 1];
       return { x: from.x + (to.x - from.x) * ratio, y: from.y + (to.y - from.y) * ratio };
@@ -226,6 +226,31 @@ function midpoint(points) {
   }
 
   return points[points.length - 1];
+}
+
+/**
+ * 同じ 2 つのノードを結ぶ線が複数あるとき、ラベルを置く位置をずらす。
+ *
+ * ⚠️ **往復する矢印(A → B と B → A)は中点がほぼ重なる。**
+ * どちらも中点へ置くとラベルが読めなくなる。
+ */
+function labelPositions(edges) {
+  const groups = new Map();
+  for (const edge of edges) {
+    const key = [edge.v, edge.w].sort().join(" ");
+    groups.set(key, (groups.get(key) ?? 0) + 1);
+  }
+
+  const seen = new Map();
+  return edges.map((edge) => {
+    const key = [edge.v, edge.w].sort().join(" ");
+    const total = groups.get(key);
+    if (total === 1) return 0.5;
+
+    const index = seen.get(key) ?? 0;
+    seen.set(key, index + 1);
+    return 0.5 + ((index + 1) / (total + 1) - 0.5) * 0.7;
+  });
 }
 
 /** 複数行のラベルを中央へ置く。 */
@@ -273,7 +298,10 @@ export function renderFlowchart(source, key = "d0") {
   const parts = [];
 
   // 線を先に描く。ノードの下へ潜らせるため。
-  for (const edgeKey of graph.edges()) {
+  const edgeKeys = graph.edges();
+  const positions = labelPositions(edgeKeys);
+
+  for (const [index, edgeKey] of edgeKeys.entries()) {
     const edge = graph.edge(edgeKey);
     const path = edge.points
       .map(
@@ -287,7 +315,7 @@ export function renderFlowchart(source, key = "d0") {
     parts.push(`<path class="${classes}" d="${path}"${marker}/>`);
 
     if (edge.label) {
-      const center = midpoint(edge.points);
+      const center = pointOnPath(edge.points, positions[index]);
       parts.push(
         `<rect class="dg-edge-label-bg" x="${(center.x - edge.width / 2).toFixed(1)}" y="${(center.y - edge.height / 2).toFixed(1)}" width="${edge.width}" height="${edge.height}" rx="4"/>`,
         renderLabel(edge.label, center.x, center.y, "dg-edge-label"),
