@@ -28,7 +28,7 @@ pnpm lint
 | テスト | **309 件**(core 126 / generator 16 / docs-html 19 / web 148) |
 | 型チェック / Lint / 整形 | 0 エラー |
 | 本番ビルド | JS 345.14 KB(gzip **106.66 KB**)/ CSS 233.55 KB(gzip 34.31 KB) |
-| 盤面ロジック | ✅ **工程 2 の 1〜6 が完了。同梱パックを 3,000 問生成済み**。⚠️ **難問・最難関は 1 問も作れない**(課題 9。工程 2 の 7 で解消) |
+| 盤面ロジック | ✅ **工程 2 が完了。同梱パックは 5 クラス 5,000 問**(easy / normal / hard / expert / extreme 各 1,000) |
 | 画面 | ✅ **工程 3 完了。**工程 4 はメモまで統合済み |
 | CI | ✅ **導入済み**(GitHub Actions。静的検査とテスト + ドキュメント変換の決定性) |
 | ブランチ | `main` / `develop` / `feature/agent-a` / `cc/agent-b` / `cc/agent-c` |
@@ -79,7 +79,7 @@ puzzles/            生成された問題パック(外部ファイル)
 | 3 | 完成盤の生成(シード注入) | ✅ `packages/core/src/generate.ts` + `random.ts` |
 | 4 | 穴あけ(一意解を保つ) | ✅ `packages/core/src/generate.ts` |
 | 5 | 難易度の評価(手筋ソルバ) | ✅ `packages/core/src/technique-solver.ts` + `difficulty.ts`。**レベル 1〜4 まで実装**(5 以降は未実装) |
-| 6 | パックとマニフェストの書き出し・並列生成 | ✅ `packages/core/src/puzzle-file.ts` + `packages/generator/`。**同梱パックを 3,000 問生成済み** |
+| 6 | パックとマニフェストの書き出し・並列生成 | ✅ `packages/core/src/puzzle-file.ts` + `packages/generator/`。**同梱パックは 5,000 問** |
 | 7 | **レベル 5〜7 の手筋**(X-Wing / XY-Wing / X-Chain) | ✅ **完了(2026-08-05)。**5 クラスすべてを収録できるようになった。Forcing Chain は未実装 |
 
 **完了条件**: [テストの方針](../verification/testing-policy.md) の「必ず守る性質」6 項目が
@@ -92,7 +92,7 @@ puzzles/            生成された問題パック(外部ファイル)
 | 3 同じシードからは同じ問題ができる | ✅ |
 | 4 難易度の判定が安定している | ✅ |
 | 5 解いた結果が数独の規則を満たす | ✅ |
-| 6 パックの全問が読み込める | ✅ **収録済みの 3,000 問を全件検証**(`packages/generator/src/puzzles-directory.test.ts`) |
+| 6 パックの全問が読み込める | ✅ **収録済みの 5,000 問を全件検証**(`packages/generator/src/puzzles-directory.test.ts`) |
 
 ### 工程 3: 遊べる最小の UI(`web`)✅
 
