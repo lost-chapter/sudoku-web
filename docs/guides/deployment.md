@@ -134,6 +134,21 @@ const DEFAULT_BASE_URL = `${import.meta.env.BASE_URL}puzzles`;
 <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
 ```
 
+#### 🔴 それでも `/favicon.ico` は残ることがある(避けられない)
+
+⚠️ **`link` を置いてもブラウザが `/favicon.ico` を投機的に取りに行くことがある。**
+**2026-08-06 の実測では、同じビルドで出るときと出ないときがあった**(キャッシュ次第)。
+
+🎯 **サブパス配信では、これは直せない。**
+`/favicon.ico` は**ドメイン直下**、つまり `<user>.github.io/favicon.ico` を指す。
+**このリポジトリの配信先(`/sudoku-web/`)の外**なので、何を置いても当たらない。
+
+⚠️ **`public/favicon.ico` を置いても無駄である**(`/sudoku-web/favicon.ico` に置かれるため)。
+**実際に作って確かめ、消した。**
+
+**実害は無い。** タブのアイコンは `link` で指した SVG が使われる。
+⇒ **「外へ出た要求」に `/favicon.ico` だけが残っていたら、それは直っている状態である。**
+
 ## 配信物の作られ方
 
 ```mermaid
