@@ -3,8 +3,10 @@ import { Button, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
 import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 
 import { Board } from "../features/board/Board";
+import { computeHighlights, remainingCounts } from "../features/board/highlights";
 import { NumberPad } from "../features/input/NumberPad";
 import type { Puzzle } from "../features/puzzle/types";
+import type { Settings } from "../features/settings/settings";
 import { isGiven, matchesSolution } from "../state/boardState";
 import {
   canRedo,
@@ -25,14 +27,16 @@ import {
  */
 export interface GameProps {
   readonly puzzle: Puzzle;
+  readonly settings: Settings;
   /** 完成したあと次の問題へ進む。 */
   readonly onNext: () => void;
 }
 
-export function Game({ puzzle, onNext }: GameProps) {
+export function Game({ puzzle, settings, onNext }: GameProps) {
   const [game, dispatch] = useReducer(gameReducer, puzzle, createGameState);
   const state = game.present;
   const completed = matchesSolution(state);
+  const highlights = computeHighlights(state, settings);
 
   // 完成したら盤面を動かさない。完成の知らせが入力で消えてしまうのを防ぐ。
   const play = (action: GameAction) => {
@@ -61,11 +65,16 @@ export function Game({ puzzle, onNext }: GameProps) {
 
   return (
     <Stack gap="lg">
-      <Board state={state} onSelect={(index) => play({ type: "selectCell", index })} />
+      <Board
+        state={state}
+        highlights={highlights}
+        onSelect={(index) => play({ type: "selectCell", index })}
+      />
 
       <NumberPad
         disabled={completed || isGiven(state, state.selected)}
         noteMode={state.noteMode}
+        remaining={settings.showRemaining ? remainingCounts(state) : null}
         canUndo={!completed && canUndo(game)}
         canRedo={!completed && canRedo(game)}
         onDigit={(digit) => play({ type: "inputDigit", digit })}
