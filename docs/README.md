@@ -31,6 +31,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [保留中の判断事項](reference/pending-decisions.md) — **人が決める必要がある事項の一覧。**調べても決まらないものはここへ集約する
 - [作業の引き継ぎ](guides/handover.md) — **別の端末・別の担当者へ渡すとき。**未プッシュのコミット・Git 管理外のもの・進行中の作業
 - [並列エージェントの運用](guides/parallel-agent-operations.md) — **複数のエージェントで同時に進めるとき。**担当の立て方・触ってよいファイルの境界・統合の作法・禁止事項
+- [ブランチ戦略](guides/branch-strategy.md) — **ブランチの種類・誰が何をマージできるか・いつ寄せるか。**`develop` へは直接コミットしない
 - [プロジェクトの目的と対象範囲](overview/project-purpose.md) — 与えられた 5 つの要件と、作る / 作らないの線引き
 - [システム構成](architecture/system-architecture.md) — 「作る側(Node)」と「遊ぶ側(ブラウザ)」を分け、`core` を共有する
 - [問題ファイルの形式](api/puzzle-file-format.md) — **生成側と遊技側をつなぐ契約。**片方だけ変えない
