@@ -11,6 +11,7 @@
     "dev": "pnpm --filter @sudoku/web dev",
     "build": "pnpm --filter @sudoku/web build",
     "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm -r --if-present test:e2e",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",

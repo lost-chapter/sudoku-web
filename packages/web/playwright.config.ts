@@ -33,9 +33,19 @@ export default defineConfig({
   webServer: {
     // 開発サーバへ当てる。ビルド成果物ではないので、待ち時間が短い。
     // ⚠️ ポートは他の担当と衝突しないものを使う(既定 5175)。
-    command: `PORT=${PORT} pnpm dev`,
+    //
+    // ⚠️ **`--strictPort` を付ける。**Vite は既定では塞がっているポートを避けて
+    // 別の番号で起動するが、Playwright は指定した番号を待ち続けるため、
+    // **原因の分かりにくいタイムアウト**になる。塞がっていたら即座に失敗させる。
+    command: `PORT=${PORT} pnpm dev -- --strictPort`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // ⚠️ **手元でも「動いているサーバを再利用」しない**(2026-08-05 に実測して変更)。
+    //
+    // 再利用を許すと、**別の担当が 5175 で立てた無関係なサーバに当たっても
+    // そのまま走り**、3 件とも原因の分からない失敗になる(実際に再現した)。
+    // 常に自前で立てれば、塞がっているときは Playwright が
+    // 「already used」と名指しで止まる。**起動は 1 秒ほどしか変わらない。**
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });
