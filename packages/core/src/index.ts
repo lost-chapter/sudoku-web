@@ -60,9 +60,13 @@ export type {
   TechniqueSolveResult,
   TechniqueStep,
 } from "./technique-solver";
+
 export {
   TECHNIQUE_LEVEL,
   TECHNIQUE_SCORE,
   findHint,
   solveWithTechniques,
 } from "./technique-solver";
+
+export type { Difficulty, DifficultyRating } from "./difficulty";
+export { DIFFICULTIES, rateDifficulty } from "./difficulty";
