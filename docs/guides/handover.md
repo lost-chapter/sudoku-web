@@ -90,10 +90,10 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **PLACEHOLDER** |
+| テスト | **146 件**(core 68 / docs-html 19 / web 59。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
-| 本番ビルド | 成功(JS 306.34 KB / gzip 95.27 KB、CSS 232.38 KB / gzip 34.12 KB) |
+| 本番ビルド | 成功(JS 306.66 KB / gzip 95.38 KB、CSS 232.38 KB / gzip 34.12 KB) |
 
 **`feature/agent-a` に工程 2 の 1〜4 と工程 3 が入った時点の値。**
 統合のたびに測り直す(各自の手元の値を足しても合わない)。
