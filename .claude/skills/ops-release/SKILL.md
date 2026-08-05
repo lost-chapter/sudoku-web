@@ -104,12 +104,22 @@ git checkout -b release/0.2.0                      # 版に合わせる
 
 ## 3. 版を上げてリリースノートを書く
 
-**版は 2 か所。片方だけ直すと `ops-release` の検査で落ちる。**
+**版は 2 か所。片方だけ直すと下の検査で落ちる。**
 
 ```bash
 # 1) ルートの package.json の version
 # 2) docs/release-notes/<版>.md を新規作成
 ```
+
+🔴 **上げるのはルートの `package.json` だけである。**
+`packages/*` と `tools/*` の `version` は**触らない**。
+⚠️ **どれも `private: true` で、どこへも配布しない。**
+**揃える意味が無く、揃え忘れる場所が増えるだけである。**
+
+⚠️ **最初のリリース(0.1.0)では、この節は何もすることが無い。**
+**版は最初から `0.1.0` で、リリースノートも先に書いてある。**
+**「上げるコミットが無い」のが正しい状態なので、無理に作らない**
+(2026-08-06 に実際に通して確かめた)。
 
 リリースノートの書き方は
 [`docs-release-notes` スキル](../docs-release-notes/SKILL.md) にある。
@@ -143,6 +153,11 @@ pnpm docs:lint
 pnpm build:pages                                   # BASE_PATH を付けたビルド
 pnpm preview:subpath                               # http://localhost:4321/sudoku-web/
 ```
+
+⚠️ **`packages/web/public/` は Git 管理外である。**
+問題パックもリリースノートも **`pnpm build` が毎回作り直す**ので、
+`main` へマージしたあとの CI でも同じものができる。
+**`main` のツリーに配信物が無くても異常ではない。**
 
 **ブラウザで開いて実際に 1 問遊ぶ。**
 **Ctrl-C で止めると、サブパスの外へ出た要求の一覧が出る。**
