@@ -1,0 +1,544 @@
+<title>sudoku-web 進捗</title>
+<style>
+  /*
+   * 数独の盤面から: **罫線の太さで階層を表す**。
+   * 3×3 の区切りが太く、マスの区切りが細いのと同じ考え方で、
+   * 工程の切れ目は太線、項目の切れ目は細線にする。
+   */
+  :root {
+    --paper: #faf8f4;
+    --ink: #16130f;
+    --ink-quiet: #5c554a;
+    --rule-thin: #ded7ca;
+    --rule-thick: #2a241c;
+    --field: #f2eee6;
+    --blue: #2f6690;
+    --green: #4f7942;
+    --amber: #96701a;
+    --rust: #a0522d;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans:
+      system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14120f;
+      --ink: #ede8e0;
+      --ink-quiet: #9a9184;
+      --rule-thin: #2e2a24;
+      --rule-thick: #6b6154;
+      --field: #1c1915;
+      --blue: #7fb3d5;
+      --green: #8fbc7f;
+      --amber: #d4a92c;
+      --rust: #d08b64;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14120f;
+    --ink: #ede8e0;
+    --ink-quiet: #9a9184;
+    --rule-thin: #2e2a24;
+    --rule-thick: #6b6154;
+    --field: #1c1915;
+    --blue: #7fb3d5;
+    --green: #8fbc7f;
+    --amber: #d4a92c;
+    --rust: #d08b64;
+  }
+  :root[data-theme="light"] {
+    --paper: #faf8f4;
+    --ink: #16130f;
+    --ink-quiet: #5c554a;
+    --rule-thin: #ded7ca;
+    --rule-thick: #2a241c;
+    --field: #f2eee6;
+    --blue: #2f6690;
+    --green: #4f7942;
+    --amber: #96701a;
+    --rust: #a0522d;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.7;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  h2 {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-quiet);
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--rule-thick);
+  }
+  .stamp {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-quiet);
+    letter-spacing: 0.06em;
+  }
+
+  /* 見出しと数値 */
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .now {
+    font-size: 1.05rem;
+    max-width: 42em;
+    text-wrap: balance;
+  }
+  .now b {
+    color: var(--blue);
+  }
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    border-top: 2px solid var(--rule-thick);
+    border-left: 1px solid var(--rule-thin);
+  }
+  .figure {
+    padding: 0.9rem 1rem;
+    border-right: 1px solid var(--rule-thin);
+    border-bottom: 1px solid var(--rule-thin);
+  }
+  .figure dt {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-quiet);
+  }
+  .figure dd {
+    margin: 0.15rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .figure dd small {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-quiet);
+    margin-left: 0.35rem;
+  }
+  .figure.alert dd {
+    color: var(--rust);
+  }
+
+  /* 工程の帯 */
+  .phases {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .phase {
+    background: var(--field);
+    border-top: 4px solid var(--green);
+    padding: 0.7rem 0.7rem 0.9rem;
+    min-height: 5.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .phase.active {
+    border-top-color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 10%, var(--field));
+  }
+  .phase .no {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-quiet);
+    letter-spacing: 0.08em;
+  }
+  .phase .name {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .phase .state {
+    margin-top: auto;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--green);
+  }
+  .phase.active .state {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  @media (max-width: 860px) {
+    .phases {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* 表 */
+  .scroll {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--ink-quiet);
+    padding: 0 0.8rem 0.5rem 0;
+    border-bottom: 2px solid var(--rule-thick);
+    white-space: nowrap;
+  }
+  td {
+    padding: 0.65rem 0.8rem 0.65rem 0;
+    border-bottom: 1px solid var(--rule-thin);
+    vertical-align: top;
+  }
+  td:last-child,
+  th:last-child {
+    padding-right: 0;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--field);
+    padding: 0.1em 0.35em;
+  }
+
+  /* 状態のしるし: 色だけに載せず、記号と文字でも分かるようにする */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    padding: 0.1rem 0.5rem 0.1rem 0.4rem;
+    border: 1px solid currentColor;
+  }
+  .pill::before {
+    font-size: 0.9em;
+  }
+  .done {
+    color: var(--green);
+  }
+  .done::before {
+    content: "✓";
+  }
+  .work {
+    color: var(--amber);
+  }
+  .work::before {
+    content: "▶";
+  }
+  .wait {
+    color: var(--ink-quiet);
+  }
+  .wait::before {
+    content: "•";
+  }
+  .stop {
+    color: var(--rust);
+    font-weight: 600;
+  }
+  .stop::before {
+    content: "!";
+  }
+
+  /* 未解決 */
+  .issues {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--rule-thin);
+    border-top: 2px solid var(--rule-thick);
+    border-bottom: 1px solid var(--rule-thin);
+  }
+  .issue {
+    background: var(--paper);
+    padding: 0.9rem 0 0.9rem 0;
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0 1rem;
+  }
+  .issue.critical {
+    background: color-mix(in srgb, var(--rust) 8%, var(--paper));
+    padding-left: 0.8rem;
+    border-left: 3px solid var(--rust);
+  }
+  .issue h3 {
+    grid-column: 2;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .issue p {
+    grid-column: 2;
+    margin: 0.3rem 0 0;
+    font-size: 0.87rem;
+    color: var(--ink-quiet);
+    max-width: 52em;
+  }
+  .issue .who {
+    grid-row: span 2;
+  }
+  @media (max-width: 640px) {
+    .issue {
+      grid-template-columns: 1fr;
+    }
+    .issue h3,
+    .issue p {
+      grid-column: 1;
+    }
+    .issue .who {
+      grid-row: auto;
+      margin-bottom: 0.4rem;
+    }
+  }
+
+  footer {
+    font-size: 0.82rem;
+    color: var(--ink-quiet);
+    border-top: 1px solid var(--rule-thin);
+    padding-top: 1rem;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>sudoku-web の現在地</h1>
+      <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
+    </div>
+    <p class="now">
+      工程 0〜5 は完了。いまは <b>工程 6（発注者の要望への対応）</b>で、8 件中 6 件が済んでいる。
+      残りは <b>遊技が消える欠陥の修正</b>と<b>図の書き直し</b>。
+    </p>
+    <dl class="figures">
+      <div class="figure">
+        <dt>テスト</dt>
+        <dd>301<small>件</small></dd>
+      </div>
+      <div class="figure">
+        <dt>E2E</dt>
+        <dd>33<small>件</small></dd>
+      </div>
+      <div class="figure">
+        <dt>CI ジョブ</dt>
+        <dd>5<small>本</small></dd>
+      </div>
+      <div class="figure">
+        <dt>同梱パック</dt>
+        <dd>5,000<small>問</small></dd>
+      </div>
+      <div class="figure alert">
+        <dt>未プッシュ</dt>
+        <dd>80<small>+ コミット</small></dd>
+      </div>
+    </dl>
+  </header>
+
+  <section>
+    <h2>工程</h2>
+    <div class="phases">
+      <div class="phase">
+        <span class="no">0</span><span class="name">技術構成の選定</span
+        ><span class="state">完了</span>
+      </div>
+      <div class="phase">
+        <span class="no">1</span><span class="name">開発基盤</span><span class="state">完了</span>
+      </div>
+      <div class="phase">
+        <span class="no">2</span><span class="name">盤面ロジックと生成</span
+        ><span class="state">完了</span>
+      </div>
+      <div class="phase">
+        <span class="no">3</span><span class="name">遊べる最小の UI</span
+        ><span class="state">完了</span>
+      </div>
+      <div class="phase">
+        <span class="no">4</span><span class="name">遊技機能の横展開</span
+        ><span class="state">完了</span>
+      </div>
+      <div class="phase">
+        <span class="no">5</span><span class="name">本番構成（CI）</span
+        ><span class="state">完了</span>
+      </div>
+      <div class="phase active">
+        <span class="no">6</span><span class="name">発注者の要望への対応</span
+        ><span class="state">6 / 8</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>工程 6 の内訳</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>作業</th>
+            <th>担当</th>
+            <th>状態</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>いらない機能の削除（タイマー・誤りの指摘・残り数）</td>
+            <td>agent-b</td>
+            <td><span class="pill done">完了</span></td>
+            <td>テスト 282 → 265 件。古い保存を読んでも遊びかけは消えない</td>
+          </tr>
+          <tr>
+            <td>スマートフォン専用レイアウトの設計</td>
+            <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td>UA では分岐しない（幅 × 入力装置）。横向きの見落としを 1 度差し戻し</td>
+          </tr>
+          <tr>
+            <td>あきらめるボタン</td>
+            <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td>諦めたのに「完成しました」と読み上げていたのを差し戻して修正</td>
+          </tr>
+          <tr>
+            <td>スマートフォン専用レイアウトの実装</td>
+            <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td>縦 / 横 / PC の 3 通り。バンドル gzip +1.6 KB</td>
+          </tr>
+          <tr>
+            <td>mermaid での図解と HTML の読みやすさ</td>
+            <td>agent-d</td>
+            <td><span class="pill done">完了</span></td>
+            <td>強調 171 個の欠落を修正。図 4 枚。2 度差し戻し</td>
+          </tr>
+          <tr>
+            <td>和文の強調を CI で見張る</td>
+            <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td><code>pnpm docs:lint</code>。管理役が書いた 5 か所を検出</td>
+          </tr>
+          <tr>
+            <td>レイアウト切り替えで遊技が消える欠陥</td>
+            <td>agent-c</td>
+            <td><span class="pill stop">差し戻し中</span></td>
+            <td>入力・保存が消え、別の問題に変わる。再現手順あり</td>
+          </tr>
+          <tr>
+            <td>ASCII 図をすべて mermaid へ（12 個）</td>
+            <td>agent-d</td>
+            <td><span class="pill work">作業中</span></td>
+            <td>罫線が環境で崩れるため。最大 474.8px のずれを実測</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>未解決</h2>
+    <div class="issues">
+      <div class="issue critical">
+        <span class="who"><span class="pill stop">最優先</span></span>
+        <h3>レイアウトを切り替えると遊技も保存も消える</h3>
+        <p>
+          スマホ幅で 2 マス入れて PC 幅にすると、入力が消え、<code>localStorage</code>
+          の保存も消え、別の問題に変わる。「途中でやめて再開できる」という要望を壊している。
+          E2E 33 件が通っているのに見つからなかった（レイアウトを跨ぐ検査が無い）。
+        </p>
+      </div>
+      <div class="issue">
+        <span class="who"><span class="pill work">対応中</span></span>
+        <h3>ASCII 図が読む人の環境で崩れる</h3>
+        <p>
+          等幅フォントでも罫線と和文の幅比が 2:1 にならず、枠が閉じない。
+          ディレクトリツリーで最大 474.8px のずれ。図 12 個を mermaid か表へ書き直している。
+        </p>
+      </div>
+      <div class="issue">
+        <span class="who"><span class="pill wait">判断待ち</span></span>
+        <h3>80 コミットが手元に留まっている</h3>
+        <p>
+          工程 6 の全部が未プッシュ。GitHub 上での強調の見え方（128 か所を直した結果）も、
+          プッシュするまで誰も確認できない。
+        </p>
+      </div>
+      <div class="issue">
+        <span class="who"><span class="pill wait">実機待ち</span></span>
+        <h3>実機でしか確かめられない 2 点</h3>
+        <p>
+          812×375（iPhone 横）で収まるか。ブラウザのバーが伸縮したときの見え方（<code
+            >svh</code
+          >
+          の採用是非）。どちらも自動化では届かない。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>体制</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>担当</th>
+            <th>領域</th>
+            <th>いま</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>agent-a</td>
+            <td>管理役。統合・裏取り・裁定・文書</td>
+            <td><span class="pill work">稼働中</span></td>
+          </tr>
+          <tr>
+            <td>agent-b</td>
+            <td><code>core</code> + <code>generator</code></td>
+            <td><span class="pill wait">待機</span></td>
+          </tr>
+          <tr>
+            <td>agent-c</td>
+            <td><code>packages/web</code></td>
+            <td><span class="pill stop">差し戻し対応</span></td>
+          </tr>
+          <tr>
+            <td>agent-d</td>
+            <td>ドキュメントと <code>tools/docs-html</code></td>
+            <td><span class="pill work">作業中</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    正本は <code>docs/guides/implementation-roadmap.md</code> と
+    <code>docs/guides/handover.md</code>。 この画面は要約で、判断の根拠はそちらにある。
+  </footer>
+</div>
