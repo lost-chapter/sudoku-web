@@ -245,6 +245,26 @@ git -c credential.helper='!gh auth git-credential' \
 gh run watch --repo lost-chapter/sudoku-web
 ```
 
+🔴 **ビルドが成功して配置だけが落ちたら、環境の許可ブランチを見る。**
+
+```
+Branch "main" is not allowed to deploy to github-pages
+due to environment protection rules.
+```
+
+```bash
+gh api repos/lost-chapter/sudoku-web/environments/github-pages/deployment-branch-policies \
+  --jq '[.branch_policies[].name]'      # ["main"] であること
+```
+
+⚠️ **直すのはユーザーの操作**(Settings → Environments)。
+手順は [配信](../../../docs/guides/deployment.md#-3-出せるブランチを-main-にする)。
+**直したら、落ちた実行を回し直せばよい**(作り直さなくてよい)。
+
+```bash
+gh run rerun <run-id> --failed --repo lost-chapter/sudoku-web
+```
+
 ## 9. 出たことを確かめる
 
 ```bash
@@ -264,7 +284,8 @@ curl -s -o /dev/null -w '%{http_code}\n' https://lost-chapter.github.io/sudoku-w
 | 落とし穴 | どうなるか |
 |---------|-----------|
 | 🔴 **`develop` へ戻し忘れる** | 版を上げたコミットが `develop` に無く、次のリリースで必ず競合する |
-| 🔴 **`develop..main` が空でないのを異常だと読む** | **`main` のマージコミットは必ず残る。** 空になることはない。`git diff` と `--no-merges` で見る |
+| 🔴 **`develop..main` が空でないのを異常だと読む** | **`main` のマージコミットは必ず残る。** 空になることはない。`--no-merges` で見る |
+| 🔴 **配置だけが落ちたのを実装の問題だと読む** | **環境の許可ブランチが `develop` のままだと `main` から出せない。** ビルドは成功するので気づきにくい |
 | 🔴 **`pnpm preview` で確かめて満足する** | あれはルートで配るので**サブパスの 404 が見つからない**。`preview:subpath` を使う |
 | **版を片方だけ上げる** | `package.json` とリリースノートのファイル名が食い違う。3 の検査で止める |
 | **リリースブランチで機能を足す** | 固める場所である。足したくなったら `develop` へ入れて次の版に回す |
