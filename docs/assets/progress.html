@@ -333,8 +333,8 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      工程 0〜5 は完了。いまは <b>工程 6（発注者の要望への対応）</b>で、8 件中 7 件が済んでいる。
-      残りは <b>遊技が消える欠陥の修正</b>だけ。
+      工程 0〜6 がすべて完了。<b>遊技が消える欠陥</b>も直り、E2E で見張っている。
+      残るのは <b>プッシュの判断</b>と、実機でしか確かめられない 2 点。
     </p>
     <dl class="figures">
       <div class="figure">
@@ -343,7 +343,7 @@
       </div>
       <div class="figure">
         <dt>E2E</dt>
-        <dd>33<small>件</small></dd>
+        <dd>35<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>CI ジョブ</dt>
@@ -359,7 +359,7 @@
       </div>
       <div class="figure alert">
         <dt>未プッシュ</dt>
-        <dd>90<small>+ コミット</small></dd>
+        <dd>100<small>+ コミット</small></dd>
       </div>
     </dl>
   </header>
@@ -390,9 +390,9 @@
         <span class="no">5</span><span class="name">本番構成（CI）</span
         ><span class="state">完了</span>
       </div>
-      <div class="phase active">
+      <div class="phase">
         <span class="no">6</span><span class="name">発注者の要望への対応</span
-        ><span class="state">7 / 8</span>
+        ><span class="state">8 / 8</span>
       </div>
     </div>
   </section>
@@ -449,8 +449,8 @@
           <tr>
             <td>レイアウト切り替えで遊技が消える欠陥</td>
             <td>agent-c</td>
-            <td><span class="pill stop">差し戻し中</span></td>
-            <td>入力・保存が消え、別の問題に変わる。再現手順あり</td>
+            <td><span class="pill done">完了</span></td>
+            <td>原因は <code>App</code> の早期 return。要素の置き場所が変わると作り直される</td>
           </tr>
           <tr>
             <td>ASCII 図をすべて mermaid へ（12 個）</td>
@@ -467,12 +467,12 @@
     <h2>未解決</h2>
     <div class="issues">
       <div class="issue critical">
-        <span class="who"><span class="pill stop">最優先</span></span>
-        <h3>レイアウトを切り替えると遊技も保存も消える</h3>
+        <span class="who"><span class="pill stop">要判断</span></span>
+        <h3>GitHub Pages へ出すなら、先に決めることがある</h3>
         <p>
-          スマホ幅で 2 マス入れて PC 幅にすると、入力が消え、<code>localStorage</code>
-          の保存も消え、別の問題に変わる。「途中でやめて再開できる」という要望を壊している。
-          E2E 33 件が通っているのに見つからなかった（レイアウトを跨ぐ検査が無い）。
+          リポジトリが private のため、Free プランでは Pages を使えない。Pro なら使えるが
+          <b>サイトは全世界に公開される</b>。あわせて <code>base</code> の設定が要る（いまは絶対パスなので
+          サブパスでアセットもパックも 404 になる）。
         </p>
       </div>
       <div class="issue">

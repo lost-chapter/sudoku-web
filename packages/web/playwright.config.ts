@@ -50,9 +50,15 @@ export default defineConfig({
       name: "phone",
       use: { ...devices["iPhone 12"], browserName: "chromium" },
     },
+    /*
+     * ⚠️ **切り替えを跨ぐ検査は `phone` でだけ回す。**
+     * 中で自分から寸法を変えるので、**どの寸法から始めても見るものは同じ**である。
+     * 3 つの project で回しても、同じことを 3 回確かめるだけになる。
+     */
     {
       // ⚠️ **いちばん狭い端末。**ここが 1 画面と 24px の両立が最も厳しい。
       name: "phone-small",
+      testIgnore: "**/layoutSwitch.e2e.ts",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 320, height: 568 },
@@ -62,6 +68,7 @@ export default defineConfig({
     },
     {
       name: "phone-landscape",
+      testIgnore: "**/layoutSwitch.e2e.ts",
       use: { ...devices["iPhone SE landscape"], browserName: "chromium" },
     },
   ],
