@@ -7,6 +7,11 @@
 ## 全体像
 
 ```mermaid
+---
+config:
+  flowchart:
+    rankSpacing: 64
+---
 flowchart TB
   subgraph make["作る側 / Node"]
     gen["packages/generator"]
