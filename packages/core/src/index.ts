@@ -47,3 +47,6 @@ export {
 } from "./board";
 
 export { countSolutions, findSolutions, hasUniqueSolution, solveBoard } from "./search-solver";
+
+export type { Random } from "./random";
+export { createRandom, randomInt, shuffled } from "./random";
