@@ -236,17 +236,23 @@ blockquote {
   border-left: 4px solid var(--warn-border);
   border-radius: 0 6px 6px 0;
 }
+/* 表は横に溢れたら表だけがスクロールする(ページ全体は横スクロールさせない)。
+   ⚠️ overflow-x を付けると縦もスクロールコンテナになるため、th の sticky は
+   ページのスクロールでは効かない。画面より高い表だけ器の高さを止め、
+   その中で見出し行を固定する(is-tall は script.mjs が付ける)。 */
 .table-scroll {
   overflow-x: auto;
   margin: 1.2em 0;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+.table-scroll.is-tall { max-height: 78vh; overflow-y: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
 th, td { border-bottom: 1px solid var(--border); padding: 0.55em 0.8em; text-align: left; vertical-align: top; }
 th + th, td + td { border-left: 1px solid var(--border); }
 tr:last-child td { border-bottom: none; }
-th { background: var(--surface); position: sticky; top: 0; }
+th { background: var(--surface); position: sticky; top: 0; z-index: 1; }
+.is-tall th { box-shadow: 0 1px 0 var(--border); }
 tbody tr:hover { background: var(--surface); }
 img { max-width: 100%; height: auto; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
@@ -310,5 +316,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
   .sidebar, .toc, .topbar, .pager, .copy, .anchor { display: none !important; }
   .layout { display: block; max-width: none; padding: 0; }
   pre, .table-scroll { break-inside: avoid; }
+  /* 紙には器のスクロールが無い。高さを止めると表が途中で切れる。 */
+  .table-scroll.is-tall { max-height: none; overflow: visible; }
 }
 `;
