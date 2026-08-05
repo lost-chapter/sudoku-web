@@ -129,6 +129,33 @@ describe("renderPage", () => {
     expect(render()).toContain('<div class="table-scroll">');
   });
 
+  it("⚠️ で始まる段落を注意書きの箱にする", () => {
+    const html = render({ markdown: "# 題\n\n本文\n\n⚠️ **触らない。**壊れる\n\n> 引用の中\n" });
+    expect(html).toContain('<p class="warn">');
+    // 引用は既に箱なので二重にしない
+    expect(html).toContain("<blockquote>\n<p>引用の中</p>");
+  });
+
+  it("✅ / ❌ で始まる表のセルに印を付ける", () => {
+    const html = render({
+      markdown:
+        "# 題\n\n| 項目 | 状態 |\n|---|---|\n| a | ✅ 完了 |\n| b | ❌ 未着手 |\n| c | 実測中 |\n",
+    });
+    expect(html).toContain('<td class="cell-ok">✅ 完了</td>');
+    expect(html).toContain('<td class="cell-ng">❌ 未着手</td>');
+    expect(html).toContain("<td>実測中</td>");
+  });
+
+  it("言語を指定したコードだけ色を付ける(ビルド時・クラス名のみ)", () => {
+    const html = render({
+      markdown: "# 題\n\n```bash\n# 数える\npnpm test\n```\n\n```\nsudoku-web/\n└── docs/\n```\n",
+    });
+    expect(html).toContain('<code class="hljs">');
+    expect(html).toContain('<span class="hljs-comment"># 数える</span>');
+    // 言語の指定が無いものは推測せず、素のまま出す(ASCII の図が色付くのを防ぐ)
+    expect(html).toContain("<pre><code>sudoku-web/\n└── docs/\n</code></pre>");
+  });
+
   it("生の HTML はエスケープする", () => {
     expect(render()).not.toContain("<script>alert(1)</script>");
   });

@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import MarkdownIt from "markdown-it";
 
 import { applyCjkEmphasis } from "./cjk-emphasis.mjs";
+import { highlight } from "./highlight.mjs";
 import { buildNav, extractTitle, toHref } from "./nav.mjs";
 import { PAGE_SCRIPT } from "./script.mjs";
 import { PAGE_STYLE } from "./style.mjs";
@@ -71,6 +72,11 @@ function plainText(inline) {
     .trim();
 }
 
+/** インラインの本文がこの印で始まるか。強調(`⚠️ **…**`)の中でも拾う。 */
+function startsWith(inline, mark) {
+  return plainText(inline).startsWith(mark);
+}
+
 /**
  * 相対リンクを HTML 側の宛先へ書き換える。
  *
@@ -96,13 +102,34 @@ function rewriteHref(href, dirIndex) {
  * - 見出しに決定的な id と、見出しへ戻れるアンカーを付ける
  * - 相対リンクの .md を .html へ書き換える(外部リンクとアンカーは触らない)
  * - 外部リンクは別タブで開き、印を付ける
+ * - `⚠️` で始まる段落を注意書きの箱にする
+ * - `✅` `❌` で始まる表のセルに印を付ける
  */
 function transform(tokens, dirIndex) {
   const usedIds = new Map();
   const headings = [];
+  let inQuote = 0;
 
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i];
+
+    if (token.type === "blockquote_open") inQuote += 1;
+    if (token.type === "blockquote_close") inQuote -= 1;
+
+    // ⚠️ で始まる段落は注意書きとして扱う。docs は 78 か所でこの書き方をしており、
+    // 地の文と同じ見た目では警告として立たない。
+    // 引用の中は既に箱なので二重にしない。
+    if (token.type === "paragraph_open" && inQuote === 0) {
+      if (startsWith(tokens[i + 1], "⚠️")) token.attrJoin("class", "warn");
+      continue;
+    }
+
+    // 表のセルの ✅ / ❌ は「終わったか」を一目で拾うための印。
+    if (token.type === "td_open") {
+      if (startsWith(tokens[i + 1], "✅")) token.attrJoin("class", "cell-ok");
+      else if (startsWith(tokens[i + 1], "❌")) token.attrJoin("class", "cell-ng");
+      continue;
+    }
 
     if (token.type === "heading_open") {
       const inline = tokens[i + 1];
@@ -223,6 +250,14 @@ export function renderPage({
   // 表は横に溢れたら表だけがスクロールする。ページ全体を横スクロールさせない。
   md.renderer.rules.table_open = () => '<div class="table-scroll">\n<table>\n';
   md.renderer.rules.table_close = () => "</table>\n</div>\n";
+
+  // コードの色付けはここ(ビルド時)で終える。出力に載るのはクラス名だけ。
+  md.renderer.rules.fence = (tokens, index) => {
+    const token = tokens[index];
+    const colored = highlight(token.content, token.info);
+    const attrs = colored ? ' class="hljs"' : "";
+    return `<pre><code${attrs}>${colored ?? escapeHtml(token.content)}</code></pre>\n`;
+  };
 
   const tokens = md.parse(markdown, {});
   const headings = transform(tokens, dirIndex);
