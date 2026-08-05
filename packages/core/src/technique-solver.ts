@@ -12,8 +12,10 @@
  * **決定的でなければならない。** 走査順に乱数を混ぜない。
  * 同じ盤面からは常に同じ `steps` が出る。
  *
- * 実装しているのはレベル 1〜4(基本手筋)まで。レベル 5 以降(X-Wing・XY-Wing・
- * チェーン系)は難易度クラスを広げる段階で足す。
+ * 実装しているのは**レベル 1〜7**。
+ * 1〜4 が基本手筋、5 が魚(X-Wing / Swordfish / Jellyfish)、
+ * 6 が Wing(XY-Wing / XYZ-Wing)、7 が X-Chain(単一数字の彩色)である。
+ *
  * **実装していない手筋があること自体は問題ではない。**
  * 手筋ソルバで解けない問題は、その難易度クラスに入れずに捨てる。
  */
@@ -46,7 +48,13 @@ export type TechniqueName =
   | "naked-triple"
   | "hidden-triple"
   | "naked-quad"
-  | "hidden-quad";
+  | "hidden-quad"
+  | "x-wing"
+  | "swordfish"
+  | "jellyfish"
+  | "xy-wing"
+  | "xyz-wing"
+  | "x-chain";
 
 /**
  * 手筋のレベル(docs/algorithms/difficulty-rating.md の「手筋のレベル」)。
@@ -64,6 +72,12 @@ export const TECHNIQUE_LEVEL: Record<TechniqueName, number> = {
   "hidden-triple": 4,
   "naked-quad": 4,
   "hidden-quad": 4,
+  "x-wing": 5,
+  swordfish: 5,
+  jellyfish: 5,
+  "xy-wing": 6,
+  "xyz-wing": 6,
+  "x-chain": 7,
 };
 
 /**
@@ -84,6 +98,12 @@ export const TECHNIQUE_SCORE: Record<TechniqueName, number> = {
   "hidden-triple": 16,
   "naked-quad": 20,
   "hidden-quad": 24,
+  "x-wing": 30,
+  swordfish: 36,
+  jellyfish: 42,
+  "xy-wing": 50,
+  "xyz-wing": 55,
+  "x-chain": 70,
 };
 
 /** 候補を消す 1 件。 */
@@ -412,6 +432,240 @@ function findHiddenSubset(state: TechniqueState, size: number): TechniqueStep | 
   return null;
 }
 
+const FISH_NAMES: Record<number, TechniqueName> = {
+  2: "x-wing",
+  3: "swordfish",
+  4: "jellyfish",
+};
+
+/**
+ * X-Wing / Swordfish / Jellyfish(魚)。
+ *
+ * ある数字について、**`size` 個の行での候補位置が `size` 個の列に収まる**なら、
+ * その数字はその列の**他の行**には入らない(行と列を入れ替えても成り立つ)。
+ *
+ * 行を土台にする場合と列を土台にする場合の 2 通りを見る。
+ */
+function findFish(state: TechniqueState, size: number): TechniqueStep | null {
+  for (let digit = 1; digit <= BOARD_SIZE; digit += 1) {
+    const bit = maskOfDigit(digit);
+
+    for (const baseIsRow of [true, false]) {
+      // 土台ごとの候補位置(9 ビット)。位置は覆う側の番号。
+      const positionsOf: number[] = [];
+      const baseLines: number[] = [];
+      for (let line = 0; line < BOARD_SIZE; line += 1) {
+        let positions = 0;
+        for (let offset = 0; offset < BOARD_SIZE; offset += 1) {
+          const cell = baseIsRow ? line * BOARD_SIZE + offset : offset * BOARD_SIZE + line;
+          if (state.cells[cell] !== 0) continue;
+          if ((state.candidates[cell] & bit) !== 0) positions |= 1 << offset;
+        }
+        // 1 か所だけの行は Hidden Single なので、ここでは扱わない。
+        const count = countCandidates(positions);
+        if (count < 2 || count > size) continue;
+        baseLines.push(line);
+        positionsOf.push(positions);
+      }
+      if (baseLines.length < size) continue;
+
+      let result: TechniqueStep | null = null;
+      const found = forEachCombination(baseLines.length, size, (chosen) => {
+        let cover = 0;
+        for (const position of chosen) cover |= positionsOf[position];
+        if (countCandidates(cover) !== size) return false;
+
+        const base = [...chosen].map((position) => baseLines[position]);
+        const cells: number[] = [];
+        for (const line of base) {
+          for (let offset = 0; offset < BOARD_SIZE; offset += 1) {
+            if ((cover & (1 << offset)) === 0) continue;
+            const cell = baseIsRow ? line * BOARD_SIZE + offset : offset * BOARD_SIZE + line;
+            if (state.cells[cell] === 0 && (state.candidates[cell] & bit) !== 0) cells.push(cell);
+          }
+        }
+
+        const eliminations: Elimination[] = [];
+        for (let line = 0; line < BOARD_SIZE; line += 1) {
+          if (base.includes(line)) continue;
+          for (let offset = 0; offset < BOARD_SIZE; offset += 1) {
+            if ((cover & (1 << offset)) === 0) continue;
+            const cell = baseIsRow ? line * BOARD_SIZE + offset : offset * BOARD_SIZE + line;
+            if (state.cells[cell] !== 0) continue;
+            if ((state.candidates[cell] & bit) === 0) continue;
+            eliminations.push({ index: cell, digit });
+          }
+        }
+        if (eliminations.length === 0) return false;
+
+        result = step(
+          FISH_NAMES[size],
+          cells.sort((a, b) => a - b),
+          null,
+          eliminations,
+        );
+        return true;
+      });
+      if (found) return result;
+    }
+  }
+  return null;
+}
+
+/** 2 つのセルが規則を共有するか(同じ行・列・ブロック)。自分自身は含めない。 */
+function sees(a: number, b: number): boolean {
+  if (a === b) return false;
+  return ROW_OF[a] === ROW_OF[b] || COLUMN_OF[a] === COLUMN_OF[b] || BOX_OF[a] === BOX_OF[b];
+}
+
+/**
+ * XY-Wing / XYZ-Wing。
+ *
+ * - **XY-Wing** …… 候補 2 個の軸 `{a,b}` と、それを見る候補 2 個の枝 `{a,c}` `{b,c}`。
+ *   軸がどちらでも、枝のどちらかが `c` になるので、**両方の枝を見るセルから `c` を消せる**
+ * - **XYZ-Wing** …… 軸が `{a,b,c}` の 3 候補。軸自身も `c` になりうるので、
+ *   **軸と両方の枝を見るセル**からしか消せない
+ */
+function findWing(state: TechniqueState, withZ: boolean): TechniqueStep | null {
+  const pivotSize = withZ ? 3 : 2;
+
+  for (let pivot = 0; pivot < CELL_COUNT; pivot += 1) {
+    if (state.cells[pivot] !== 0) continue;
+    const pivotMask = state.candidates[pivot];
+    if (countCandidates(pivotMask) !== pivotSize) continue;
+
+    const peers = PEERS[pivot].filter(
+      (cell) => state.cells[cell] === 0 && countCandidates(state.candidates[cell]) === 2,
+    );
+
+    for (let first = 0; first < peers.length; first += 1) {
+      for (let second = first + 1; second < peers.length; second += 1) {
+        const x = peers[first];
+        const y = peers[second];
+        const maskX = state.candidates[x];
+        const maskY = state.candidates[y];
+
+        // 枝どうしが共有するのはちょうど 1 つの数字(これが消える数字になる)。
+        const shared = maskX & maskY;
+        if (countCandidates(shared) !== 1) continue;
+        const digit = lowestDigit(shared);
+
+        if (withZ) {
+          // XYZ-Wing …… 枝は軸の候補に収まり、2 つ合わせて軸と一致する。
+          // 共有の数字は軸にも入っているので、軸自身も候補として残る。
+          if ((maskX | maskY) !== pivotMask) continue;
+        } else {
+          // XY-Wing …… 共有の数字は軸に無い。
+          // 枝はそれぞれ「軸と共有する 1 つ」+「共有の数字」でできていて、
+          // 軸と共有する数字は 2 つの枝で異なる。
+          if ((pivotMask & shared) !== 0) continue;
+          const fromX = maskX & pivotMask;
+          const fromY = maskY & pivotMask;
+          if (countCandidates(fromX) !== 1 || countCandidates(fromY) !== 1) continue;
+          if (fromX === fromY) continue;
+          if (maskX !== (fromX | shared) || maskY !== (fromY | shared)) continue;
+        }
+
+        const bit = maskOfDigit(digit);
+        const eliminations: Elimination[] = [];
+        for (let cell = 0; cell < CELL_COUNT; cell += 1) {
+          if (cell === pivot || cell === x || cell === y) continue;
+          if (state.cells[cell] !== 0) continue;
+          if ((state.candidates[cell] & bit) === 0) continue;
+          if (!sees(cell, x) || !sees(cell, y)) continue;
+          // XYZ-Wing は軸も c になりうるので、軸も見えていないと消せない。
+          if (withZ && !sees(cell, pivot)) continue;
+          eliminations.push({ index: cell, digit });
+        }
+        if (eliminations.length === 0) continue;
+
+        return step(
+          withZ ? "xyz-wing" : "xy-wing",
+          [pivot, x, y].sort((a, b) => a - b),
+          null,
+          eliminations,
+        );
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * X-Chain(単一数字の彩色)。
+ *
+ * ある数字について、**その数字が 2 か所にしか入らない単位**を強いつながりとみなし、
+ * つながった塊を 2 色に塗り分ける。同じ色は「全部入る」か「全部入らない」のどちらかになる。
+ *
+ * - **同じ色どうしが見え合っていたら、その色は全部入らない**(消せる)
+ * - **両方の色を見ているセルには、その数字は入らない**(どちらかの色が必ず入るため)
+ */
+function findXChain(state: TechniqueState): TechniqueStep | null {
+  for (let digit = 1; digit <= BOARD_SIZE; digit += 1) {
+    const bit = maskOfDigit(digit);
+
+    // 強いつながり。ある単位でこの数字が 2 か所にしか入らないときに張る。
+    const links = new Map<number, number[]>();
+    for (let unitIndex = 0; unitIndex < UNIT_COUNT; unitIndex += 1) {
+      const cells = candidateCellsOf(state, UNITS[unitIndex], digit);
+      if (cells.length !== 2) continue;
+      for (const [from, to] of [
+        [cells[0], cells[1]],
+        [cells[1], cells[0]],
+      ]) {
+        const list = links.get(from) ?? [];
+        if (!list.includes(to)) list.push(to);
+        links.set(from, list);
+      }
+    }
+    if (links.size === 0) continue;
+
+    const colorOf = new Map<number, number>();
+    for (const start of [...links.keys()].sort((a, b) => a - b)) {
+      if (colorOf.has(start)) continue;
+
+      // 塊を 2 色に塗る。始点は必ず塊の中で最小の添字なので、塗り方は決定的。
+      const component: number[] = [start];
+      colorOf.set(start, 0);
+      for (let position = 0; position < component.length; position += 1) {
+        const cell = component[position];
+        const color = colorOf.get(cell) ?? 0;
+        for (const next of (links.get(cell) ?? []).toSorted((a, b) => a - b)) {
+          if (colorOf.has(next)) continue;
+          colorOf.set(next, 1 - color);
+          component.push(next);
+        }
+      }
+      component.sort((a, b) => a - b);
+
+      const colored = [
+        component.filter((cell) => colorOf.get(cell) === 0),
+        component.filter((cell) => colorOf.get(cell) === 1),
+      ];
+
+      // 同じ色どうしが見え合っていたら、その色は全部消える。
+      for (const group of colored) {
+        const conflict = group.some((a) => group.some((b) => a !== b && sees(a, b)));
+        if (!conflict) continue;
+        const eliminations = group.map((cell) => ({ index: cell, digit }));
+        return step("x-chain", component, null, eliminations);
+      }
+
+      // 両方の色を見ているセルからは消せる。
+      const eliminations: Elimination[] = [];
+      for (let cell = 0; cell < CELL_COUNT; cell += 1) {
+        if (state.cells[cell] !== 0 || component.includes(cell)) continue;
+        if ((state.candidates[cell] & bit) === 0) continue;
+        if (!colored[0].some((other) => sees(cell, other))) continue;
+        if (!colored[1].some((other) => sees(cell, other))) continue;
+        eliminations.push({ index: cell, digit });
+      }
+      if (eliminations.length > 0) return step("x-chain", component, null, eliminations);
+    }
+  }
+  return null;
+}
+
 /**
  * 次に適用する手筋を 1 つ選ぶ。**レベルの低い順に試す。**
  *
@@ -430,7 +684,13 @@ function findNextStep(state: TechniqueState): TechniqueStep | null {
     findNakedSubset(state, 3) ??
     findHiddenSubset(state, 3) ??
     findNakedSubset(state, 4) ??
-    findHiddenSubset(state, 4)
+    findHiddenSubset(state, 4) ??
+    findFish(state, 2) ??
+    findFish(state, 3) ??
+    findFish(state, 4) ??
+    findWing(state, false) ??
+    findWing(state, true) ??
+    findXChain(state)
   );
 }
 

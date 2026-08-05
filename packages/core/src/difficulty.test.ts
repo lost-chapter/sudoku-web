@@ -12,6 +12,8 @@ import {
   QUAD_PUZZLE,
   SINGLES_ONLY_PUZZLE,
   TRIPLE_PUZZLE,
+  XY_WING_PUZZLE,
+  X_CHAIN_PUZZLE,
 } from "./test-puzzles";
 
 describe("難易度の評価", () => {
@@ -27,6 +29,14 @@ describe("難易度の評価", () => {
     const rating = rateDifficulty(parseBoard(POINTING_PUZZLE));
     expect(rating.difficulty).toBe("hard");
     expect(rating.hardestLevel).toBe(3);
+  });
+
+  it("チェーンが要る問題は extreme", () => {
+    for (const puzzle of [XY_WING_PUZZLE, X_CHAIN_PUZZLE]) {
+      const rating = rateDifficulty(parseBoard(puzzle));
+      expect(rating.difficulty).toBe("extreme");
+      expect(rating.hardestLevel).toBe(7);
+    }
   });
 
   it("実装済みの手筋で解けない問題は難易度を付けない", () => {

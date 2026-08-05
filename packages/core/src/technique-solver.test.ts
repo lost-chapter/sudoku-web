@@ -15,7 +15,12 @@ import {
   POINTING_PUZZLE,
   QUAD_PUZZLE,
   SINGLES_ONLY_PUZZLE,
+  SWORDFISH_PUZZLE,
   TRIPLE_PUZZLE,
+  XYZ_WING_PUZZLE,
+  XY_WING_PUZZLE,
+  X_CHAIN_PUZZLE,
+  X_WING_PUZZLE,
 } from "./test-puzzles";
 
 /** 手筋ソルバを回して、使われた手筋の名前を集める。 */
@@ -132,8 +137,40 @@ describe("個々の手筋", () => {
     expect(techniquesUsed(QUAD_PUZZLE).has("naked-quad")).toBe(true);
   });
 
+  it("魚(X-Wing / Swordfish)を使う", () => {
+    expect(techniquesUsed(X_WING_PUZZLE).has("x-wing")).toBe(true);
+    expect(techniquesUsed(SWORDFISH_PUZZLE).has("swordfish")).toBe(true);
+  });
+
+  it("Wing(XY-Wing / XYZ-Wing)を使う", () => {
+    expect(techniquesUsed(XY_WING_PUZZLE).has("xy-wing")).toBe(true);
+    expect(techniquesUsed(XYZ_WING_PUZZLE).has("xyz-wing")).toBe(true);
+  });
+
+  it("X-Chain を使う", () => {
+    expect(techniquesUsed(X_CHAIN_PUZZLE).has("x-chain")).toBe(true);
+  });
+
+  it("レベルの高い手筋は、低い手筋が尽きてからしか出ない", () => {
+    // 例えば X-Wing(レベル 5)が出る時点では、Single も Locked Candidates も
+    // Subset も使えない状態になっている。手筋ソルバの順序そのものの検証。
+    for (const puzzle of [X_WING_PUZZLE, XY_WING_PUZZLE, X_CHAIN_PUZZLE]) {
+      const steps = solveWithTechniques(parseBoard(puzzle)).steps;
+      const advanced = steps.findIndex((step) => step.level >= 5);
+      expect(advanced).toBeGreaterThan(0);
+    }
+  });
+
   it("候補を消す手筋は数字を確定させない", () => {
-    for (const puzzle of [POINTING_PUZZLE, CLAIMING_PUZZLE, TRIPLE_PUZZLE, QUAD_PUZZLE]) {
+    for (const puzzle of [
+      POINTING_PUZZLE,
+      CLAIMING_PUZZLE,
+      TRIPLE_PUZZLE,
+      QUAD_PUZZLE,
+      X_WING_PUZZLE,
+      XY_WING_PUZZLE,
+      X_CHAIN_PUZZLE,
+    ]) {
       for (const step of solveWithTechniques(parseBoard(puzzle)).steps) {
         if (step.technique === "naked-single" || step.technique === "hidden-single") {
           expect(step.placement).not.toBeNull();
@@ -148,7 +185,7 @@ describe("個々の手筋", () => {
   it("消した候補は解の数字ではない(誤った消去をしない)", () => {
     // 手筋が解の数字を候補から消すと、そこから先は絶対に解けなくなる。
     // 生成した問題は解を持っているので、突き合わせれば健全性を確かめられる。
-    for (let seed = 0; seed < 30; seed += 1) {
+    for (let seed = 0; seed < 60; seed += 1) {
       const { puzzle, solution } = generatePuzzle(createRandom(`elim-${String(seed)}`));
       for (const step of solveWithTechniques(puzzle).steps) {
         for (const elimination of step.eliminations) {
