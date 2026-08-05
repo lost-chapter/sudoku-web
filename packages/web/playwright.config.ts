@@ -37,10 +37,19 @@ export default defineConfig({
    */
   projects: [
     /*
-     * ⚠️ **寸法の検査は PC 版では回さない。**「1 画面に収める」はスマホ版の要件で、
+     * ⚠️ **「1 画面に収める」は PC 版では回さない。**スマホ版の要件で、
      * 狭くした PC のウィンドウ(`pointer: fine`)は PC 版のまま縦に伸びてよい。
+     *
+     * 🔴 **押せる大きさは PC 版でも回す**(2026-08-06 に追加)。
+     * ⚠️ **「1 画面に収まるか」と同じファイルに置いていたせいで、
+     * 要らないほうと一緒に、要るほうまで落ちていた**(PC 版の 3 つが下限を割っていた)。
+     * 🎯 **「この検査は PC に要らない」は、ファイル単位ではなく検査単位で確かめる。**
      */
-    { name: "desktop", testMatch: "**/keyboard.e2e.ts", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "desktop",
+      testMatch: ["**/keyboard.e2e.ts", "**/touchTarget.e2e.ts"],
+      use: { ...devices["Desktop Chrome"] },
+    },
     /*
      * ⚠️ **端末定義の既定は WebKit だが、Chromium で回す。**
      * 確かめたいのはブラウザ差ではなく「レイアウトを分けても意味づけが保たれるか」で、
@@ -51,14 +60,15 @@ export default defineConfig({
       use: { ...devices["iPhone 12"], browserName: "chromium" },
     },
     /*
-     * ⚠️ **切り替えを跨ぐ検査は `phone` でだけ回す。**
+     * ⚠️ **切り替えを跨ぐ検査(`layoutSwitch`)は `phone` でだけ回す。**
      * 中で自分から寸法を変えるので、**どの寸法から始めても見るものは同じ**である。
+     * **更新情報(`releaseNotes`)も同じ** —— 見ているのは寸法ではなく中身である。
      * 3 つの project で回しても、同じことを 3 回確かめるだけになる。
      */
     {
       // ⚠️ **いちばん狭い端末。**ここが 1 画面と 24px の両立が最も厳しい。
       name: "phone-small",
-      testIgnore: "**/layoutSwitch.e2e.ts",
+      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 320, height: 568 },
@@ -68,7 +78,7 @@ export default defineConfig({
     },
     {
       name: "phone-landscape",
-      testIgnore: "**/layoutSwitch.e2e.ts",
+      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts"],
       use: { ...devices["iPhone SE landscape"], browserName: "chromium" },
     },
   ],

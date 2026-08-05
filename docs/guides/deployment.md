@@ -104,12 +104,64 @@ const DEFAULT_BASE_URL = `${import.meta.env.BASE_URL}puzzles`;
 
 ⚠️ **`BASE_URL` は末尾がスラッシュである。** `/` を足すと `//puzzles` になる。
 
-**該当するのは 2 つ。**
+**該当するのは 3 つ。**
 
 | 何 | 置き場所 |
 |----|---------|
 | 問題パック(`manifest.json` / `packs/*.txt`) | `packages/web/src/features/puzzle/loadPuzzle.ts` |
 | リリースノート(`release-notes.json`) | 閲覧機能([リリースノートの形式](../api/release-notes-format.md)) |
+| 🔴 **favicon** | `packages/web/index.html`(**`%BASE_URL%` で書く**) |
+
+### ⚠️ ブラウザが勝手に要求するものもある(2026-08-06 に検出)
+
+**`.ts` を全部直しても 1 件残った。**
+
+```
+🔴 本番で 404 になるものが 2 件ある
+  /favicon.ico            ← 誰も書いていない
+  /puzzles/manifest.json
+```
+
+⚠️ **指定が無いと、ブラウザは `/favicon.ico` をドメイン直下へ要求する。**
+**コードを検索しても出てこない**ので、**`preview:subpath` で実際に配らないと見つからない。**
+
+🎯 **`import.meta.env.BASE_URL` の検索では足りない。**
+**「外へ出た要求」の一覧が空になることを見ること。**
+
+**直し方**(`index.html` は `%BASE_URL%` が使える)。
+
+```html
+<link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+```
+
+#### 🔴 それでも `/favicon.ico` は残ることがある(避けられない)
+
+⚠️ **`link` を置いてもブラウザが `/favicon.ico` を投機的に取りに行くことがある。**
+**2026-08-06 の実測では、同じビルドで出るときと出ないときがあった**(キャッシュ次第)。
+
+🎯 **サブパス配信では、これは直せない。**
+`/favicon.ico` は**ドメイン直下**、つまり `<user>.github.io/favicon.ico` を指す。
+**このリポジトリの配信先(`/sudoku-web/`)の外**なので、何を置いても当たらない。
+
+⚠️ **`public/favicon.ico` を置いても無駄である**(`/sudoku-web/favicon.ico` に置かれるため)。
+**実際に作って確かめ、消した。**
+
+**実害は無い。** タブのアイコンは `link` で指した SVG が使われる。
+
+**⇒ `preview:subpath` は 2 つに分けて出す**(2026-08-06 に管理役が対応)。
+
+```
+🔴 本番で 404 になるものが 1 件ある
+  /puzzles/manifest.json        ← 直す
+
+出たが直しようが無いもの(実害なし)
+  /favicon.ico                  ← 直せない。終了コードにも数えない
+```
+
+⚠️ **黙って除外はしていない。**
+🎯 **一覧に必ず出るものがあると、人は一覧そのものを見なくなり、本物の 1 件を見落とす。**
+**「直せるもの」と「直せないもの」に分けて、両方出す。**
+**終了コードは「直せるもの」の数だけで決まる。**
 
 ## 配信物の作られ方
 
