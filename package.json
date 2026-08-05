@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs:html": "node tools/docs-html/render.mjs"
+    "docs:html": "node tools/docs-html/render.mjs",
+    "docs:lint": "node tools/docs-lint/check-emphasis.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
