@@ -90,12 +90,13 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **57 件**(core 46 / docs-html 11。generator と web は 0 件) |
+| テスト | **79 件**(core 68 / docs-html 11。generator と web は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
 | 本番ビルド | 成功(JS gzip 約 73 KB / CSS gzip 約 34 KB。工程 1 の実測値) |
 
-`cc/agent-b` に工程 2 の 1〜2(盤面の表現・探索ソルバ)が入った時点の値。
+`cc/agent-b` に工程 2 の 1〜4(盤面の表現・探索ソルバ・完成盤の生成・穴あけ)が
+入った時点の値。
 **`feature/agent-a` へ寄せたら測り直す**(各自の手元の値を足しても合わない)。
 
 詳細と前提(Node 22 以上・pnpm 11 系)は [ローカル環境の構築](local-setup.md)。
@@ -217,8 +218,9 @@ git worktree add .claude/worktrees/<名前> cc/agent-b
 | agent-a | `docs-markdown-to-html` スキルの追加と実装 | ✅ 2026-08-05。`tools/docs-html/`。決定性をテスト 11 件で固定 |
 | agent-a | 工程 0(技術構成の選定と設計) | ✅ **完了(2026-08-05)。**ADR 0001〜0003 + アルゴリズム 3 本 + ファイル形式 + UI 仕様。[保留中の判断事項](../reference/pending-decisions.md) は全件決着 |
 | agent-a | 工程 1(開発基盤) | ✅ **完了(2026-08-05)。**`pnpm install` → `pnpm dev` で起動を実測。テスト 12 件・型 0 エラー・Lint 0 エラー・本番ビルド成功 |
-| agent-b | 工程 2 の 1〜2(盤面の表現・探索ソルバ) | ✅ **完了(2026-08-05)。**`core` のテスト 46 件。所要時間を実測して[検証](../reports/2026-08-05-search-solver-benchmark.md)へ記録 |
-| agent-b | 工程 2 の 3〜6(生成・穴あけ・難易度評価・パック出力) | 🔜 **次はここ。**完成盤の生成から。**乱数は `core` の外から注入する**([盤面の生成](../algorithms/board-generation.md#大前提-乱数は外から注入する)) |
+| agent-b | 工程 2 の 1〜2(盤面の表現・探索ソルバ) | ✅ **完了(2026-08-05)。**所要時間を実測して[検証](../reports/2026-08-05-search-solver-benchmark.md)へ記録 |
+| agent-b | 工程 2 の 3〜4(完成盤の生成・穴あけ) | ✅ **完了(2026-08-05)。**`core` のテスト 68 件。**一意解の問題を毎秒 640 問**。手がかり数の分布を[検証](../reports/2026-08-05-puzzle-generation-benchmark.md)へ記録 |
+| agent-b | 工程 2 の 5〜6(難易度評価・パック出力) | 🔜 **次はここ。**手筋ソルバから。**6 で問題ファイルのパースとシリアライズも `core` へ出す**(agent-c の `packages/web/src/features/puzzle/puzzleLine.ts` を置き換える) |
 | agent-c | 工程 3〜4(`web`) | 🔜 **着手できる。**[画面構成と操作仕様](../ui/screens-and-interactions.md) と[問題ファイルの形式](../api/puzzle-file-format.md) を読む |
 
 ### 設計時に確かめた事実で、失うと痛いもの
