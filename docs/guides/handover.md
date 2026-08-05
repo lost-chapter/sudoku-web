@@ -64,7 +64,7 @@ Git 管理外で、クローン直後や新しい worktree で**必ず不足す�
 | `.claude/settings.local.json`(Claude Code のローカル設定) | worktree ごと |
 | `packages/web/dist/` | ビルドのたび |
 | `puzzles/generated/` | 生成のたび(マニフェストのシードから作り直せる) |
-| `docs/**/*.html` | `pnpm docs:html` のたび |
+| `docs-html/` | `pnpm docs:html` のたび |
 
 **Git 管理外が増えたらこの表へ足す。**
 

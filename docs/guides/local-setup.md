@@ -26,7 +26,7 @@ worktree や別端末で足りないものを揃える手順は `ops-dev-environ
 | `pnpm typecheck` | 全パッケージの型チェック |
 | `pnpm lint` | ESLint |
 | `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm docs:html` | `docs/` の Markdown を HTML へ変換(`docs-markdown-to-html` スキル) |
+| `pnpm docs:html` | `docs/` を HTML のサイトへ変換。入口は `docs-html/index.html` |
 
 **ポートを変えるときは `PORT` を渡す。** worktree ごとに変える
 ([体制表](handover.md#3-いまの体制))。
@@ -69,7 +69,7 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 | `node_modules/` | worktree ごと |
 | `packages/web/dist/` | ビルドのたび |
 | `puzzles/generated/` | 生成のたび(シードから作り直せる) |
-| `docs/**/*.html` | `pnpm docs:html` のたび |
+| `docs-html/` | `pnpm docs:html` のたび |
 | `.claude/settings.local.json` | worktree ごと |
 | `.claude/worktrees/` | 端末ごと |
 
@@ -81,4 +81,4 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 - **`pnpm install` で esbuild のビルドスクリプトを許可している**
   (`pnpm-workspace.yaml` の `allowBuilds`)。拒否すると Vite と Vitest が動かない
 - **ポートが衝突したら `PORT` を変える。** 複数の worktree で同時に立てると起きる
-- **`docs/**/*.html` はコミットしない。** 正本は `.md`
+- **`docs-html/` はコミットしない。** 正本は `docs/` の `.md`
