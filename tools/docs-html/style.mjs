@@ -19,6 +19,14 @@ export const PAGE_STYLE = `:root {
   --accent: #0969da;
   --warn-bg: #fff8c5;
   --warn-border: #d4a72c;
+  --ok-bg: rgba(46, 160, 67, 0.09);
+  --ng-bg: rgba(207, 34, 46, 0.07);
+  --code-muted: #6e7781;
+  --code-string: #0a3069;
+  --code-keyword: #cf222e;
+  --code-name: #8250df;
+  --code-number: #0550ae;
+  --code-meta: #953800;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -32,9 +40,25 @@ export const PAGE_STYLE = `:root {
     --accent: #4493f8;
     --warn-bg: #272115;
     --warn-border: #bb8009;
+    --ok-bg: rgba(63, 185, 80, 0.12);
+    --ng-bg: rgba(248, 81, 73, 0.11);
+    --code-muted: #8b949e;
+    --code-string: #a5d6ff;
+    --code-keyword: #ff7b72;
+    --code-name: #d2a8ff;
+    --code-number: #79c0ff;
+    --code-meta: #ffa657;
   }
 }
 :root[data-theme="dark"] {
+  --ok-bg: rgba(63, 185, 80, 0.12);
+  --ng-bg: rgba(248, 81, 73, 0.11);
+  --code-muted: #8b949e;
+  --code-string: #a5d6ff;
+  --code-keyword: #ff7b72;
+  --code-name: #d2a8ff;
+  --code-number: #79c0ff;
+  --code-meta: #ffa657;
   --bg: #0d1117;
   --fg: #e6edf3;
   --muted: #9198a1;
@@ -61,9 +85,9 @@ body {
 /* ---- 版面 ---- */
 .layout {
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr) 15rem;
+  grid-template-columns: 17rem minmax(0, 1fr) 18rem;
   gap: 2.5rem;
-  max-width: 90rem;
+  max-width: 94rem;
   margin: 0 auto;
   padding: 0 1.5rem;
   align-items: start;
@@ -151,7 +175,7 @@ body {
   max-height: 100vh;
   overflow-y: auto;
   padding: 2.6rem 0 3rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border-left: 1px solid var(--border);
   padding-left: 1rem;
 }
@@ -164,13 +188,15 @@ body {
   text-transform: uppercase;
 }
 .toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+/* 見出しは和文で長い。折り返す前提で、行間を詰めて項目の間を空ける。 */
 .toc a {
   display: block;
-  padding: 0.15rem 0;
+  padding: 0.2rem 0 0.2rem 0.6rem;
   color: var(--muted);
   text-decoration: none;
   border-left: 2px solid transparent;
-  padding-left: 0.6rem;
+  line-height: 1.45;
 }
 .toc a:hover { color: var(--fg); }
 .toc a.is-current { color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
@@ -236,6 +262,21 @@ blockquote {
   border-left: 4px solid var(--warn-border);
   border-radius: 0 6px 6px 0;
 }
+/* ⚠️ で始まる段落は注意書き。引用と同じ見た目にして、読み手の語彙を増やさない。 */
+p.warn {
+  padding: 0.7rem 1rem;
+  background: var(--warn-bg);
+  border-left: 4px solid var(--warn-border);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ---- コードの色(highlight.js のクラス名に対応する) ---- */
+.hljs-comment, .hljs-quote { color: var(--code-muted); font-style: italic; }
+.hljs-string, .hljs-attr, .hljs-attribute { color: var(--code-string); }
+.hljs-keyword, .hljs-literal, .hljs-type { color: var(--code-keyword); }
+.hljs-built_in, .hljs-title, .hljs-title.function_ { color: var(--code-name); }
+.hljs-number, .hljs-variable, .hljs-template-variable { color: var(--code-number); }
+.hljs-meta, .hljs-symbol, .hljs-regexp { color: var(--code-meta); }
 /* 表は横に溢れたら表だけがスクロールする(ページ全体は横スクロールさせない)。
    ⚠️ overflow-x を付けると縦もスクロールコンテナになるため、th の sticky は
    ページのスクロールでは効かない。画面より高い表だけ器の高さを止め、
@@ -253,6 +294,9 @@ th + th, td + td { border-left: 1px solid var(--border); }
 tr:last-child td { border-bottom: none; }
 th { background: var(--surface); position: sticky; top: 0; z-index: 1; }
 .is-tall th { box-shadow: 0 1px 0 var(--border); }
+/* ✅ / ❌ で始まるセルは淡く色を敷く。⚠️ 濃くすると表が信号機になって読めない。 */
+td.cell-ok { background: var(--ok-bg); }
+td.cell-ng { background: var(--ng-bg); }
 tbody tr:hover { background: var(--surface); }
 img { max-width: 100%; height: auto; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
