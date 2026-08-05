@@ -102,3 +102,50 @@ test("キーの外で離したら何も起きない", async ({ page, context }) 
 
   await expect.poll(() => stateOf(page, cell)).toBe("空");
 });
+
+test("設定で切ると、上へはじいてもメモにならない", async ({ page, context }) => {
+  // ⚠️ **切ったときに「何も起きない」領域が復活しないことも見る。**
+  // **フリックの判定だけを止めると、タップが `click` 任せに戻って slop の穴が開く。**
+  await page.getByRole("button", { name: "設定" }).click();
+  /*
+   * ⚠️ **`getByRole("checkbox")` では見つからない。**
+   * **Mantine の `Switch` は `input[type=checkbox]` だが `role="switch"` を上書きしている。**
+   * 🎯 **`role="switch"` にした瞬間に走査から外れた**のと同じ形で、
+   * **今度はテストを書く側が踏んだ**(2026-08-06)。
+   *
+   * ⚠️ **`uncheck()` も使えない。**本体の `input` は隠されているので、
+   * Playwright が「見えていない」と判断して待ち続ける。**見えているラベルを押す。**
+   */
+  const flick = page.getByRole("switch", { name: /上へはじいてメモ/ });
+  await expect(flick).toBeChecked();
+  await page.locator('label:has-text("上へはじいてメモ")').click();
+  await expect(flick).not.toBeChecked();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+
+  const cell = await pinEmptyCell(page);
+  const box = await page.getByRole("button", { name: /^1 を入力$/ }).boundingBox();
+  const x = box!.x + box!.width / 2;
+  const y = box!.y + box!.height / 2;
+  const cdp = await context.newCDPSession(page);
+  const slideUp = async (distance: number) => {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x, y: y - distance }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  };
+
+  // キーの中に収まる範囲は確定入力のまま。**穴は開かない。**
+  for (const distance of [0, 16, 23]) {
+    await slideUp(distance);
+    await expect.poll(() => stateOf(page, cell), { message: `上へ ${distance}px` }).toBe("1");
+    await page.getByRole("button", { name: "消す" }).click();
+    await expect.poll(() => stateOf(page, cell)).toBe("空");
+  }
+
+  // **キーの外まで滑らせたら取り消し。**候補は立たない。
+  await slideUp(30);
+  await expect.poll(() => stateOf(page, cell)).toBe("空");
+});

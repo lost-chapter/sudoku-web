@@ -3,13 +3,24 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./settings";
 
 describe("既定値", () => {
-  it("残っているのは盤面の強調 2 つだけ", () => {
-    // 2026-08-06 に「矛盾の表示」「残り数の表示」「誤りの即時指摘」を消した。
-    expect(Object.keys(DEFAULT_SETTINGS)).toEqual(["highlightSameDigit", "highlightUnits"]);
+  it("いま持っているのは盤面の強調 2 つと上フリック", () => {
+    // 2026-08-06 に「矛盾の表示」「残り数の表示」「誤りの即時指摘」を消し、
+    // 同じ日に「上へはじいてメモ」を足した。
+    expect(Object.keys(DEFAULT_SETTINGS)).toEqual([
+      "highlightSameDigit",
+      "highlightUnits",
+      "flickToNote",
+    ]);
   });
 
-  it("既定はどちらも入", () => {
+  it("既定はすべて入", () => {
     expect(Object.values(DEFAULT_SETTINGS).every((value) => value)).toBe(true);
+  });
+
+  // ⚠️ **既定で切ると、要望どおり入れたものが誰にも届かない。**
+  // 知らなければ気づかないだけで損はしないので、入で出す。
+  it("上へはじいてメモの既定は入", () => {
+    expect(DEFAULT_SETTINGS.flickToNote).toBe(true);
   });
 });
 
@@ -23,6 +34,16 @@ describe("normalizeSettings", () => {
     expect(normalizeSettings({ highlightUnits: false })).toEqual({
       ...DEFAULT_SETTINGS,
       highlightUnits: false,
+    });
+  });
+
+  // 🔴 **上フリックを足す前の保存**。0.1.0 で遊んでいた人がそのまま読む形である。
+  it("上フリックを知らない古い保存でも、既定の入で読める", () => {
+    const before = { highlightSameDigit: true, highlightUnits: false };
+    expect(normalizeSettings(before)).toEqual({
+      highlightSameDigit: true,
+      highlightUnits: false,
+      flickToNote: true,
     });
   });
 
