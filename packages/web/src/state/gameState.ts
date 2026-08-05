@@ -1,6 +1,12 @@
 import type { Puzzle } from "../features/puzzle/types";
 
-import { boardReducer, createBoardState, type BoardAction, type BoardState } from "./boardState";
+import {
+  boardReducer,
+  createBoardState,
+  type BoardAction,
+  type BoardState,
+  type RestoredBoard,
+} from "./boardState";
 
 /**
  * 取り消し(undo)とやり直し(redo)。
@@ -24,8 +30,14 @@ export interface GameState {
 
 export type GameAction = BoardAction | { readonly type: "undo" } | { readonly type: "redo" };
 
-export function createGameState(puzzle: Puzzle): GameState {
-  return { present: createBoardState(puzzle), past: [], future: [] };
+export interface GameInit {
+  readonly puzzle: Puzzle;
+  /** 遊びかけから始めるとき。**履歴は空で始まる**(前回の手は取り消せない)。 */
+  readonly restored?: RestoredBoard;
+}
+
+export function createGameState({ puzzle, restored }: GameInit): GameState {
+  return { present: createBoardState(puzzle, restored), past: [], future: [] };
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {

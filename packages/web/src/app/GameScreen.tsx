@@ -19,7 +19,7 @@ import { Game } from "./Game";
 const DIFFICULTY: Difficulty = "easy";
 
 export function GameScreen() {
-  const { status, puzzle, source, puzzleKey, next } = usePuzzle(DIFFICULTY);
+  const { status, puzzle, source, restored, elapsedMs, puzzleKey, next } = usePuzzle(DIFFICULTY);
   const { settings, setSetting } = useSettings();
   const [settingsOpened, settingsModal] = useDisclosure(false);
 
@@ -37,7 +37,17 @@ export function GameScreen() {
         </Group>
       </Group>
 
-      {puzzle && <Game key={puzzleKey} puzzle={puzzle} settings={settings} onNext={next} />}
+      {puzzle && (
+        <Game
+          key={puzzleKey}
+          puzzle={puzzle}
+          settings={settings}
+          source={source}
+          restored={restored}
+          initialElapsedMs={elapsedMs}
+          onNext={next}
+        />
+      )}
 
       <SettingsModal
         opened={settingsOpened}
@@ -59,6 +69,8 @@ function statusMessage(status: PuzzleStatus, packPath?: string): string {
       return "問題を読み込んでいます";
     case "loaded":
       return packPath ?? "";
+    case "resumed":
+      return "遊びかけから再開しました";
     case "fallback":
       return "問題を取得できないので、同梱の 1 問で遊びます";
   }
