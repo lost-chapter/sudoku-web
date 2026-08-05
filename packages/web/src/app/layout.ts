@@ -46,9 +46,19 @@ export type Layout = "desktop" | "phone-portrait" | "phone-landscape";
  * (メディアクエリの購読なので、幅や向きが変われば再判定される)。
  */
 export function useLayout(): Layout {
-  // 判定が付く前は PC 版を出す。スマホでも遊べる形なので、外れても壊れない。
-  const phone = useMediaQuery(PHONE_QUERY, false);
-  const landscape = useMediaQuery(LANDSCAPE_QUERY, false);
+  /*
+   * ⚠️ **最初の描画から正しい側を出す**(`getInitialValueInEffect: false`)。
+   *
+   * 既定では初回だけ初期値を返し、効果が走ってから実際の値になる。
+   * つまり **1 フレームだけ PC 版が見える**。SSR をしないので、
+   * `matchMedia` を同期で読んでよい。
+   *
+   * **`index.html` に先読みのスクリプトを置く案は採らない。**条件式が
+   * 2 か所になり、片方だけ直して食い違うのがこの手の仕組みで最も多い壊れ方である。
+   */
+  const options = { getInitialValueInEffect: false };
+  const phone = useMediaQuery(PHONE_QUERY, false, options);
+  const landscape = useMediaQuery(LANDSCAPE_QUERY, false, options);
 
   if (!phone) {
     return "desktop";

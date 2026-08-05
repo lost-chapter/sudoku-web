@@ -7,6 +7,8 @@ import {
   boardReducer,
   createBoardState,
   isGiven,
+  isRevealed,
+  isSolvedByPlayer,
   matchesSolution,
   notesAt,
   valueAt,
@@ -233,6 +235,72 @@ describe("メモ", () => {
 
   it("数字が見えているセルのメモは表示しない", () => {
     expect(notesAt(initial, GIVEN_INDEX)).toBe(0);
+  });
+});
+
+describe("あきらめる", () => {
+  const gaveUp = boardReducer(initial, { type: "giveUp" });
+
+  it("空きマスに解が出る", () => {
+    expect(valueAt(gaveUp, EMPTY_INDEX)).toBe(SAMPLE_PUZZLE.solution[EMPTY_INDEX]);
+    expect(matchesSolution(gaveUp)).toBe(true);
+  });
+
+  it("間違って入れていたマスも解で上書きする", () => {
+    const wrong = SAMPLE_PUZZLE.solution[EMPTY_INDEX] === 1 ? 2 : 1;
+    const state = boardReducer(boardReducer(initial, { type: "inputDigit", digit: wrong }), {
+      type: "giveUp",
+    });
+
+    expect(valueAt(state, EMPTY_INDEX)).toBe(SAMPLE_PUZZLE.solution[EMPTY_INDEX]);
+    expect(isRevealed(state, EMPTY_INDEX)).toBe(true);
+  });
+
+  it("自分で当てたマスは「答え」にしない", () => {
+    const correct = SAMPLE_PUZZLE.solution[EMPTY_INDEX];
+    const state = boardReducer(boardReducer(initial, { type: "inputDigit", digit: correct }), {
+      type: "giveUp",
+    });
+
+    expect(isRevealed(state, EMPTY_INDEX)).toBe(false);
+  });
+
+  it("手がかりは「答え」にしない", () => {
+    expect(isRevealed(gaveUp, GIVEN_INDEX)).toBe(false);
+  });
+
+  it("あきらめたあとは入力もメモも効かない", () => {
+    expect(boardReducer(gaveUp, { type: "inputDigit", digit: 4 })).toBe(gaveUp);
+    expect(boardReducer(gaveUp, { type: "clearCell" })).toBe(gaveUp);
+    expect(boardReducer(gaveUp, { type: "toggleNoteMode" })).toBe(gaveUp);
+  });
+
+  it("選択の移動だけは効く(読み上げで盤面を辿れるように)", () => {
+    const moved = boardReducer(gaveUp, { type: "moveSelection", direction: "down" });
+    expect(moved.selected).toBe(gaveUp.selected + 9);
+  });
+
+  it("⚠️ あきらめて解が出ても「完成」ではない", () => {
+    // 盤面は解と一致するが、解いたのは遊技者ではない。
+    // ここを取り違えると、諦めた遊技者に「完成しました」と知らせることになる。
+    expect(matchesSolution(gaveUp)).toBe(true);
+    expect(isSolvedByPlayer(gaveUp)).toBe(false);
+  });
+
+  it("自分で解き終えたときは「完成」になる", () => {
+    const solved = SAMPLE_PUZZLE.solution.reduce<BoardState>((state, digit, index) => {
+      if (isGiven(state, index)) {
+        return state;
+      }
+      return boardReducer(select(state, index), { type: "inputDigit", digit });
+    }, initial);
+
+    expect(isSolvedByPlayer(solved)).toBe(true);
+  });
+
+  it("メモモードは切れる(次の問題で入力先を取り違えない)", () => {
+    const noting = boardReducer(initial, { type: "toggleNoteMode" });
+    expect(boardReducer(noting, { type: "giveUp" }).noteMode).toBe(false);
   });
 });
 

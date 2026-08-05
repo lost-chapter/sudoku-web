@@ -53,13 +53,24 @@ export function TouchPad({
             {digit}
           </button>
         ))}
-        {/* 縦向きでは数字 9 個 + 消す でちょうど 2 行(5 列)に収まる。 */}
-        <button type="button" className={classes.key} disabled={disabled} onClick={onClear}>
-          消す
-        </button>
+        {/*
+          縦向きは 5 列なので、数字 9 個 + 消す でちょうど 2 行に収まる。
+          ⚠️ **横向きは 3 列。**ここに置くと 4 行目ができて高さが足りなくなるので、
+          補助行へ回す(実測: 320px の高さに収まらなかった)。
+        */}
+        {!landscape && (
+          <button type="button" className={classes.key} disabled={disabled} onClick={onClear}>
+            消す
+          </button>
+        )}
       </div>
 
-      <div className={classes.utility}>
+      <div className={landscape ? classes.utilityLandscape : classes.utility}>
+        {landscape && (
+          <button type="button" className={classes.key} disabled={disabled} onClick={onClear}>
+            消す
+          </button>
+        )}
         <button
           type="button"
           className={[classes.key, noteMode ? classes.pressed : ""].join(" ")}

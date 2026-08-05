@@ -38,8 +38,9 @@ test("ホームで Tab して Space を押しても遊び始められる", async
 
   await page.keyboard.press("Space");
 
+  // ⚠️ 難易度の文字はレイアウトによって出ない(横向きは幅が無いので畳む)。
+  // ここで見たいのは「Space でも始まるか」だけなので、盤面が出たことで足りる。
   await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
-  await expect(page.getByText("ふつう")).toBeVisible();
 });
 
 test("設定を Escape で閉じるとフォーカスが「設定」へ戻る", async ({ page }) => {
