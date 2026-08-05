@@ -44,6 +44,8 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [ADR 0001 プロジェクト構成](decisions/0001-project-structure.md) — pnpm workspaces の 3 パッケージ
 - [ADR 0002 UI ライブラリの選定](decisions/0002-ui-library-selection.md) — Mantine。**React 19.2+ が必須になる**
 - [ADR 0003 問題を事前生成した外部ファイルとして持つ](decisions/0003-external-puzzle-files.md) — サーバを持たない。同梱分だけコミットする
+- [ADR 0004 遊技機能の範囲を発注者の要望に合わせる](decisions/0004-feature-scope-from-client.md) — **タイマー・誤りの指摘・残り数を消す。**設定に残さない
+- [ADR 0005 スマートフォンは専用レイアウトにする](decisions/0005-mobile-dedicated-layout.md) — 幅の調整では足りない。**分岐の具体は設計中**
 - [調査: UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md) — 5 候補の実測比較。shadcn/ui は 2026-07 に基盤が変わった
 - [調査: 数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md) — 同型変換の罠・最小 17 手がかり・相関表・81 文字 1 行
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
@@ -76,6 +78,8 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
   - [0001 プロジェクト構成](decisions/0001-project-structure.md)
   - [0002 UI ライブラリの選定](decisions/0002-ui-library-selection.md)
   - [0003 問題を事前生成した外部ファイルとして持つ](decisions/0003-external-puzzle-files.md)
+  - [0004 遊技機能の範囲を発注者の要望に合わせる](decisions/0004-feature-scope-from-client.md)
+  - [0005 スマートフォンは専用レイアウトにする](decisions/0005-mobile-dedicated-layout.md)
 - 実施済みの調査・検証:
   - [UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md)
   - [数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md)
