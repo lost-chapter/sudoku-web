@@ -32,6 +32,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [作業の引き継ぎ](guides/handover.md) — **別の端末・別の担当者へ渡すとき。**未プッシュのコミット・Git 管理外のもの・進行中の作業
 - [並列エージェントの運用](guides/parallel-agent-operations.md) — **複数のエージェントで同時に進めるとき。**担当の立て方・触ってよいファイルの境界・統合の作法・禁止事項
 - [ブランチ戦略](guides/branch-strategy.md) — **ブランチの種類・誰が何をマージできるか・いつ寄せるか。**`develop` へは直接コミットしない
+- [ローカル環境の構築](guides/local-setup.md) — `pnpm install` → `pnpm dev`。コマンド一覧と実測値
 - [プロジェクトの目的と対象範囲](overview/project-purpose.md) — 与えられた 5 つの要件と、作る / 作らないの線引き
 - [システム構成](architecture/system-architecture.md) — 「作る側(Node)」と「遊ぶ側(ブラウザ)」を分け、`core` を共有する
 - [問題ファイルの形式](api/puzzle-file-format.md) — **生成側と遊技側をつなぐ契約。**片方だけ変えない
@@ -49,7 +50,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
 
-> **まだ実装が無いため、`guides/local-setup.md`(ローカル環境の構築)は工程 1 の成果物である。**
+> **工程 1(開発基盤)まで完了している。**盤面ロジック(工程 2)と画面(工程 3)はこれから。
 
 ## 初めて参加する開発者が読む順序
 
@@ -65,7 +66,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 
 ## 進行中の検証・重要な設計判断
 
-- 進行中の作業: [実装の進め方と現在地](guides/implementation-roadmap.md) — **工程 1(開発基盤)。**設計は完了
+- 進行中の作業: [実装の進め方と現在地](guides/implementation-roadmap.md) — **工程 2(agent-b)と工程 3(agent-c)を並行。**設計と開発基盤は完了
 - 判断待ち: [保留中の判断事項](reference/pending-decisions.md) — **現時点で未決は無い**(工程 0 の 3 件は決着済み)
 - 重要な設計判断:
   - [0001 プロジェクト構成](decisions/0001-project-structure.md)

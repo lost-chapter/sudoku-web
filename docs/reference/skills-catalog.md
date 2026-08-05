@@ -15,15 +15,16 @@
 `ops-` の 2 つは cadapi-2 から移植し、sudoku-web の実態に合わせて書き直した。
 `docs-markdown-to-html` は sudoku-web で新規に作成した。
 
-⚠️ **どちらも「走らせる先」がまだ無い。**
+**3 つとも実際に動く**(2026-08-05 の工程 1 で実装と実測を済ませた)。
 
-| スキル | 不足しているもの | 用意する工程 |
-|--------|----------------|------------|
-| `ops-dev-environment-setup` | 依存インストール・テストの実コマンド | 工程 1 |
-| `docs-markdown-to-html` | `tools/docs-html/render.mjs` の実装 | 工程 1 |
+| スキル | 実体 |
+|--------|------|
+| `docs-markdown-to-html` | `tools/docs-html/`(テスト 11 件が契約を守っている) |
+| `ops-dev-environment-setup` | [ローカル環境の構築](../guides/local-setup.md) の実コマンド |
+| `ops-branch-merge` | Git の操作のみ |
 
-工程 1 が終わったら、**実測して**それぞれのスキルを書き直すこと
-([実装の進め方と現在地](../guides/implementation-roadmap.md))。
+**構成を変えたらスキルも書き直す。** 実測値を含むので、放置すると次の担当が
+存在しないコマンドを叩くことになる。
 
 ## ユーザーのグローバルスキルとの関係
 

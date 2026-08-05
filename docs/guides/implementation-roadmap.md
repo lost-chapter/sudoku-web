@@ -10,22 +10,29 @@ pwd
 git rev-parse --abbrev-ref HEAD | cat
 git status --short
 git log --oneline -5 | cat
+
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
 ```
 
-**実装が入ったら、ここへテスト・型チェック・ビルドのコマンドを追記する。**
-以降の「現在地」の数値は、そのコマンドの実測値で書くこと。
+**「現在地」の数値は必ずこの実測値で書く。**
 
 ## 現在地(2026-08-05 時点)
 
 | 項目 | 状態 |
 |------|------|
 | 設計 | ✅ **完了。**[システム構成](../architecture/system-architecture.md) と ADR 0001〜0003 |
-| 実装 | **無し。**リポジトリにあるのはドキュメントとスキルのみ |
-| テスト | 未整備 |
-| CI | 未整備 |
-| ブランチ | `main` / `develop` / `feature/agent-a` |
+| 開発基盤 | ✅ **完了。**`pnpm install` → `pnpm dev` で動く([ローカル環境の構築](local-setup.md)) |
+| テスト | **12 件**(core 1 / docs-html 11)。generator と web は 0 件 |
+| 型チェック / Lint | 4 パッケージ 0 エラー |
+| 盤面ロジック | **未着手**(工程 2・agent-b) |
+| 画面 | **骨組みのみ**(工程 3・agent-c) |
+| CI | 未整備(工程 5) |
+| ブランチ | `main` / `develop` / `feature/agent-a` / `cc/agent-b` / `cc/agent-c` |
 
-**次の一手は工程 1(開発基盤)。** 設計は済んでいるので、判断待ちで止まる要素は無い。
+**次の一手は工程 2(agent-b)と工程 3(agent-c)を並行で始めること。**
 
 ## 設計の骨子(工程を読む前に)
 
@@ -48,23 +55,19 @@ puzzles/            生成された問題パック(外部ファイル)
 [ADR 0002](../decisions/0002-ui-library-selection.md) /
 [ADR 0003](../decisions/0003-external-puzzle-files.md)。
 
-### 工程 1: 開発基盤 🔜
+### 工程 1: 開発基盤 ✅
 
-**成果物**
+2026-08-05 完了(agent-a)。
 
-- pnpm workspaces と 3 パッケージの骨組み(`core` / `generator` / `web`)
-- TypeScript(`strict`)・Vite・Vitest・ESLint・Prettier の設定
-- `tools/docs-html/render.mjs`(`docs-markdown-to-html` スキルの実装)
-- `docs/guides/local-setup.md`(手順書)
-- `.gitignore` へ `puzzles/generated/` を追加
+- pnpm workspaces と 3 パッケージ(`core` / `generator` / `web`)+ `tools/docs-html`
+- TypeScript(`strict`)・Vite・Vitest・ESLint・Prettier
+- `docs-markdown-to-html` の実装(`pnpm docs:html`)。**2 回流して出力が完全一致**を実測
+- [ローカル環境の構築](local-setup.md)
 
-**完了条件**: クローンして 1 コマンドで開発サーバが起動し、テストと型チェックが回る。
-`docs-markdown-to-html` が **2 回流して同じ出力**になる。
+**パッケージ間は TypeScript のソースを直接参照する**(`exports` が `./src/index.ts` を指す)。
+ビルド順の依存が無いので、`core` を直せば即座に両側へ反映される。
 
-**終わったら `ops-dev-environment-setup` スキルを実測して書き直す**
-([スキル一覧](../reference/skills-catalog.md))。
-
-### 工程 2: 盤面ロジックと生成(`core` + `generator`)
+### 工程 2: 盤面ロジックと生成(`core` + `generator`)🔜 agent-b
 
 **この工程がプロジェクトの中身である。** 順序は次のとおり。
 
@@ -78,7 +81,7 @@ puzzles/            生成された問題パック(外部ファイル)
 **完了条件**: [テストの方針](../verification/testing-policy.md) の「必ず守る性質」6 項目が
 テストで守られ、同梱パックが生成できている。
 
-### 工程 3: 遊べる最小の UI(`web`)
+### 工程 3: 遊べる最小の UI(`web`)🔜 agent-c
 
 問題を 1 問読み込み、盤面を表示し、数字を入力し、完成を判定するまで**一本の経路を通す**。
 補助表示・メモ・取り消しは工程 4。
@@ -129,6 +132,8 @@ puzzles/            生成された問題パック(外部ファイル)
 | 2 | 難易度クラスのしきい値 | 工程 2 で分布を実測してから |
 | 3 | 生成の性能(1 問あたりの所要時間) | 工程 2 で実測 |
 | 4 | 極小性(手がかりを 1 つ消すと一意解でなくなる)を要件にするか | 工程 2 で生成コストを測ってから判断 |
+| 5 | **TypeScript を 7 系へ上げられるか** | typescript-eslint が対応してから。いまは 6 系に固定(上げると `pnpm lint` が落ちる) |
+| 6 | Mantine の CSS 231 KB を削れるか | 工程 3 以降。使う部品だけを import できているかを実測する |
 
 ## 関連ドキュメント
 

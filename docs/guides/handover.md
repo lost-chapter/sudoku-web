@@ -60,12 +60,13 @@ Git 管理外で、クローン直後や新しい worktree で**必ず不足す�
 
 | 対象 | 単位 |
 |------|------|
-| `node_modules/` | worktree ごと |
-| `.env`(必要になったら) | worktree ごと |
+| `node_modules/` | worktree ごと(`pnpm install`) |
 | `.claude/settings.local.json`(Claude Code のローカル設定) | worktree ごと |
+| `packages/web/dist/` | ビルドのたび |
+| `puzzles/generated/` | 生成のたび(マニフェストのシードから作り直せる) |
+| `docs/**/*.html` | `pnpm docs:html` のたび |
 
-**実装が入ったら、この表を実態に合わせて更新する。**
-ビルド成果物・生成コード・ローカルの DB などが増えたら必ず足すこと。
+**Git 管理外が増えたらこの表へ足す。**
 
 ---
 
@@ -77,11 +78,24 @@ Git 管理外で、クローン直後や新しい worktree で**必ず不足す�
 ```bash
 git log --oneline -5 | cat
 git status --short
+
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
 ```
 
-**2026-08-05 時点では実装が無いため、実測するものが無い。**
-開発基盤(工程 1)が入ったら、ここへテスト・型チェック・ビルドのコマンドと
-その時点の実測値を書く。**ここから乖離していたら、その差が引き継ぎで落ちたものである。**
+2026-08-05 時点の実測値。**ここから乖離していたら、その差が引き継ぎで落ちたものである。**
+
+| 項目 | 値 |
+|------|-----|
+| テスト | **12 件**(core 1 / docs-html 11。generator と web は 0 件) |
+| 型チェック | 4 パッケージ 0 エラー |
+| Lint | 0 エラー |
+| 本番ビルド | 成功(JS gzip 約 73 KB / CSS gzip 約 34 KB) |
+
+詳細と前提(Node 22 以上・pnpm 11 系)は [ローカル環境の構築](local-setup.md)。
 
 ---
 
@@ -197,11 +211,11 @@ git worktree add .claude/worktrees/<名前> cc/agent-b
 | 誰 | 内容 | 状態 |
 |----|------|------|
 | agent-a | ドキュメント戦略・スキル戦略・サブエージェント戦略の導入 | ✅ 2026-08-05 に導入。cadapi-2 の構成を sudoku-web 向けに読み替えた |
-| agent-a | `docs-markdown-to-html` スキルの追加 | ✅ 2026-08-05。**実装(`tools/docs-html/render.mjs`)は工程 1** |
+| agent-a | `docs-markdown-to-html` スキルの追加と実装 | ✅ 2026-08-05。`tools/docs-html/`。決定性をテスト 11 件で固定 |
 | agent-a | 工程 0(技術構成の選定と設計) | ✅ **完了(2026-08-05)。**ADR 0001〜0003 + アルゴリズム 3 本 + ファイル形式 + UI 仕様。[保留中の判断事項](../reference/pending-decisions.md) は全件決着 |
-| agent-a | 工程 1(開発基盤) | 🔜 **未着手。**これが終わるまで b と c は立てない |
-| agent-b | 工程 2(`core` + `generator`) | ⏸ 待機。着手時は[盤面の生成](../algorithms/board-generation.md) →[解法](../algorithms/solver.md) →[難易度の評価](../algorithms/difficulty-rating.md) の順に読む |
-| agent-c | 工程 3〜4(`web`) | ⏸ 待機。着手時は[画面構成と操作仕様](../ui/screens-and-interactions.md) と[問題ファイルの形式](../api/puzzle-file-format.md) を読む |
+| agent-a | 工程 1(開発基盤) | ✅ **完了(2026-08-05)。**`pnpm install` → `pnpm dev` で起動を実測。テスト 12 件・型 0 エラー・Lint 0 エラー・本番ビルド成功 |
+| agent-b | 工程 2(`core` + `generator`) | 🔜 **着手できる。**[盤面の生成](../algorithms/board-generation.md) →[解法](../algorithms/solver.md) →[難易度の評価](../algorithms/difficulty-rating.md) の順に読む |
+| agent-c | 工程 3〜4(`web`) | 🔜 **着手できる。**[画面構成と操作仕様](../ui/screens-and-interactions.md) と[問題ファイルの形式](../api/puzzle-file-format.md) を読む |
 
 ### 設計時に確かめた事実で、失うと痛いもの
 

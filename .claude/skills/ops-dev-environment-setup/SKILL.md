@@ -15,10 +15,8 @@ description: sudoku-web の開発環境を新しい git worktree や別の端末
 | `.claude/settings.local.json` | **worktree ごと** | 下記 3 |
 | 開発サーバのポート | **worktree ごとに変える** | 下記 4 |
 
-> **⚠️ 2026-08-05 時点で実装が無く、技術構成も未確定である**
-> ([保留中の判断事項](../../../docs/reference/pending-decisions.md) の 1)。
-> **下記 2 のコマンドは技術構成が決まった時点で実測して書き直すこと。**
-> 手順の骨格(何が worktree ごとに要るか)は構成が変わっても効く。
+**前提は Node.js 22 以上と pnpm 11 系**(`package.json` の `engines` / `packageManager`)。
+コマンドの一覧は [ローカル環境の構築](../../../docs/guides/local-setup.md)。
 
 ## 0. 作業ディレクトリを確認する
 
@@ -44,16 +42,23 @@ ls -d node_modules .env .claude/settings.local.json 2>&1
 
 ## 2. 依存パッケージ(worktree ごと)
 
-**技術構成が決まったらここへ実際のコマンドを書く。** 目安は次の 3 つ。
-
 ```bash
-# cp .env.example .env      # .env を使う構成にした場合
-# <パッケージマネージャ> install
-# <テストコマンド> / <型チェックコマンド>   # 通ることまで確認する
+pnpm install
+pnpm test        # 12 件通れば健全(2026-08-05 時点)
+pnpm typecheck
+pnpm lint
 ```
+
+pnpm が無ければ `corepack enable` で入る(版は `packageManager` で固定してある)。
 
 **「入れた」で終わらせず、テストと型チェックが通るところまで確認する。**
 通らない状態を引き渡すと、次の担当が自分の変更のせいだと誤認する。
+
+⚠️ **`pnpm install` が esbuild のビルドスクリプトを実行する**
+(`pnpm-workspace.yaml` の `allowBuilds`)。**拒否すると Vite と Vitest が動かない。**
+
+⚠️ **TypeScript は 6 系に固定してある。** 7 系へ上げると typescript-eslint が
+起動時に落ちて `pnpm lint` が通らない。
 
 ## 3. Claude Code のローカル設定(worktree ごと)
 
@@ -84,14 +89,15 @@ JSON
 ## 4. 開発サーバのポート(worktree ごとに変える)
 
 **worktree ごとに同じポートで立てると衝突する。**
-複数の worktree で同時に動かすなら、担当ごとにポートを決めて
-[作業の引き継ぎ](../../../docs/guides/handover.md) の体制表へ書く。
+割り当ては [作業の引き継ぎ](../../../docs/guides/handover.md#3-いまの体制) の体制表。
 
 ```bash
-lsof -nP -iTCP -sTCP:LISTEN | grep -E 'node|LISTEN' | head   # 何が使っているか確認する
+lsof -nP -iTCP:5173 -sTCP:LISTEN    # 誰が使っているか確認する
+PORT=5174 pnpm dev                  # ポートを変えて起動する
 ```
 
-**構成が決まったら、ポートの変え方(環境変数か起動引数か)をここへ書く。**
+`vite.config.ts` が `PORT` を読む。`.claude/launch.json` は `autoPort` が有効なので、
+Claude Code のプレビューから起動すると空きポートが自動で割り当てられる。
 
 ## よくある落とし穴
 
@@ -101,8 +107,9 @@ lsof -nP -iTCP -sTCP:LISTEN | grep -E 'node|LISTEN' | head   # 何が使って�
 - **依存を入れただけで済ませる**: テストと型チェックまで通す(2)
 - **`.claude/settings.local.json` がその場で効くと思う**: 反映は次のセッションから。
   書いたら Claude Code の再起動をユーザーへ促す
-- **この手順が古いまま使われる**: 技術構成が決まったら**必ず実測して書き直す**。
-  雛形のまま放置すると、次の担当が存在しないコマンドを叩く
+- **esbuild のビルドを拒否する**: Vite と Vitest が動かなくなる
+- **TypeScript を上げる**: 7 系にすると `pnpm lint` が落ちる(6 系に固定)
+- **この手順が古いまま使われる**: 構成を変えたら**必ず実測して書き直す**
 
 ## 関連ドキュメント
 
