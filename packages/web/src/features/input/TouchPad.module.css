@@ -43,6 +43,11 @@
 }
 
 .key {
+  /* 記号と文字が並ぶキー(メモ)があるので、中身を中央へ寄せる。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   height: var(--pad-key-height);
   padding: 0;
   border: 1px solid var(--mantine-color-default-border);

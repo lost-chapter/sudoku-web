@@ -1,5 +1,7 @@
 import { BOARD_SIZE } from "@sudoku/core";
 
+import { Icon } from "../../ui/Icon";
+
 import type { PadProps } from "./padProps";
 
 import classes from "./TouchPad.module.css";
@@ -25,6 +27,24 @@ export interface TouchPadProps extends PadProps {
 }
 
 const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
+
+/**
+ * 「消す」。**縦向きは数字の行、横向きは補助の行**と置き場所が変わるだけで中身は同じ。
+ * ⚠️ **2 か所に同じものを書かない。**片方だけ直す形を作らないための部品である。
+ */
+function ClearKey({ disabled, onClear }: Pick<PadProps, "disabled" | "onClear">) {
+  return (
+    <button
+      type="button"
+      className={classes.key}
+      aria-label="消す"
+      disabled={disabled}
+      onClick={onClear}
+    >
+      <Icon name="backspace" />
+    </button>
+  );
+}
 
 export function TouchPad({
   onDigit,
@@ -58,32 +78,48 @@ export function TouchPad({
           ⚠️ **横向きは 3 列。**ここに置くと 4 行目ができて高さが足りなくなるので、
           補助行へ回す(実測: 320px の高さに収まらなかった)。
         */}
-        {!landscape && (
-          <button type="button" className={classes.key} disabled={disabled} onClick={onClear}>
-            消す
-          </button>
-        )}
+        {!landscape && <ClearKey disabled={disabled} onClear={onClear} />}
       </div>
 
       <div className={landscape ? classes.utilityLandscape : classes.utility}>
-        {landscape && (
-          <button type="button" className={classes.key} disabled={disabled} onClick={onClear}>
-            消す
-          </button>
-        )}
+        {landscape && <ClearKey disabled={disabled} onClear={onClear} />}
+        {/*
+          ⚠️ **「メモ」だけは文字を消さない。**押しっぱなしの状態を持つので、
+          **記号だけにすると「入」か「切」かが色でしか分からなくなる**
+          (色だけに情報を載せない、という仕様の約束に反する)。
+        */}
         <button
           type="button"
           className={[classes.key, noteMode ? classes.pressed : ""].join(" ")}
+          /*
+            ⚠️ **画面から「メモ」の 2 文字が消えたぶんを名前で補う。**
+            見えている「入 / 切」を名前に含めてあるので、
+            **音声で操作する人が「メモ 入」と言える**(WCAG 2.5.3)。
+          */
+          aria-label={`メモ ${noteMode ? "入" : "切"}`}
           aria-pressed={noteMode}
           onClick={onToggleNoteMode}
         >
-          メモ{noteMode ? " 入" : " 切"}
+          <Icon name="pencil" size={18} />
+          {noteMode ? "入" : "切"}
         </button>
-        <button type="button" className={classes.key} disabled={!canUndo} onClick={onUndo}>
-          取り消し
+        <button
+          type="button"
+          className={classes.key}
+          aria-label="取り消し"
+          disabled={!canUndo}
+          onClick={onUndo}
+        >
+          <Icon name="undo" />
         </button>
-        <button type="button" className={classes.key} disabled={!canRedo} onClick={onRedo}>
-          やり直し
+        <button
+          type="button"
+          className={classes.key}
+          aria-label="やり直し"
+          disabled={!canRedo}
+          onClick={onRedo}
+        >
+          <Icon name="redo" />
         </button>
       </div>
     </div>

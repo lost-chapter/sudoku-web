@@ -2,7 +2,18 @@ import { Button, Group, Text } from "@mantine/core";
 
 import type { Difficulty } from "@sudoku/core";
 
+import { Icon } from "../ui/Icon";
+
 import { TOUCH_TARGET } from "./layout";
+
+/**
+ * 記号だけのボタンの左右の余白。
+ *
+ * ⚠️ **44px の下限を幅でも満たすために要る。**アイコンは 20px しかないので、
+ * 既定の余白のままだと**高さは 44 でも幅が足りない**。
+ * 14 × 2 + 20 = 48px で、境界ぴったりを避けてある。
+ */
+const ICON_ONLY_PADDING = 14;
 
 /**
  * ゲーム画面のヘッダ。**難易度 / パック名 / 設定**
@@ -48,10 +59,21 @@ export function GameHeader({
         {/*
           ⚠️ **高さだけを 44px へ上げる。**幅は文字数で決まり、いずれも足りている。
           `size` を上げると文字も大きくなり、横向きのヘッダが 2 行になる(実測)。
+
+          ⚠️ **「ホーム」と「設定」は記号だけにする。**ヘッダは幅がいちばん厳しく、
+          **320px 幅では 3 つ並べると 2 行に折り返す**。
+          **名前は `aria-label` が持つので、読み上げでは今までと同じに聞こえる。**
         */}
         {onHome && (
-          <Button variant="default" size="xs" h={TOUCH_TARGET} onClick={onHome}>
-            ホーム
+          <Button
+            variant="default"
+            size="xs"
+            h={TOUCH_TARGET}
+            px={ICON_ONLY_PADDING}
+            aria-label="ホーム"
+            onClick={onHome}
+          >
+            <Icon name="home" />
           </Button>
         )}
         {!compact && <Text fw={500}>{DIFFICULTY_LABELS[difficulty]}</Text>}
@@ -69,17 +91,30 @@ export function GameHeader({
           遊技中に誤って触りにくい(docs/ui/screens-and-interactions.md)。
           押すと確認のモーダルが出るので、置き場所と合わせて二重に防いでいる。
         */}
+        {/*
+          🔴 **「あきらめる」だけは文字を残す。**押すと遊技が終わる操作で、
+          **記号だけにすると「押してみて確かめる」が起きうる。**
+          置き場所(親指から遠い)と確認モーダルに続く 3 つ目の歯止めである。
+        */}
         <Button
           variant="default"
           size="xs"
           h={TOUCH_TARGET}
+          leftSection={<Icon name="flag" size={16} />}
           disabled={!canGiveUp}
           onClick={onGiveUp}
         >
           あきらめる
         </Button>
-        <Button variant="default" size="xs" h={TOUCH_TARGET} onClick={onOpenSettings}>
-          設定
+        <Button
+          variant="default"
+          size="xs"
+          h={TOUCH_TARGET}
+          px={ICON_ONLY_PADDING}
+          aria-label="設定"
+          onClick={onOpenSettings}
+        >
+          <Icon name="settings" />
         </Button>
       </Group>
     </Group>

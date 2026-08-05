@@ -7,6 +7,8 @@ import { availableDifficulties } from "../features/puzzle/packSelection";
 import { loadManifest } from "../features/puzzle/loadPuzzle";
 import type { Difficulty } from "@sudoku/core";
 
+import { Icon } from "../ui/Icon";
+
 import { DIFFICULTY_LABELS } from "./GameHeader";
 import { TOUCH_TARGET } from "./layout";
 
@@ -61,7 +63,11 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
             <Text size="sm" c="dimmed">
               {DIFFICULTY_LABELS[saved.difficulty]}
             </Text>
-            <Button h={TOUCH_TARGET} onClick={() => onStart(saved.difficulty, true)}>
+            <Button
+              h={TOUCH_TARGET}
+              leftSection={<Icon name="play" />}
+              onClick={() => onStart(saved.difficulty, true)}
+            >
               続きから
             </Button>
           </Stack>
