@@ -10,7 +10,12 @@ docs/**/*.html
 
 node_modules/
 dist/
+coverage/
 *.tsbuildinfo
+
+# 大量生成した問題(マニフェストのシードから作り直せる。ADR 0003)
+# 同梱パック puzzles/packs/ はコミットする
+/puzzles/generated/
 
 # 環境ごとの接続情報
 .env

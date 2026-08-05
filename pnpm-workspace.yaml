@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - tools/*
+
+# esbuild は Vite / Vitest が使う。インストール時にプラットフォーム用のバイナリを
+# 配置するため、ビルドスクリプトの実行を許可する。
+allowBuilds:
+  esbuild: true
