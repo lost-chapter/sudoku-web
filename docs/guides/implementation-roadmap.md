@@ -25,10 +25,10 @@ pnpm lint
 |------|------|
 | 設計 | ✅ **完了。**[システム構成](../architecture/system-architecture.md) と ADR 0001〜0003 |
 | 開発基盤 | ✅ **完了。**`pnpm install` → `pnpm dev` で動く([ローカル環境の構築](local-setup.md)) |
-| テスト | **305 件**(core 126 / generator 16 / docs-html 19 / web 144) |
+| テスト | **309 件**(core 126 / generator 16 / docs-html 19 / web 148) |
 | 型チェック / Lint / 整形 | 0 エラー |
 | 本番ビルド | JS 345.14 KB(gzip **106.66 KB**)/ CSS 233.55 KB(gzip 34.31 KB) |
-| 盤面ロジック | ✅ **工程 2 の 1〜6 が完了。同梱パックを 3,000 問生成済み**。⚠️ **難問・最難関は 1 問も作れない**(課題 9。工程 2 の 7 で解消) |
+| 盤面ロジック | ✅ **工程 2 が完了(1〜7)。同梱パックは 5 クラス 5,000 問**。難問・最難関も収録済み |
 | 画面 | ✅ **工程 3 完了。**工程 4 はメモまで統合済み |
 | CI | ✅ **導入済み**(GitHub Actions。静的検査とテスト + ドキュメント変換の決定性) |
 | ブランチ | `main` / `develop` / `feature/agent-a` / `cc/agent-b` / `cc/agent-c` |

@@ -90,16 +90,12 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-<<<<<<< HEAD
-| テスト | **304 件**(core 121 / generator 16 / docs-html 19 / web 148) |
-=======
-| テスト | **305 件**(core 126 / generator 16 / docs-html 19 / web 144) |
->>>>>>> cc/agent-b
+| テスト | **309 件**(core 126 / generator 16 / docs-html 19 / web 148) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
 | 本番ビルド | 成功(JS 345.14 KB / gzip 106.66 KB、CSS 233.55 KB / gzip 34.31 KB) |
 
-**`feature/agent-a` に工程 2 の 1〜5 と工程 3・工程 4 のメモが入った時点の値。**
+**工程 2 の 1〜7(agent-b)と工程 3・工程 4(agent-c)が入った時点の値。**
 統合のたびに測り直す(各自の手元の値を足しても合わない)。
 
 詳細と前提(Node 22 以上・pnpm 11 系)は [ローカル環境の構築](local-setup.md)。
