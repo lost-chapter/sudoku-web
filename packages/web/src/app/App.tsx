@@ -1,24 +1,24 @@
-import { Container, MantineProvider, Stack, Text, Title } from "@mantine/core";
+import { Container, MantineProvider, Stack, Title } from "@mantine/core";
 
-import { BOARD_SIZE } from "@sudoku/core";
+import { GameScreen } from "./GameScreen";
 
 /**
- * アプリの骨組み。
+ * アプリの入口。
  *
- * 画面と操作の実装は工程 3〜4(担当 agent-c)。
- * 仕様は docs/ui/screens-and-interactions.md にある。
+ * ホーム / 設定 / 完成の画面は工程 4(docs/ui/screens-and-interactions.md)。
+ * いまはゲーム画面だけを直接出している。
  *
  * defaultColorScheme="auto" で端末の設定に従う(同ドキュメントの「テーマ」)。
  */
 export function App() {
   return (
     <MantineProvider defaultColorScheme="auto">
-      <Container size="sm" py="xl">
-        <Stack gap="xs">
-          <Title order={1}>数独</Title>
-          <Text c="dimmed">
-            開発基盤の骨組み。{BOARD_SIZE}×{BOARD_SIZE} の盤面は工程 3 で入る。
-          </Text>
+      <Container size="sm" px="xs" py="md">
+        <Stack gap="md">
+          <Title order={1} size="h2">
+            数独
+          </Title>
+          <GameScreen />
         </Stack>
       </Container>
     </MantineProvider>
