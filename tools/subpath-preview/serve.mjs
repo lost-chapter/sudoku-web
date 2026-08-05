@@ -46,6 +46,23 @@ const TYPES = {
 /** サブパスの外へ出た要求。**これが本番で 404 になるもの。** */
 const escaped = new Set();
 
+/**
+ * **本番でも 404 になるが、直しようが無いもの。**
+ *
+ * ⚠️ **ブラウザがドメイン直下へ勝手に取りに行く。**アプリのコードには出てこないので、
+ * `import.meta.env.BASE_URL` を検索しても見つからない。
+ *
+ * `/favicon.ico` は `<user>.github.io/favicon.ico` を指す —— **配信先の外**である。
+ * `public/` へ置いても `/sudoku-web/favicon.ico` になるので当たらない
+ * (2026-08-06 に実際に ICO を作って確かめた)。
+ * **実害は無い。**タブのアイコンは `index.html` の `link` が指す SVG が使われる。
+ *
+ * 🎯 **黙って除外しない。** 一覧に必ず出るものがあると、
+ * **人は一覧そのものを見なくなり、本物の 1 件を見落とす。**
+ * **「直せるもの」と「直せないもの」に分けて、両方出す。**
+ */
+const UNAVOIDABLE = new Set(["/favicon.ico"]);
+
 const server = createServer(async (request, response) => {
   const { pathname } = new URL(request.url ?? "/", "http://localhost");
 
@@ -71,15 +88,27 @@ const server = createServer(async (request, response) => {
 });
 
 function report() {
-  if (escaped.size === 0) {
-    process.stdout.write("\nサブパスの外へ出た要求は無かった\n");
+  const all = [...escaped].sort();
+  const fixable = all.filter((path) => !UNAVOIDABLE.has(path));
+  const known = all.filter((path) => UNAVOIDABLE.has(path));
+
+  if (fixable.length === 0) {
+    process.stdout.write("\n直せる 404 は無かった\n");
   } else {
-    process.stdout.write(`\n🔴 本番で 404 になるものが ${escaped.size} 件ある\n`);
-    for (const path of [...escaped].sort()) {
+    process.stdout.write(`\n🔴 本番で 404 になるものが ${fixable.length} 件ある\n`);
+    for (const path of fixable) {
       process.stdout.write(`  ${path}\n`);
     }
   }
-  process.exit(escaped.size === 0 ? 0 : 1);
+
+  if (known.length > 0) {
+    process.stdout.write(`\n出たが直しようが無いもの(実害なし)\n`);
+    for (const path of known) {
+      process.stdout.write(`  ${path}\n`);
+    }
+  }
+
+  process.exit(fixable.length === 0 ? 0 : 1);
 }
 
 process.on("SIGINT", report);
