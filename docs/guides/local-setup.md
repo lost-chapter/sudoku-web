@@ -53,14 +53,14 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **12 件**(core 1 / docs-html 11。generator と web は 0 件) |
+| テスト | **98 件**(core 46 / docs-html 19 / web 33。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
-| 本番ビルド | 成功(JS 約 234 KB / gzip 約 73 KB、CSS 約 231 KB / gzip 約 34 KB) |
+| 本番ビルド | 成功(JS 256.17 KB / gzip 79.54 KB、CSS 232.38 KB / gzip 34.12 KB) |
 
-⚠️ **CSS 231 KB は Mantine の全スタイルである。**
-[ADR 0002](../decisions/0002-ui-library-selection.md) の「使う部品だけを import できているか」は
-工程 3 以降で詰める。
+⚠️ **CSS 232 KB は Mantine の全スタイルである。**
+部品ごとの CSS が配布されているので削減はできるが、**切り替えは使う部品が固まる
+工程 4 の終わり**にする([未解決の課題](implementation-roadmap.md#未解決の課題全体) の 6)。
 
 ## Git 管理外のもの
 
