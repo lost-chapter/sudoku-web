@@ -1,0 +1,76 @@
+# ゲーム本体を GitHub Pages へ出す。
+#
+# 出すのは main だけである。develop は「動く状態」を保つブランチであって、
+# 「出してよい状態」ではない(docs/guides/branch-strategy.md)。
+#
+# 手順と前提は docs/guides/deployment.md にある。
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  # リリースを伴わずに出し直したいとき用(設定を変えたときなど)
+  workflow_dispatch:
+
+# GitHub Pages へ出すために要る権限。既定より広いので、この workflow だけに付ける。
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 出す順を守る。⚠️ 打ち切ると「古い版が残ったまま」になりうるので待たせる。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # ⚠️ サブパスに置かれるので base が要る。
+      #    リポジトリ名から作るので、名前を変えてもここを直さなくてよい。
+      - name: 本番ビルド
+        run: pnpm build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+
+      # 404 を index.html にしておくと、サイト内のどの URL を直接開いても
+      # アプリが立ち上がる。⚠️ いまは 1 画面なので効いていないが、
+      # 画面ごとの URL を持たせたときに要る。先に置いておく。
+      - name: 直接開いたときの受け皿を置く
+        run: cp packages/web/dist/index.html packages/web/dist/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/web/dist
+
+  deploy:
+    name: 配置
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

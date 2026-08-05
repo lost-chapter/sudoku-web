@@ -23,6 +23,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 | [guides/](guides/) | 開発者向け手順書(環境構築、ローカル実行、テスト、リリース) |
 | [reference/](reference/) | 頻繁に参照する事実情報・一覧(用語詳細、データ形式、定数一覧、スキル一覧) |
 | [reports/](reports/) | 実施済みの調査・実験・検証・ベンチマーク結果(`YYYY-MM-DD-<report-title>.md`) |
+| [release-notes/](release-notes/) | **遊ぶ人へ向けた版ごとの変更点**(`<版>.md`)。⚠️ **ここだけ読み手が開発者ではない** |
 | [assets/](assets/) | ドキュメントから参照する画像・図・添付データ |
 
 ## 主要ドキュメント
@@ -32,10 +33,12 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [作業の引き継ぎ](guides/handover.md) — **別の端末・別の担当者へ渡すとき**。未プッシュのコミット・Git 管理外のもの・進行中の作業
 - [並列エージェントの運用](guides/parallel-agent-operations.md) — **複数のエージェントで同時に進めるとき**。担当の立て方・触ってよいファイルの境界・統合の作法・禁止事項
 - [ブランチ戦略](guides/branch-strategy.md) — **ブランチの種類・誰が何をマージできるか・いつ寄せるか**。`develop` へは直接コミットしない
+- [配信(GitHub Pages)](guides/deployment.md) — **出すのは `main` だけ**。🔴 **サブパスで壊れるものの見つけ方**
 - [ローカル環境の構築](guides/local-setup.md) — `pnpm install` → `pnpm dev`。コマンド一覧と実測値
 - [プロジェクトの目的と対象範囲](overview/project-purpose.md) — 与えられた 5 つの要件と、作る / 作らないの線引き
 - [システム構成](architecture/system-architecture.md) — 「作る側(Node)」と「遊ぶ側(ブラウザ)」を分け、`core` を共有する
 - [問題ファイルの形式](api/puzzle-file-format.md) — **生成側と遊技側をつなぐ契約**。片方だけ変えない
+- [リリースノートの形式](api/release-notes-format.md) — **書く側と閲覧機能をつなぐ契約**。既読の記録もここで決める
 - [盤面の生成](algorithms/board-generation.md) — **同型変換で量産しない**。乱数はシードで外から注入する
 - [解法(ソルバ)](algorithms/solver.md) — 探索ソルバと手筋ソルバは別物。一意解は「解 2 個で打ち切り」
 - [難易度の評価](algorithms/difficulty-rating.md) — **手がかり数で難易度を決めない**(相関 0.25〜0.27)
@@ -46,6 +49,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [ADR 0003 問題を事前生成した外部ファイルとして持つ](decisions/0003-external-puzzle-files.md) — サーバを持たない。同梱分だけコミットする
 - [ADR 0004 遊技機能の範囲を発注者の要望に合わせる](decisions/0004-feature-scope-from-client.md) — **タイマー・誤りの指摘・残り数を消す**。設定に残さない
 - [ADR 0005 スマートフォンは専用レイアウトにする](decisions/0005-mobile-dedicated-layout.md) — **UA では分岐しない**(幅 × 入力装置)。振る舞いは 1 つ、見た目は 2 つ
+- [ADR 0006 アイコンはライブラリを入れず自前で持つ](decisions/0006-own-svg-icons.md) — **バンドルの差は gzip 0.64 KB。決め手は `node_modules` の 140 MB**
 - [調査: UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md) — 5 候補の実測比較。shadcn/ui は 2026-07 に基盤が変わった
 - [調査: 数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md) — 同型変換の罠・最小 17 手がかり・相関表・81 文字 1 行
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
@@ -55,9 +59,9 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
 
-> **工程 0〜4 が完了している**。同梱パックは 5 クラス 5,000 問。
-> **工程 5(本番構成)は CI をもって区切りとし、配信は当面やらない**(2026-08-05 決定)。
-> **いまは工程 6(発注者の要望への対応)を進めている**(2026-08-06 開始)。
+> **工程 0〜6 が完了している**。同梱パックは 5 クラス 5,000 問。
+> **配信は GitHub Pages に決まった**(2026-08-06。当初は「やらない」としていた)。
+> **いまは工程 7(UI の作り込み)と工程 8(リリースの仕組み)を並行して進めている。**
 
 ## 初めて参加する開発者が読む順序
 
@@ -73,7 +77,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 
 ## 進行中の検証・重要な設計判断
 
-- 進行中の作業: [実装の進め方と現在地](guides/implementation-roadmap.md) — **工程 6(発注者の要望への対応)**。担当の割り当ては [作業の引き継ぎ](guides/handover.md#3-いまの体制) の体制表にある
+- 進行中の作業: [実装の進め方と現在地](guides/implementation-roadmap.md) — **工程 7(UI の作り込み)と工程 8(リリースの仕組み)**。担当の割り当ては [作業の引き継ぎ](guides/handover.md#3-いまの体制) の体制表にある
 - 判断待ち: [保留中の判断事項](reference/pending-decisions.md) — **現時点で未決は無い**(工程 0 の 3 件は決着済み)
 - 重要な設計判断:
   - [0001 プロジェクト構成](decisions/0001-project-structure.md)
@@ -81,6 +85,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
   - [0003 問題を事前生成した外部ファイルとして持つ](decisions/0003-external-puzzle-files.md)
   - [0004 遊技機能の範囲を発注者の要望に合わせる](decisions/0004-feature-scope-from-client.md)
   - [0005 スマートフォンは専用レイアウトにする](decisions/0005-mobile-dedicated-layout.md)
+  - [0006 アイコンはライブラリを入れず自前で持つ](decisions/0006-own-svg-icons.md)
 - 実施済みの調査・検証:
   - [UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md)
   - [数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md)

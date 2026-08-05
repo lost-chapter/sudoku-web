@@ -21,6 +21,10 @@ coverage/
 # 正本は puzzles/。ここを手で編集しても次の同期で消える
 /packages/web/public/puzzles/
 
+# docs/release-notes/ から変換した配信物(tools/release-notes が作る)
+# 正本は docs/release-notes/*.md。ここを手で編集しても次のビルドで消える
+/packages/web/public/release-notes.json
+
 # 環境ごとの接続情報
 .env
 
