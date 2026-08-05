@@ -2,6 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2023"],
+    // ワーカーは new URL("./worker.ts", ...) で実体を名指しして起動する。
+    // import の側も ".ts" 付きで書いて、ファイル名の食い違いを型で検出する。
+    "allowImportingTsExtensions": true,
     "types": ["node"]
   },
   "include": ["src"]
