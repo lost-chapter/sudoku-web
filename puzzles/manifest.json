@@ -1,17 +1,42 @@
 {
   "formatVersion": 1,
   "generatedWith": {
-    "generator": "0.0.0-dev",
-    "techniques": [1]
+    "generator": "0.1.0",
+    "techniques": [
+      1,
+      2,
+      3,
+      4
+    ]
   },
   "packs": [
     {
       "path": "packs/easy-000.txt",
       "difficulty": "easy",
-      "count": 3,
-      "seed": "dev-easy-000",
-      "bytes": 516
+      "count": 1000,
+      "seed": "easy-000",
+      "bytes": 172000
+    },
+    {
+      "path": "packs/normal-000.txt",
+      "difficulty": "normal",
+      "count": 1000,
+      "seed": "normal-000",
+      "bytes": 174074
+    },
+    {
+      "path": "packs/hard-000.txt",
+      "difficulty": "hard",
+      "count": 1000,
+      "seed": "hard-000",
+      "bytes": 172549
     }
   ],
-  "totals": { "easy": 3, "normal": 0, "hard": 0, "expert": 0, "extreme": 0 }
+  "totals": {
+    "easy": 1000,
+    "normal": 1000,
+    "hard": 1000,
+    "expert": 0,
+    "extreme": 0
+  }
 }
