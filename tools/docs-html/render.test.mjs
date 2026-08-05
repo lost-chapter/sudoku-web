@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { MERMAID_VERSION } from "./mermaid-cdn.mjs";
 import { buildNav, extractTitle, toHref } from "./nav.mjs";
 import { renderPage } from "./render.mjs";
 
@@ -156,50 +157,35 @@ describe("renderPage", () => {
     expect(html).toContain("<pre><code>sudoku-web/\n└── docs/\n</code></pre>");
   });
 
-  it("mermaid の flowchart をビルド時に SVG へ変換する", () => {
+  it("mermaid の記法はそのまま置き、閲覧時に描かせる", () => {
     const html = render({
       markdown: '# 題\n\n```mermaid\nflowchart TD\n  A["作る"] -->|生成| B{"一意解か"}\n```\n',
     });
-    expect(html).toContain('<figure class="diagram-figure"><svg class="diagram"');
-    expect(html).toContain(">作る</text>");
-    expect(html).toContain(">生成</text>");
-    // 図はページの中で完結する。外から何も読まない
-    expect(html).not.toMatch(/<script[^>]+src=/);
+    expect(html).toContain('<figure class="diagram-figure"><pre class="mermaid">');
+    // 記法はエスケープして置く(文書に書いたタグが実行されないこと)
+    expect(html).toContain("A[&quot;作る&quot;] --&gt;|生成| B{&quot;一意解か&quot;}");
   });
 
-  it("描けない図はその図だけ記法のまま出す(変換全体は落とさない)", () => {
-    const html = render({
-      markdown: "# 題\n\n```mermaid\nsequenceDiagram\n  A->>B: こんにちは\n```\n\n本文は続く\n",
-    });
-    expect(html).toContain('<div class="diagram-fallback">');
-    expect(html).toContain("A-&gt;&gt;B: こんにちは");
-    expect(html).toContain("<p>本文は続く</p>");
+  it("mermaid の版をパッチまで固定する", () => {
+    const html = render({ markdown: "# 題\n\n```mermaid\nflowchart LR\n  A --> B\n```\n" });
+    expect(html).toContain(`mermaid@${MERMAID_VERSION}/dist/mermaid.esm.min.mjs`);
+    expect(MERMAID_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("往復する矢印のラベルを重ねない", () => {
-    const html = render({
-      markdown: "# 題\n\n```mermaid\nflowchart LR\n  A -->|行き| B\n  B -->|帰り| A\n```\n",
-    });
-    const at = (text) => {
-      const found = new RegExp(
-        `<text class="dg-edge-label" x="([\\d.]+)" y="([\\d.]+)">${text}<`,
-      ).exec(html);
-      return { x: Number(found[1]), y: Number(found[2]) };
-    };
-    // 中点へ揃えると読めなくなるので、線の上で離す
-    const a = at("行き");
-    const b = at("帰り");
-    expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(20);
+  it("図のあるページにだけ mermaid の読み込みを埋める", () => {
+    const withDiagram = render({ markdown: "# 題\n\n```mermaid\nflowchart LR\n  A --> B\n```\n" });
+    const withoutDiagram = render({ markdown: "# 題\n\n本文だけ\n" });
+    expect(withDiagram).toContain("mermaid.esm.min.mjs");
+    // CSS には .mermaid の指定が残るので、読み込み(import)の有無で見る
+    expect(withoutDiagram).not.toContain("mermaid.esm.min.mjs");
+    expect(withoutDiagram).not.toContain("import(");
   });
 
-  it("同じページに図が 2 つあっても id がぶつからない", () => {
-    const html = render({
-      markdown:
-        "# 題\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n```mermaid\nflowchart LR\n  C --> D\n```\n",
-    });
-    const ids = [...html.matchAll(/<marker id="([^"]+)"/g)].map((match) => match[1]);
-    expect(ids).toHaveLength(2);
-    expect(new Set(ids).size).toBe(2);
+  it("読み込みに失敗したら記法を見せる道を持つ", () => {
+    const html = render({ markdown: "# 題\n\n```mermaid\nflowchart LR\n  A --> B\n```\n" });
+    // 白紙にせず、記法をそのまま出す(ネットワークが無いときのため)
+    expect(html).toContain("diagram-fallback");
+    expect(html).toContain(".catch(");
   });
 
   it("生の HTML はエスケープする", () => {
