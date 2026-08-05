@@ -8,7 +8,7 @@
 
 | スキル名 | 開発領域 | 目的 | 配置 |
 |----------|----------|------|------|
-| `docs-markdown-to-html` | `docs-` | `docs/` の Markdown を、人間が読みやすい自己完結の HTML へ**決定的に**変換する(入力は書き換えない。生成物は Git 管理外) | [.claude/skills/docs-markdown-to-html/](../../.claude/skills/docs-markdown-to-html/SKILL.md) |
+| `docs-markdown-to-html` | `docs-` | `docs/` の Markdown を、人間が読みやすい自己完結の HTML へ**決定的に**変換する(入力は書き換えない。生成物は Git 管理外)。**コードの色付けと ` ```mermaid ` の図の描画もビルド時に行う** | [.claude/skills/docs-markdown-to-html/](../../.claude/skills/docs-markdown-to-html/SKILL.md) |
 | `ops-branch-merge` | `ops-` | 作業ブランチを指定した統合ブランチへ fast-forward で揃える(手段として no-ff マージを行う) | [.claude/skills/ops-branch-merge/](../../.claude/skills/ops-branch-merge/SKILL.md) |
 | `ops-dev-environment-setup` | `ops-` | 新しい worktree や別端末で、依存パッケージ・`.env`・Claude Code のローカル設定・開発サーバのポートを揃える | [.claude/skills/ops-dev-environment-setup/](../../.claude/skills/ops-dev-environment-setup/SKILL.md) |
 
@@ -19,7 +19,7 @@
 
 | スキル | 実体 |
 |--------|------|
-| `docs-markdown-to-html` | `tools/docs-html/`(テスト 11 件が契約を守っている) |
+| `docs-markdown-to-html` | `tools/docs-html/`(テスト 31 件が契約を守っている。2026-08-06 時点) |
 | `ops-dev-environment-setup` | [ローカル環境の構築](../guides/local-setup.md) の実コマンド |
 | `ops-branch-merge` | Git の操作のみ |
 
