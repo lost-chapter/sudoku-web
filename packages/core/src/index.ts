@@ -53,3 +53,16 @@ export { createRandom, randomInt, shuffled } from "./random";
 
 export type { GeneratedPuzzle } from "./generate";
 export { digHoles, generatePuzzle, generateSolvedBoard } from "./generate";
+
+export type {
+  Elimination,
+  TechniqueName,
+  TechniqueSolveResult,
+  TechniqueStep,
+} from "./technique-solver";
+export {
+  TECHNIQUE_LEVEL,
+  TECHNIQUE_SCORE,
+  findHint,
+  solveWithTechniques,
+} from "./technique-solver";
