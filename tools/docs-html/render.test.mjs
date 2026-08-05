@@ -117,6 +117,14 @@ describe("renderPage", () => {
     expect(render({ markdown: "# 題\n\n本文\n" })).not.toContain('<nav class="toc"');
   });
 
+  it("目次には記法の記号を出さない", () => {
+    const html = render({
+      markdown: "# 題\n\n## 1. 技術構成 —— ✅ **決定**\n\n本文\n\n## `core` の制約\n\n本文\n",
+    });
+    expect(html).toContain('<a href="#1-技術構成---決定">1. 技術構成 —— ✅ 決定</a>');
+    expect(html).toContain('<a href="#core-の制約">core の制約</a>');
+  });
+
   it("表を横スクロールできる器で包む", () => {
     expect(render()).toContain('<div class="table-scroll">');
   });
@@ -129,6 +137,34 @@ describe("renderPage", () => {
     const html = render();
     expect(html).not.toMatch(/<link[^>]+href=/);
     expect(html).not.toMatch(/<script[^>]+src=/);
+  });
+
+  it("和文の約物で閉じた強調も強調になる", () => {
+    // 素の CommonMark では「。」の直後の `**` が閉じにならず、記号がそのまま出る。
+    const html = render({
+      markdown: "# 題\n\n本文\n\n**完了(2026-08-05)。**5 クラスすべてを収録した。\n",
+    });
+    expect(html).toContain("<strong>完了(2026-08-05)。</strong>5 クラス");
+    expect(html).not.toContain("**");
+  });
+
+  it("表の中の強調も同じように効く", () => {
+    const html = render({
+      markdown: "# 題\n\n| 担当 | 状態 |\n|---|---|\n| b | **完了。**次へ |\n",
+    });
+    expect(html).toContain("<td><strong>完了。</strong>次へ</td>");
+  });
+
+  it("全角空白は空白として扱う(強調を閉じない)", () => {
+    const html = render({ markdown: "# 題\n\n本文\n\n**強調　**の後\n" });
+    expect(html).toContain("<p>**強調　**の後</p>");
+  });
+
+  it("欧文の強調の扱いは変えない", () => {
+    const html = render({ markdown: "# 題\n\n本文\n\nplain **bold** and a**b**c text\n" });
+    expect(html).toContain("<strong>bold</strong>");
+    // 単語の途中は `**` でも強調にしない(CommonMark どおり)
+    expect(html).toContain("a<strong>b</strong>c");
   });
 
   it("入力の .md を書き換えない(副作用なし)", async () => {
