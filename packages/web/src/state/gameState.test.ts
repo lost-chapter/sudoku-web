@@ -18,7 +18,7 @@ import {
  * 選択の移動とメモモードの切替は 1 手に数えない。
  */
 
-const initial = createGameState(SAMPLE_PUZZLE);
+const initial = createGameState({ puzzle: SAMPLE_PUZZLE });
 const CELL = initial.present.selected;
 
 function run(state: GameState, ...actions: readonly GameAction[]): GameState {
@@ -141,6 +141,18 @@ describe("取り消しとやり直し", () => {
     const undone = run(filled, { type: "undo" });
     expect(valueAt(undone.present, CELL)).toBe(0);
     expect(candidateDigits(notesAt(undone.present, CELL))).toEqual([1, 2]);
+  });
+
+  it("遊びかけから始めたときは前回の手を取り消せない", () => {
+    const entries = new Array<number>(81).fill(0);
+    entries[CELL] = 4;
+    const resumed = createGameState({
+      puzzle: SAMPLE_PUZZLE,
+      restored: { entries, notes: new Array<number>(81).fill(0) },
+    });
+
+    expect(valueAt(resumed.present, CELL)).toBe(4);
+    expect(canUndo(resumed)).toBe(false);
   });
 
   it("取り消してもメモモードは戻さない", () => {

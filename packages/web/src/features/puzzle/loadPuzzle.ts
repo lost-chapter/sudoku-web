@@ -1,4 +1,4 @@
-import { decodeManifest, packsFor } from "./manifest";
+import { decodeManifest, packsFor, type Manifest } from "./manifest";
 import { decodePack } from "./pack";
 import type { Difficulty, Puzzle } from "./types";
 
@@ -20,34 +20,44 @@ export interface LoadedPuzzle {
   /** どのパックの何行目か。**進行の保存はこの 2 つで問題を指す。** */
   readonly packPath: string;
   readonly line: number;
+  /**
+   * 取ってきた時点のパックの版。
+   *
+   * **進行の保存が古くなったかの判定に要る**(docs/api/puzzle-file-format.md)。
+   */
+  readonly formatVersion: number;
+  readonly generator: string;
 }
 
 export interface LoadPuzzleOptions {
-  readonly difficulty: Difficulty;
   /** 配信元。末尾の `/` は付けても付けなくてもよい。 */
   readonly baseUrl?: string;
   /** 差し替え口。テストではここに偽の取得を渡す。 */
   readonly fetch?: typeof globalThis.fetch;
+}
+
+export interface LoadRandomPuzzleOptions extends LoadPuzzleOptions {
+  readonly difficulty: Difficulty;
   /** 乱択。テストでは固定値を渡して同じ問題を選ばせる。 */
   readonly random?: () => number;
 }
 
+export interface LoadPuzzleAtOptions extends LoadPuzzleOptions {
+  readonly packPath: string;
+  readonly line: number;
+}
+
 const DEFAULT_BASE_URL = "/puzzles";
 
-export async function loadRandomPuzzle(options: LoadPuzzleOptions): Promise<LoadedPuzzle | null> {
-  const {
-    difficulty,
-    baseUrl = DEFAULT_BASE_URL,
-    fetch = globalThis.fetch,
-    random = Math.random,
-  } = options;
+/** 難易度を指定して 1 問を乱択する。 */
+export async function loadRandomPuzzle(
+  options: LoadRandomPuzzleOptions,
+): Promise<LoadedPuzzle | null> {
+  const { difficulty, random = Math.random } = options;
+  const fetch = options.fetch ?? globalThis.fetch;
+  const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
 
-  const manifestValue = await fetchJson(fetch, join(baseUrl, "manifest.json"));
-  if (manifestValue === null) {
-    return null;
-  }
-
-  const manifest = decodeManifest(manifestValue);
+  const manifest = await fetchManifest(fetch, baseUrl);
   if (!manifest) {
     return null;
   }
@@ -58,19 +68,70 @@ export async function loadRandomPuzzle(options: LoadPuzzleOptions): Promise<Load
   }
 
   const pack = packs[pick(random, packs.length)];
-  const text = await fetchText(fetch, join(baseUrl, pack.path));
-  if (text === null) {
-    return null;
-  }
-
-  // 壊れた行はここで落ちている。残った中から選ぶ。
-  const entries = decodePack(text);
+  const entries = await fetchEntries(fetch, baseUrl, pack.path);
   if (entries.length === 0) {
     return null;
   }
 
   const entry = entries[pick(random, entries.length)];
-  return { puzzle: entry.puzzle, packPath: pack.path, line: entry.line };
+  return toLoaded(entry.puzzle, pack.path, entry.line, manifest);
+}
+
+/**
+ * パックと行を指定して 1 問取る。**遊びかけの復元に使う。**
+ *
+ * 行が見つからなければ `null`(パックが差し替わって行が消えた場合)。
+ */
+export async function loadPuzzleAt(options: LoadPuzzleAtOptions): Promise<LoadedPuzzle | null> {
+  const { packPath, line } = options;
+  const fetch = options.fetch ?? globalThis.fetch;
+  const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
+
+  const manifest = await fetchManifest(fetch, baseUrl);
+  if (!manifest) {
+    return null;
+  }
+
+  // マニフェストに無いパックは取りに行かない。
+  if (!manifest.packs.some((pack) => pack.path === packPath)) {
+    return null;
+  }
+
+  const entry = (await fetchEntries(fetch, baseUrl, packPath)).find((item) => item.line === line);
+  if (!entry) {
+    return null;
+  }
+
+  return toLoaded(entry.puzzle, packPath, line, manifest);
+}
+
+function toLoaded(
+  puzzle: Puzzle,
+  packPath: string,
+  line: number,
+  manifest: Manifest,
+): LoadedPuzzle {
+  return {
+    puzzle,
+    packPath,
+    line,
+    formatVersion: manifest.formatVersion,
+    generator: manifest.generator,
+  };
+}
+
+async function fetchManifest(
+  fetch: typeof globalThis.fetch,
+  baseUrl: string,
+): Promise<Manifest | null> {
+  const value = await fetchJson(fetch, join(baseUrl, "manifest.json"));
+  return value === null ? null : decodeManifest(value);
+}
+
+/** 壊れた行はここで落ちる。パック全体は捨てない。 */
+async function fetchEntries(fetch: typeof globalThis.fetch, baseUrl: string, path: string) {
+  const text = await fetchText(fetch, join(baseUrl, path));
+  return text === null ? [] : decodePack(text);
 }
 
 /** `random()` の 0〜1 を 0〜`length - 1` へ。1 になっても範囲から出さない。 */

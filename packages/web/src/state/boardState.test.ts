@@ -42,6 +42,35 @@ describe("createBoardState", () => {
   });
 });
 
+describe("遊びかけからの復元", () => {
+  it("入力とメモを戻す", () => {
+    const entries = new Array<number>(81).fill(0);
+    const notes = new Array<number>(81).fill(0);
+    entries[EMPTY_INDEX] = 4;
+    notes[40] = maskOfDigit(7);
+
+    const restored = createBoardState(SAMPLE_PUZZLE, { entries, notes });
+
+    expect(valueAt(restored, EMPTY_INDEX)).toBe(4);
+    expect(notesAt(restored, 40)).toBe(maskOfDigit(7));
+  });
+
+  it("手がかりのマスに入っている値は捨てる", () => {
+    // パックが差し替わって手がかりが増えていても、書き換えられないマスに
+    // 遊技者の入力が残らないこと。
+    const entries = new Array<number>(81).fill(0);
+    entries[GIVEN_INDEX] = 9;
+
+    const restored = createBoardState(SAMPLE_PUZZLE, {
+      entries,
+      notes: new Array<number>(81).fill(0),
+    });
+
+    expect(restored.entries[GIVEN_INDEX]).toBe(0);
+    expect(valueAt(restored, GIVEN_INDEX)).toBe(SAMPLE_PUZZLE.givens[GIVEN_INDEX]);
+  });
+});
+
 describe("selectCell", () => {
   it("選んだセルへ移る", () => {
     expect(select(initial, 40).selected).toBe(40);
