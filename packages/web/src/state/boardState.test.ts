@@ -4,7 +4,7 @@ import { SAMPLE_PUZZLE } from "../features/puzzle/samplePuzzle";
 import {
   boardReducer,
   createBoardState,
-  isComplete,
+  matchesSolution,
   isGiven,
   valueAt,
   type BoardState,
@@ -130,9 +130,9 @@ describe("clearCell", () => {
   });
 });
 
-describe("isComplete", () => {
+describe("matchesSolution", () => {
   it("始めた直後は完成していない", () => {
-    expect(isComplete(initial)).toBe(false);
+    expect(matchesSolution(initial)).toBe(false);
   });
 
   it("解をすべて入れたら完成する", () => {
@@ -143,12 +143,12 @@ describe("isComplete", () => {
       return boardReducer(select(state, index), { type: "inputDigit", digit });
     }, initial);
 
-    expect(isComplete(solved)).toBe(true);
+    expect(matchesSolution(solved)).toBe(true);
   });
 
   it("1 マスでも違えば完成しない", () => {
     const state = boardReducer(initial, { type: "inputDigit", digit: wrongDigitAt(EMPTY_INDEX) });
-    expect(isComplete(state)).toBe(false);
+    expect(matchesSolution(state)).toBe(false);
   });
 });
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { isSolvedBoard, isValidBoard } from "@sudoku/core";
+
 import { decodePuzzleLine } from "./puzzleLine";
 import { SAMPLE_PUZZLE, SAMPLE_PUZZLE_LINE } from "./samplePuzzle";
 
@@ -63,32 +65,11 @@ describe("decodePuzzleLine", () => {
  */
 describe("開発用の問題", () => {
   it("解が数独の規則を満たす", () => {
-    const solution = SAMPLE_PUZZLE.solution;
-    const groups = [...rows(solution), ...columns(solution), ...blocks(solution)];
-    for (const group of groups) {
-      expect(new Set(group).size).toBe(9);
-    }
+    // 規則の検証は core に任せる。web で書き直すと生成側と判定が割れる。
+    expect(isSolvedBoard(SAMPLE_PUZZLE.solution)).toBe(true);
+  });
+
+  it("手がかりだけの盤面も規則に反していない", () => {
+    expect(isValidBoard(SAMPLE_PUZZLE.givens)).toBe(true);
   });
 });
-
-function rows(cells: readonly number[]): number[][] {
-  return Array.from({ length: 9 }, (_, row) => cells.slice(row * 9, row * 9 + 9));
-}
-
-function columns(cells: readonly number[]): number[][] {
-  return Array.from({ length: 9 }, (_, column) =>
-    Array.from({ length: 9 }, (_, row) => cells[row * 9 + column]),
-  );
-}
-
-function blocks(cells: readonly number[]): number[][] {
-  return Array.from({ length: 9 }, (_, block) => {
-    const top = Math.floor(block / 3) * 3;
-    const left = (block % 3) * 3;
-    return Array.from({ length: 9 }, (_, cell) => {
-      const row = top + Math.floor(cell / 3);
-      const column = left + (cell % 3);
-      return cells[row * 9 + column];
-    });
-  });
-}
