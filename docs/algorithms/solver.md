@@ -82,44 +82,73 @@ Apple M1 Ultra / Node 24)。
 
 ## 手筋ソルバ
 
+**実装は `packages/core/src/technique-solver.ts`。**
+
 **人間が使う手筋だけで解き進め、使った手筋を順に記録する。**
 探索(当て推量)を使わないのが決定的な違いである。
 
 ### 手筋の適用順
 
 **簡単な手筋から順に試し、進んだら最初へ戻る。**
+並びは [難易度の評価](difficulty-rating.md#手筋のレベル) の**レベルの昇順**である。
 
-```
-1. Naked Single       候補が 1 個のセル
-2. Hidden Single      ある単位で 1 か所にしか入らない数字
-3. Locked Candidates  Pointing / Claiming
-4. Naked Pair/Triple/Quad
-5. Hidden Pair/Triple/Quad
-6. X-Wing / Swordfish / Jellyfish
-7. XY-Wing / XYZ-Wing
-8. チェーン系(X-Chain / Forcing Chain)
-```
+| 順 | 手筋 | レベル | 実装 |
+|----|------|--------|------|
+| 1 | Naked Single | 1 | ✅ |
+| 2 | Hidden Single | 1 | ✅ |
+| 3 | Locked Candidates(Pointing / Claiming) | 2 | ✅ |
+| 4 | Naked Pair | 3 | ✅ |
+| 5 | Hidden Pair | 3 | ✅ |
+| 6 | Naked Triple | 4 | ✅ |
+| 7 | Hidden Triple | 4 | ✅ |
+| 8 | Naked Quad | 4 | ✅ |
+| 9 | Hidden Quad | 4 | ✅ |
+| 10 | X-Wing / Swordfish / Jellyfish | 5 | 未 |
+| 11 | XY-Wing / XYZ-Wing | 6 | 未 |
+| 12 | チェーン系(X-Chain / Forcing Chain) | 7 | 未 |
 
 **この順序が難易度の定義そのものになる。**
 順序を変えると同じ問題の難易度が変わるので、**順序は勝手に入れ替えない**。
 
+⚠️ **並びを 2026-08-05 に直した(実装時)。** それまでは
+「Naked Pair/Triple/Quad → Hidden Pair/Triple/Quad」と、**組の種類でまとめていた**。
+その並びだと **Naked Triple(レベル 4)を Hidden Pair(レベル 3)より先に試す**ことになり、
+[難易度の評価](difficulty-rating.md#評価は決定的でなければならない) の
+「複数の手筋が使えるとき、必ず簡単な方を選ぶ」と食い違っていた。
+**レベル昇順に直して両方の文書を一致させた。**
+
 ### 出力
 
 ```
-solve(board) => {
+solveWithTechniques(board) => {
   solved: boolean,
-  steps: Array<{ technique, cells, eliminated }>,
+  board:  Board,                 進めたところまでの盤面
+  steps:  Array<{
+    technique,                   手筋の名前
+    level,                       手筋のレベル(難易度クラスの元になる)
+    cells,                       根拠になったセル
+    placement,                   確定したセルと数字(候補を消すだけの手筋では null)
+    eliminations,                消えた候補
+  }>,
 }
 ```
 
 - `steps` は**適用した順**。難易度評価とヒントの両方がこれを使う
 - **解けなかった場合も途中までの `steps` を返す。**
   「実装済みの手筋では解けない」ことが分かる
+- **`placement` と `eliminations` を分けている。**
+  手筋には「数字が確定するもの」と「候補が消えるだけのもの」があり、
+  UI はこの 2 つを別々に見せる必要がある
 
 ### 実装の範囲
 
-**最初から全部の手筋を実装しない。** 工程 2 では 1〜5 まで(基本手筋)を作り、
-6 以降は難易度クラスを広げる段階で足す。
+**最初から全部の手筋を実装しない。** 工程 2 では**レベル 1〜4(基本手筋)**を作り、
+レベル 5 以降は難易度クラスを広げる段階で足す。
+
+**2026-08-05 時点でレベル 1〜4 まで実装済み。**
+生成した問題の **41.5% がこの範囲では解けず、難易度を付けられない**
+([検証](../reports/2026-08-05-difficulty-distribution.md))。
+**その分がそのまま「難問」「最難関」の候補**である。
 
 **実装していない手筋があること自体は問題ではない。**
 手筋ソルバで解けない問題を「その難易度クラスに入れない」だけでよい
