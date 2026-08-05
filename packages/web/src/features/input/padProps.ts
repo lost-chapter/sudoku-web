@@ -6,7 +6,13 @@
  * 型を 1 つにしておけば、片方だけに操作が増えたときに型で気づける。
  */
 export interface PadProps {
-  readonly onDigit: (digit: number) => void;
+  /**
+   * 数字を入れる。
+   *
+   * `asNote` を渡すと**その 1 回だけメモになる**(モードは変わらない)。
+   * スマホの上フリックがこれを使う(2026-08-06 に試作)。
+   */
+  readonly onDigit: (digit: number, asNote?: boolean) => void;
   readonly onClear: () => void;
   readonly onToggleNoteMode: () => void;
   readonly onUndo: () => void;

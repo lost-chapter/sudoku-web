@@ -51,7 +51,17 @@ export type Direction = "up" | "down" | "left" | "right";
 export type BoardAction =
   | { readonly type: "selectCell"; readonly index: CellIndex }
   | { readonly type: "moveSelection"; readonly direction: Direction }
-  | { readonly type: "inputDigit"; readonly digit: number }
+  | {
+      readonly type: "inputDigit";
+      readonly digit: number;
+      /**
+       * **その 1 回だけメモとして入れる。**省略すると `noteMode` に従う。
+       *
+       * ⚠️ **モードを切り替えるのではない。**上フリックのように
+       * 「いまの 1 回だけ候補を立てたい」入力のためにある(2026-08-06 に追加)。
+       */
+      readonly asNote?: boolean;
+    }
   | { readonly type: "clearCell" }
   | { readonly type: "toggleNoteMode" }
   | { readonly type: "giveUp" };
@@ -127,7 +137,8 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
         return state;
       }
 
-      if (state.noteMode) {
+      // **その 1 回だけの指定が優先。**無ければモードに従う。
+      if (action.asNote ?? state.noteMode) {
         // 確定値が入っているセルにメモは要らない。先に確定値を消してもらう。
         if (state.entries[state.selected] !== 0) {
           return state;

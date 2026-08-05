@@ -55,6 +55,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
 - [検証: 問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md) — 1 問 1.56 ms・毎秒 640 問。**手がかり数は 24〜25 に山**
 - [検証: 難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md) — **5 クラスすべてを収録できるようになった**。しきい値は確定
+- [検討: フリック操作](reports/2026-08-06-flick-input-survey.md) —— **4 案のうち 1 案だけ試作した**。盤面は画面の端から 4px しかない
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
@@ -92,6 +93,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
   - [探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md)
   - [問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md)
   - [難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md)
+  - [フリック操作の検討](reports/2026-08-06-flick-input-survey.md)
 
 ## ドキュメントを追加・変更するとき
 
