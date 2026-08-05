@@ -340,7 +340,7 @@
     <dl class="figures">
       <div class="figure">
         <dt>テスト</dt>
-        <dd>318<small>件</small></dd>
+        <dd>322<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>E2E</dt>
@@ -360,7 +360,7 @@
       </div>
       <div class="figure alert">
         <dt>未プッシュ</dt>
-        <dd>15<small>コミット</small></dd>
+        <dd>24<small>コミット</small></dd>
       </div>
     </dl>
   </header>
@@ -397,7 +397,7 @@
       </div>
       <div class="phase active">
         <span class="no">7</span><span class="name">UI の作り込み</span
-        ><span class="state">1 / 2</span>
+        ><span class="state">2 / 4</span>
       </div>
       <div class="phase active">
         <span class="no">8</span><span class="name">リリースの仕組み</span
@@ -491,15 +491,35 @@
           <tr>
             <td>スマホでのフリック操作の検討</td>
             <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td>
+              4 案のうち A（数字キーの上フリックでメモ）だけ試作。
+              <b>盤面は画面の端から 4px しかなく</b>、盤面を掴むスワイプは OS と重なる。
+              <b>採否は発注者の判断待ち</b>
+            </td>
+          </tr>
+          <tr>
+            <td>メモの On/Off をスイッチの UI にする</td>
+            <td>agent-c</td>
             <td><span class="pill work">作業中</span></td>
             <td>
-              比較レポートと有望案の試作まで。<b>採否は発注者が決める</b>
+              発注者の FB。「✏ 切」は<b>「いま切」とも「押すと切る」とも読める</b>。
+              文字を足しても曖昧さは消えない
+            </td>
+          </tr>
+          <tr>
+            <td>上フリックの閾値と仕様の食い違い</td>
+            <td>agent-c</td>
+            <td><span class="pill stop">未修正</span></td>
+            <td>
+              <b>15〜24px の上ドラッグが「何も起きない」</b>（実測）。
+              ブラウザの tap slop が click を消すため
             </td>
           </tr>
           <tr>
             <td>PC 版でも押せる大きさを走査する</td>
             <td>agent-c</td>
-            <td><span class="pill wait">フリックの後</span></td>
+            <td><span class="pill wait">いちばん後</span></td>
             <td>
               裏取りで見つかった食い違い。<b>アイコン化で入ったものではない</b>。
               下限は 24px（スマホは 44px のまま）
@@ -581,7 +601,7 @@
     <div class="issues">
       <div class="issue">
         <span class="who"><span class="pill wait">判断待ち</span></span>
-        <h3>15 コミットが手元に留まっている</h3>
+        <h3>24 コミットが手元に留まっている</h3>
         <p>
           Pages は <code>main</code> への push で出る。<b>まだ 1 度も出していない</b>ので、
           <code>ops-release</code> の手順は机上のままである。0.1.0 が最初の通し実行になる。
@@ -599,10 +619,20 @@
       </div>
       <div class="issue">
         <span class="who"><span class="pill wait">発注者待ち</span></span>
-        <h3>フリック操作を入れるかどうか</h3>
+        <h3>上フリックのメモを残すか</h3>
         <p>
-          「導入を検討してみてください」という FB なので、<b>比較レポートを出すところまでが工程 7</b>。
-          既存のタップとキーボードは消さず、追加の経路として成立するかを実測してから判断する。
+          数字キーを上へはじくと、その 1 回だけメモになる（モードは変わらない）。試作は動いている。
+          <b>知らなければ切替を使い続けるだけで損はしない</b>ので、入れても害は無い。
+          残すか外すかは触ってから決めてよい。
+        </p>
+      </div>
+      <div class="issue">
+        <span class="who"><span class="pill wait">実機待ち</span></span>
+        <h3>フリックが iOS のホームバーと当たらないか</h3>
+        <p>
+          数字キーは画面の下端から 64px 離れているので当たらないと見込んでいるが、
+          <b>バーの反応領域は測れていない</b>。人が「はじく」ときの実際の距離も、
+          合成イベントでは「意図した動き」しか送れないので分からない。
         </p>
       </div>
       <div class="issue">
