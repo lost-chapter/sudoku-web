@@ -1,13 +1,17 @@
-import { useReducer } from "react";
-import { Button, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
+import { useEffect, useReducer } from "react";
+import { Button, Group, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
 import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 
 import { Board } from "../features/board/Board";
 import { computeHighlights, remainingCounts } from "../features/board/highlights";
 import { NumberPad } from "../features/input/NumberPad";
+import { isEmpty } from "../features/progress/progress";
+import { clearProgress, writeProgress } from "../features/progress/progressStorage";
+import { formatElapsed, useElapsedTime } from "../features/progress/useElapsedTime";
+import type { LoadedPuzzle } from "../features/puzzle/loadPuzzle";
 import type { Puzzle } from "../features/puzzle/types";
 import type { Settings } from "../features/settings/settings";
-import { isGiven, matchesSolution } from "../state/boardState";
+import { isGiven, matchesSolution, type RestoredBoard } from "../state/boardState";
 import {
   canRedo,
   canUndo,
@@ -28,15 +32,49 @@ import {
 export interface GameProps {
   readonly puzzle: Puzzle;
   readonly settings: Settings;
+  /** どのパックの何行目か。**同梱の 1 問で遊んでいるときは `null`(保存しない)。** */
+  readonly source: LoadedPuzzle | null;
+  /** 遊びかけから戻す入力とメモ。 */
+  readonly restored: RestoredBoard | null;
+  /** 遊びかけの経過時間。 */
+  readonly initialElapsedMs: number;
   /** 完成したあと次の問題へ進む。 */
   readonly onNext: () => void;
 }
 
-export function Game({ puzzle, settings, onNext }: GameProps) {
-  const [game, dispatch] = useReducer(gameReducer, puzzle, createGameState);
+export function Game({ puzzle, settings, source, restored, initialElapsedMs, onNext }: GameProps) {
+  const [game, dispatch] = useReducer(
+    gameReducer,
+    { puzzle, restored: restored ?? undefined },
+    createGameState,
+  );
   const state = game.present;
   const completed = matchesSolution(state);
   const highlights = computeHighlights(state, settings);
+
+  // 完成したら時計を止める。数え続けると保存された所要時間が実際より長くなる。
+  const elapsedMs = useElapsedTime(initialElapsedMs, !completed);
+
+  useEffect(() => {
+    // 同梱の 1 問には保存の宛先(パックと行)が無いので保存しない。
+    if (!source) {
+      return;
+    }
+    if (completed || isEmpty(state)) {
+      // 完成した盤面と、何も入っていない盤面は残さない。
+      clearProgress();
+      return;
+    }
+    writeProgress({
+      packPath: source.packPath,
+      line: source.line,
+      entries: state.entries,
+      notes: state.notes,
+      elapsedMs,
+      formatVersion: source.formatVersion,
+      generator: source.generator,
+    });
+  }, [completed, elapsedMs, source, state]);
 
   // 完成したら盤面を動かさない。完成の知らせが入力で消えてしまうのを防ぐ。
   const play = (action: GameAction) => {
@@ -65,6 +103,16 @@ export function Game({ puzzle, settings, onNext }: GameProps) {
 
   return (
     <Stack gap="lg">
+      {/*
+        経過時間。**急かす演出はしない**(docs/ui/screens-and-interactions.md)ので、
+        秒までの素の表示に留める。読み上げは 1 秒ごとに割り込ませない。
+      */}
+      <Group justify="flex-end">
+        <Text size="sm" c="dimmed" aria-label={`経過時間 ${formatElapsed(elapsedMs)}`}>
+          {formatElapsed(elapsedMs)}
+        </Text>
+      </Group>
+
       <Board
         state={state}
         highlights={highlights}
@@ -113,6 +161,9 @@ export function Game({ puzzle, settings, onNext }: GameProps) {
       >
         <Stack gap="md">
           <Text>すべてのマスが解と一致しました。</Text>
+          <Text size="sm" c="dimmed">
+            所要時間 {formatElapsed(elapsedMs)}
+          </Text>
           <Button onClick={onNext} autoFocus>
             次の問題へ
           </Button>

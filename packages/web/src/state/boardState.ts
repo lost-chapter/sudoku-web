@@ -48,23 +48,39 @@ export type BoardAction =
   | { readonly type: "clearCell" }
   | { readonly type: "toggleNoteMode" };
 
+/** 保存から戻す入力とメモ。どちらも 81 要素。 */
+export interface RestoredBoard {
+  readonly entries: readonly number[];
+  readonly notes: readonly number[];
+}
+
 /**
  * 問題から初期状態を作る。
  *
  * **選択は最初の空きマスに置く。** 遊技者がクリックしなくても
  * キーボードだけで遊び始められるようにするため
  * (docs/ui/screens-and-interactions.md の「キーボードだけで最初から最後まで遊べること」)。
+ *
+ * `restored` を渡すと遊びかけから始める。**手がかりのマスに入っている値は捨てる。**
+ * パックが差し替わって手がかりが増えていても、書き換えられないマスに
+ * 遊技者の入力が残らないようにするためである。
  */
-export function createBoardState(puzzle: Puzzle): BoardState {
+export function createBoardState(puzzle: Puzzle, restored?: RestoredBoard): BoardState {
   const firstEmpty = puzzle.givens.findIndex((value) => value === 0);
+  const empty = () => new Array<number>(CELL_COUNT).fill(0);
+
   return {
     givens: puzzle.givens,
-    entries: new Array<number>(CELL_COUNT).fill(0),
+    entries: restored ? restored.entries.map(dropOnGivens(puzzle)) : empty(),
     solution: puzzle.solution,
-    notes: new Array<number>(CELL_COUNT).fill(0),
+    notes: restored ? restored.notes.map(dropOnGivens(puzzle)) : empty(),
     noteMode: false,
     selected: firstEmpty === -1 ? 0 : firstEmpty,
   };
+}
+
+function dropOnGivens(puzzle: Puzzle): (value: number, index: number) => number {
+  return (value, index) => (puzzle.givens[index] === 0 ? value : 0);
 }
 
 /**
