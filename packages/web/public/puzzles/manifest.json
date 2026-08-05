@@ -1,0 +1,17 @@
+{
+  "formatVersion": 1,
+  "generatedWith": {
+    "generator": "0.0.0-dev",
+    "techniques": [1]
+  },
+  "packs": [
+    {
+      "path": "packs/easy-000.txt",
+      "difficulty": "easy",
+      "count": 3,
+      "seed": "dev-easy-000",
+      "bytes": 516
+    }
+  ],
+  "totals": { "easy": 3, "normal": 0, "hard": 0, "expert": 0, "extreme": 0 }
+}
