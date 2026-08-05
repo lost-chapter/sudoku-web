@@ -191,7 +191,7 @@ jobs:
           retention-days: 7
 
   docs:
-    name: ドキュメント変換の決定性
+    name: ドキュメントの検査と変換の決定性
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -205,6 +205,15 @@ jobs:
 
       - name: 依存をインストール
         run: pnpm install --frozen-lockfile
+
+      # 2026-08-06: **規則を書いても、管理役が同じ書き方を続けた。**
+      # 和文で `**強調。**次` と書くと CommonMark は強調にせず、`**` が本文へ出る。
+      # 変換側で救ってはいるが、GitHub と VS Code では壊れたままになる。
+      #
+      # ⚠️ 人が気をつけるだけでは止まらないので仕掛けにする(競合マーカーと同じ)。
+      #    直し方は docs/guides/documentation-guidelines.md にある。
+      - name: 和文の強調が壊れていないことを確認
+        run: pnpm docs:lint
 
       # docs-markdown-to-html は「同じ入力から常に同じ出力」を契約にしている。
       # 2 回流して差が出たら、決定性が壊れている。
