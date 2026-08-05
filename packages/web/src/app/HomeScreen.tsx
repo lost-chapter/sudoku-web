@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { readProgress, type StorageLike } from "../features/progress/progressStorage";
@@ -126,7 +126,7 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
   );
 
   return (
-    <Stack gap="lg">
+    <div className={classes.screen}>
       <header className={classes.hero}>
         {/*
           🎯 **盤面そのものを表題の印にする。**画像も Web フォントも増やさない。
@@ -138,7 +138,7 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
           ))}
         </span>
         <span className={classes.titleGroup}>
-          <Title order={1} size="h1">
+          <Title order={1} size="h2">
             数独
           </Title>
           {/* ⚠️ **持っている情報を出す。**マニフェストに収録数がある。 */}
@@ -150,49 +150,53 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
         </span>
       </header>
 
-      {saved && !stale && (
-        <Card withBorder padding="md">
-          <Stack gap="sm">
-            <Text fw={500}>遊びかけがあります</Text>
-            <Text size="sm" c="dimmed">
-              {DIFFICULTY_LABELS[saved.difficulty]}
-            </Text>
-            <Button
-              h={TOUCH_TARGET}
-              leftSection={<Icon name="play" />}
-              onClick={() => onStart(saved.difficulty, true)}
-            >
-              続きから
-            </Button>
-          </Stack>
-        </Card>
+      {!loaded && (
+        <Text size="sm" c="dimmed" role="status" aria-live="polite">
+          収録内容を読み込んでいます
+        </Text>
+      )}
+      {loaded && difficulties.length === 0 && (
+        <Text size="sm" c="dimmed" role="status" aria-live="polite">
+          遊べる問題が見つかりません。読み込み直してください。
+        </Text>
       )}
 
-      <Stack gap="sm">
-        <Text fw={500}>難易度を選ぶ</Text>
-        {!loaded && (
-          <Text size="sm" c="dimmed" role="status" aria-live="polite">
-            収録内容を読み込んでいます
-          </Text>
-        )}
-        {loaded && difficulties.length === 0 && (
-          <Text size="sm" c="dimmed" role="status" aria-live="polite">
-            遊べる問題が見つかりません。読み込み直してください。
-          </Text>
+      {/*
+        ⚠️ **見出しは読み上げだけに持たせる。**
+        **スマホでは 1 画面に収める**ので、カードを見れば分かるものに行を使わない。
+      */}
+      <div className={classes.list} role="group" aria-label="難易度を選ぶ">
+        {/*
+          🎯 **遊びかけも同じ形のカードにする。**専用の囲みを別に置くと、
+          **その高さぶんだけ 1 画面に入らなくなる。**
+        */}
+        {saved && !stale && (
+          <button
+            type="button"
+            className={[classes.card, classes.resume].join(" ")}
+            aria-label={`続きから ${DIFFICULTY_LABELS[saved.difficulty]}`}
+            onClick={() => onStart(saved.difficulty, true)}
+          >
+            <span className={classes.resumeMark} aria-hidden="true">
+              <Icon name="play" size={20} />
+            </span>
+            <span className={classes.cardBody} aria-hidden="true">
+              <span className={classes.cardName}>続きから</span>
+              <span className={classes.cardMeta}>{DIFFICULTY_LABELS[saved.difficulty]}</span>
+            </span>
+          </button>
         )}
 
-        <div className={classes.list}>
-          {difficulties.map((difficulty, index) => (
-            <DifficultyCard
-              key={difficulty}
-              difficulty={difficulty}
-              level={index + 1}
-              count={manifest?.totals[difficulty] ?? 0}
-              onStart={() => onStart(difficulty, false)}
-            />
-          ))}
-        </div>
-      </Stack>
+        {difficulties.map((difficulty, index) => (
+          <DifficultyCard
+            key={difficulty}
+            difficulty={difficulty}
+            level={index + 1}
+            count={manifest?.totals[difficulty] ?? 0}
+            onStart={() => onStart(difficulty, false)}
+          />
+        ))}
+      </div>
 
       {/*
         ⚠️ **更新情報はホームに置く。**遊技中に押してほしくないものの置き場所は
@@ -205,39 +209,37 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
         🎯 **難易度より弱く見せる。**主役は難易度で、これは添え物である。
       */}
       {notes && (
-        <>
-          <Group justify="center">
+        <div className={classes.footer}>
+          {/*
+            ⚠️ **`subtle` は使わない。**文字色が primary になり、
+            白地で 3.4:1 と本文の目安を割る(2026-08-05 の実測)。
+            **主従は大きさで付ける** —— 色を変えるとコントラストの検査が増える。
+          */}
+          <Button
+            variant="default"
+            size="sm"
+            h={TOUCH_TARGET}
+            leftSection={<Icon name="bell" size={18} />}
+            onClick={() => {
+              markRead();
+              releaseNotes.open();
+            }}
+          >
             {/*
-              ⚠️ **`subtle` は使わない。**文字色が primary になり、
-              白地で 3.4:1 と本文の目安を割る(2026-08-05 の実測)。
-              **主従は大きさで付ける** —— 色を変えるとコントラストの検査が増える。
+              🎯 **しるしは文字で出す。**色や点だけに載せると、
+              **色を見分けられない人へ届かない**(仕様の「色だけに情報を載せない」)。
+              読み上げでも「更新情報(新着)」と読まれる。
             */}
-            <Button
-              variant="default"
-              size="sm"
-              h={TOUCH_TARGET}
-              leftSection={<Icon name="bell" size={18} />}
-              onClick={() => {
-                markRead();
-                releaseNotes.open();
-              }}
-            >
-              {/*
-                🎯 **しるしは文字で出す。**色や点だけに載せると、
-                **色を見分けられない人へ届かない**(仕様の「色だけに情報を載せない」)。
-                読み上げでも「更新情報(新着)」と読まれる。
-              */}
-              更新情報{unread ? "(新着)" : ""}
-            </Button>
-          </Group>
+            更新情報{unread ? "(新着)" : ""}
+          </Button>
 
           <ReleaseNotesModal
             opened={releaseNotesOpened}
             notes={notes}
             onClose={releaseNotes.close}
           />
-        </>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }
