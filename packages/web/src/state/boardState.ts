@@ -221,6 +221,18 @@ export function matchesSolution(state: BoardState): boolean {
   return state.solution.every((value, index) => valueAt(state, index) === value);
 }
 
+/**
+ * **遊技者が自分で解き終えたか。**
+ *
+ * ⚠️ **あきらめて出た解は「完成」ではない。**
+ * あきらめると盤面は解と一致するので {@link matchesSolution} は真になる。
+ * **そのまま完成の判定に使うと、諦めた遊技者に「完成しました」と言うことになる。**
+ * 事実として間違っているうえに失礼である。
+ */
+export function isSolvedByPlayer(state: BoardState): boolean {
+  return !state.gaveUp && matchesSolution(state);
+}
+
 /** 行(0〜8)。 */
 export function rowOf(index: CellIndex): number {
   return Math.floor(index / BOARD_SIZE);
