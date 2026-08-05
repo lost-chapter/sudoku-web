@@ -17,7 +17,6 @@ export interface SavedProgress {
   readonly entries: readonly number[];
   /** メモ。81 要素のビットマスク。 */
   readonly notes: readonly number[];
-  readonly elapsedMs: number;
   /**
    * 遊んでいた難易度。
    *
@@ -47,6 +46,10 @@ export interface PackVersion {
  * 壊れていたら黙って捨てて新しい盤面から始める。
  * **保存の失敗で遊べなくならないこと**
  * (docs/architecture/system-architecture.md「エラーハンドリングの方針」)。
+ *
+ * ⚠️ **知らない項目は無視する。** 2026-08-06 に経過時間を消したが、
+ * `elapsedMs` を持つ古い保存も**そのまま読めて遊びかけが続く**
+ * (項目を検査しないので、余分な鍵があっても落ちない)。
  */
 export function normalizeProgress(value: unknown): SavedProgress | null {
   if (typeof value !== "object" || value === null) {
@@ -64,8 +67,6 @@ export function normalizeProgress(value: unknown): SavedProgress | null {
     (stored.line as number) < 0 ||
     !entries ||
     !notes ||
-    !Number.isFinite(stored.elapsedMs) ||
-    (stored.elapsedMs as number) < 0 ||
     !Number.isInteger(stored.formatVersion) ||
     typeof stored.generator !== "string" ||
     !isDifficulty(stored.difficulty)
@@ -78,7 +79,6 @@ export function normalizeProgress(value: unknown): SavedProgress | null {
     line: stored.line as number,
     entries,
     notes,
-    elapsedMs: stored.elapsedMs as number,
     difficulty: stored.difficulty,
     formatVersion: stored.formatVersion as number,
     generator: stored.generator,

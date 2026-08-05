@@ -5,10 +5,6 @@ import type { Difficulty } from "@sudoku/core";
 /**
  * ゲーム画面のヘッダ。**難易度 / パック名 / 設定**
  * (docs/ui/screens-and-interactions.md「ゲーム画面の構成」)。
- *
- * ⚠️ **経過時間はここに置かない。**盤面のすぐ上・右寄せである(2026-08-05 決定)。
- * 時計を止める条件(完成したか)を持つのが盤面側なので、
- * 表示位置を揃えるためだけに状態を持ち上げない。
  */
 export interface GameHeaderProps {
   readonly difficulty: Difficulty;
