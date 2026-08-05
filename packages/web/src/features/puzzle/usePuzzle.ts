@@ -53,7 +53,13 @@ interface Attempt {
   readonly elapsedMs: number;
 }
 
-export function usePuzzle(difficulty: Difficulty): UsePuzzleResult {
+export interface UsePuzzleOptions {
+  readonly difficulty: Difficulty;
+  /** 遊びかけから始めるか。**ホーム画面で「続きから」を選んだときだけ真。** */
+  readonly resume: boolean;
+}
+
+export function usePuzzle({ difficulty, resume }: UsePuzzleOptions): UsePuzzleResult {
   const [count, setCount] = useState(0);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
 
@@ -64,8 +70,8 @@ export function usePuzzle(difficulty: Difficulty): UsePuzzleResult {
     // 古い取得の結果で新しい盤面を上書きしないようにする。
     let cancelled = false;
 
-    // 遊びかけを見るのは起動時だけ。「次の問題へ」では新しい問題を引く。
-    const load = count === 0 ? resumeOrLoad(difficulty) : loadFresh(difficulty);
+    // 遊びかけを見るのは選ばれたときの 1 回だけ。「次の問題へ」では新しい問題を引く。
+    const load = resume && count === 0 ? resumeOrLoad(difficulty) : loadFresh(difficulty);
 
     void load.then((result) => {
       if (!cancelled) {
@@ -76,7 +82,7 @@ export function usePuzzle(difficulty: Difficulty): UsePuzzleResult {
     return () => {
       cancelled = true;
     };
-  }, [count, difficulty, key]);
+  }, [count, difficulty, key, resume]);
 
   const next = useCallback(() => {
     // 次へ進んだ時点で遊びかけは無い。残すと次回の起動で古い問題が開く。

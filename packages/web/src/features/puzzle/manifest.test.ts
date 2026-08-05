@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decodeManifest, packsFor } from "./manifest";
+import { availableDifficulties, decodeManifest, packsFor } from "./manifest";
 
 const VALID = {
   formatVersion: 1,
@@ -56,6 +56,27 @@ describe("decodeManifest", () => {
     const manifest = decodeManifest({ ...VALID, generatedWith: undefined });
     expect(manifest?.generator).toBe("");
     expect(manifest?.techniques).toEqual([]);
+  });
+});
+
+describe("availableDifficulties", () => {
+  it("0 件のクラスは出さない(画面にクラスを固定で書かないため)", () => {
+    const manifest = decodeManifest(VALID);
+    expect(manifest && availableDifficulties(manifest)).toEqual(["easy", "normal"]);
+  });
+
+  it("totals が壊れていればパックの件数から数え直す", () => {
+    const manifest = decodeManifest({ ...VALID, totals: { easy: "たくさん" } });
+    expect(manifest?.totals.easy).toBe(1000);
+    expect(manifest?.totals.hard).toBe(0);
+  });
+
+  it("totals が packs より多くてもそのまま信じる(収録の正は totals)", () => {
+    const manifest = decodeManifest({
+      ...VALID,
+      totals: { ...VALID.totals, hard: 500 },
+    });
+    expect(manifest && availableDifficulties(manifest)).toContain("hard");
   });
 });
 
