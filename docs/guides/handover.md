@@ -90,11 +90,7 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-<<<<<<< HEAD
 | テスト | **309 件**(core 126 / generator 16 / docs-html 19 / web 148) |
-=======
-| テスト | **305 件**(core 126 / generator 16 / docs-html 19 / web 144) |
->>>>>>> cc/agent-b
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
 | 本番ビルド | 成功(JS 345.14 KB / gzip 106.66 KB、CSS 233.55 KB / gzip 34.31 KB) |
