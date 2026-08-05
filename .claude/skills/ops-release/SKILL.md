@@ -21,17 +21,26 @@ description: sudoku-web を 1 版リリースする手順。git-flow のリリ�
 
 ```bash
 git log --oneline -1 main | cat                   # リリースのマージコミットが乗っている
-git log --oneline -1 develop | cat                # 同じ内容が develop にも戻っている
 git tag --list 'v*' | tail -3                     # v<版> のタグがある
-git log --oneline main..develop | cat             # develop だけが進んでいる(または空)
+
+git diff --stat develop main                      # 🔴 空であること(中身が一致)
+git log --oneline --no-merges develop..main | cat # 🔴 空であること(戻し漏れが無い)
 ```
 
-⚠️ **`main` にあって `develop` に無いコミットが 1 つでもあったら未完了である。**
+🔴 **「`develop..main` が空であること」を条件にしてはいけない。**
+⚠️ **`main` へ `--no-ff` でマージした時点で、そのマージコミットは必ず `develop` に無い。**
+**空にはならないので、正しく終わっていても未完了に見える**
+(2026-08-06 に初めて通して判明。それまでこの条件を書いていた)。
+
+**見たいのは「戻し忘れが無いか」である。⇒ 見るものは 2 つ。**
+
+| 何を見るか | 何が分かるか |
+|-----------|------------|
+| **`git diff --stat develop main`** | **中身が一致しているか。** これが空なら戻し漏れは無い |
+| **`git log --no-merges develop..main`** | **`main` にしか無い実体のあるコミット。** マージコミットは数えない |
+
+⚠️ **`main` にあって `develop` に無い実体のコミットが 1 つでもあったら未完了である。**
 戻し忘れると、次のリリースで必ず競合する。
-
-```bash
-git log --oneline develop..main | cat             # 空であること
-```
 
 ## 前提
 
@@ -154,6 +163,9 @@ pnpm build:pages                                   # BASE_PATH を付けたビ�
 pnpm preview:subpath                               # http://localhost:4321/sudoku-web/
 ```
 
+⚠️ **Playwright で確かめる script を書くなら `packages/web/` の中に置く。**
+**リポジトリ直下では `@playwright/test` が解決できない**(依存は web パッケージにある)。
+
 ⚠️ **`packages/web/public/` は Git 管理外である。**
 問題パックもリリースノートも **`pnpm build` が毎回作り直す**ので、
 `main` へマージしたあとの CI でも同じものができる。
@@ -190,11 +202,18 @@ git merge release/0.2.0 --no-ff --no-edit
 ⚠️ **`main` ではなく `release/` からマージする。**
 `main` からだと、`main` にしか無いもの(過去のリリース)まで巻き込む。
 
+⚠️ **版を上げるコミットが無い回(最初のリリース)は `Already up to date.` になる。**
+**それが正しい。**`release/` が `develop` の祖先なので、戻すものが無い。
+
 **戻ったことを確かめる。**
 
 ```bash
-git log --oneline develop..main | cat              # 空であること
+git diff --stat develop main                       # 空であること(中身が一致)
+git log --oneline --no-merges develop..main | cat  # 空であること
 ```
+
+🔴 **`git log --oneline develop..main` は空にならない。**
+`main` のマージコミットが必ず残る。**上の 2 つで見ること**(完了条件を参照)。
 
 ## 7. リリースブランチを片づける
 
@@ -245,6 +264,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://lost-chapter.github.io/sudoku-w
 | 落とし穴 | どうなるか |
 |---------|-----------|
 | 🔴 **`develop` へ戻し忘れる** | 版を上げたコミットが `develop` に無く、次のリリースで必ず競合する |
+| 🔴 **`develop..main` が空でないのを異常だと読む** | **`main` のマージコミットは必ず残る。** 空になることはない。`git diff` と `--no-merges` で見る |
 | 🔴 **`pnpm preview` で確かめて満足する** | あれはルートで配るので**サブパスの 404 が見つからない**。`preview:subpath` を使う |
 | **版を片方だけ上げる** | `package.json` とリリースノートのファイル名が食い違う。3 の検査で止める |
 | **リリースブランチで機能を足す** | 固める場所である。足したくなったら `develop` へ入れて次の版に回す |
