@@ -100,6 +100,8 @@ export const PAGE_SCRIPT = `
       } catch (e) {
         /* 保存できなくても表示は切り替わる */
       }
+      // 図は mermaid が色を焼き込んで描くので、テーマを変えたら描き直す
+      if (typeof window.docsDrawDiagrams === "function") window.docsDrawDiagrams();
     });
   }
 
