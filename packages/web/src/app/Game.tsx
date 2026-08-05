@@ -5,7 +5,7 @@ import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 import { Board } from "../features/board/Board";
 import { NumberPad } from "../features/input/NumberPad";
 import type { Puzzle } from "../features/puzzle/types";
-import { boardReducer, createBoardState, isComplete, isGiven } from "../state/boardState";
+import { boardReducer, createBoardState, isGiven, matchesSolution } from "../state/boardState";
 
 /**
  * 1 問を遊ぶところ。
@@ -24,7 +24,7 @@ export interface GameProps {
 
 export function Game({ puzzle, onNext }: GameProps) {
   const [state, dispatch] = useReducer(boardReducer, puzzle, createBoardState);
-  const completed = isComplete(state);
+  const completed = matchesSolution(state);
 
   // 完成したら盤面を動かさない。完成の知らせが入力で消えてしまうのを防ぐ。
   const play = (action: Parameters<typeof dispatch>[0]) => {
