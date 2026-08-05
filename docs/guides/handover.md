@@ -90,7 +90,7 @@ pnpm build
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **57 件**(core 46 / docs-html 11。generator と web は 0 件) |
+| テスト | **98 件**(core 46 / docs-html 19 / web 33。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
 | 本番ビルド | 成功(JS gzip 約 73 KB / CSS gzip 約 34 KB。工程 1 の実測値) |
