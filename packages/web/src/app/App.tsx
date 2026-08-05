@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Container, MantineProvider, Stack, Title } from "@mantine/core";
 
-import type { Difficulty } from "../features/puzzle/types";
+import type { Difficulty } from "@sudoku/core";
 
 import { GameScreen } from "./GameScreen";
 import { HomeScreen } from "./HomeScreen";

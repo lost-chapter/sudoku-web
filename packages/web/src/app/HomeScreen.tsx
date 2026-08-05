@@ -4,9 +4,9 @@ import { Button, Card, Group, Stack, Text } from "@mantine/core";
 import { formatElapsed } from "../features/progress/useElapsedTime";
 import { readProgress, type StorageLike } from "../features/progress/progressStorage";
 import { isStale, type SavedProgress } from "../features/progress/progress";
-import { availableDifficulties } from "../features/puzzle/manifest";
+import { availableDifficulties } from "../features/puzzle/packSelection";
 import { loadManifest } from "../features/puzzle/loadPuzzle";
-import type { Difficulty } from "../features/puzzle/types";
+import type { Difficulty } from "@sudoku/core";
 
 import { DIFFICULTY_LABELS } from "./GameHeader";
 
@@ -43,7 +43,7 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
           manifest !== null &&
           isStale(saved, {
             formatVersion: manifest.formatVersion,
-            generator: manifest.generator,
+            generator: manifest.generatedWith.generator,
           }),
       );
     });

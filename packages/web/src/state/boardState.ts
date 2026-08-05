@@ -1,6 +1,6 @@
 import { BOARD_SIZE, CELL_COUNT, maskOfDigit, type Board } from "@sudoku/core";
 
-import type { Puzzle } from "../features/puzzle/types";
+import type { Puzzle } from "@sudoku/core";
 
 /**
  * 盤面の状態と、その遷移。

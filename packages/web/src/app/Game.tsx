@@ -9,7 +9,7 @@ import { isEmpty } from "../features/progress/progress";
 import { clearProgress, writeProgress } from "../features/progress/progressStorage";
 import { formatElapsed, useElapsedTime } from "../features/progress/useElapsedTime";
 import type { LoadedPuzzle } from "../features/puzzle/loadPuzzle";
-import type { Puzzle } from "../features/puzzle/types";
+import type { Puzzle } from "@sudoku/core";
 import type { Settings } from "../features/settings/settings";
 import { isGiven, matchesSolution, type RestoredBoard } from "../state/boardState";
 import {
