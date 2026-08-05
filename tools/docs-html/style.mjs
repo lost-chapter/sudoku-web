@@ -270,6 +270,28 @@ p.warn {
   border-radius: 0 6px 6px 0;
 }
 
+/* ---- 図(mermaid の flowchart をビルド時に SVG へ変換したもの) ---- */
+.diagram-figure {
+  margin: 1.6em 0;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.diagram { max-width: 100%; height: auto; font-family: inherit; }
+.dg-node { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.dg-label { fill: var(--fg); font-size: 14px; text-anchor: middle; }
+.dg-edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.dg-dashed { stroke-dasharray: 5 4; }
+.dg-thick { stroke-width: 3; }
+.dg-arrow-head { fill: var(--muted); }
+.dg-edge-label-bg { fill: var(--surface); }
+.dg-edge-label { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.diagram-fallback { margin: 1.6em 0; }
+.diagram-fallback > p { margin-bottom: 0.4em; font-size: 0.85rem; color: var(--muted); }
+
 /* ---- コードの色(highlight.js のクラス名に対応する) ---- */
 .hljs-comment, .hljs-quote { color: var(--code-muted); font-style: italic; }
 .hljs-string, .hljs-attr, .hljs-attribute { color: var(--code-string); }
@@ -359,7 +381,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
   :root { --bg: #ffffff; --fg: #000000; --surface: #ffffff; --warn-bg: #ffffff; }
   .sidebar, .toc, .topbar, .pager, .copy, .anchor { display: none !important; }
   .layout { display: block; max-width: none; padding: 0; }
-  pre, .table-scroll { break-inside: avoid; }
+  pre, .table-scroll, .diagram-figure { break-inside: avoid; }
   /* 紙には器のスクロールが無い。高さを止めると表が途中で切れる。 */
   .table-scroll.is-tall { max-height: none; overflow: visible; }
 }

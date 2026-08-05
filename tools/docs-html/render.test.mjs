@@ -156,6 +156,36 @@ describe("renderPage", () => {
     expect(html).toContain("<pre><code>sudoku-web/\n└── docs/\n</code></pre>");
   });
 
+  it("mermaid の flowchart をビルド時に SVG へ変換する", () => {
+    const html = render({
+      markdown: '# 題\n\n```mermaid\nflowchart TD\n  A["作る"] -->|生成| B{"一意解か"}\n```\n',
+    });
+    expect(html).toContain('<figure class="diagram-figure"><svg class="diagram"');
+    expect(html).toContain(">作る</text>");
+    expect(html).toContain(">生成</text>");
+    // 図はページの中で完結する。外から何も読まない
+    expect(html).not.toMatch(/<script[^>]+src=/);
+  });
+
+  it("描けない図はその図だけ記法のまま出す(変換全体は落とさない)", () => {
+    const html = render({
+      markdown: "# 題\n\n```mermaid\nsequenceDiagram\n  A->>B: こんにちは\n```\n\n本文は続く\n",
+    });
+    expect(html).toContain('<div class="diagram-fallback">');
+    expect(html).toContain("A-&gt;&gt;B: こんにちは");
+    expect(html).toContain("<p>本文は続く</p>");
+  });
+
+  it("同じページに図が 2 つあっても id がぶつからない", () => {
+    const html = render({
+      markdown:
+        "# 題\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\n```mermaid\nflowchart LR\n  C --> D\n```\n",
+    });
+    const ids = [...html.matchAll(/<marker id="([^"]+)"/g)].map((match) => match[1]);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   it("生の HTML はエスケープする", () => {
     expect(render()).not.toContain("<script>alert(1)</script>");
   });
