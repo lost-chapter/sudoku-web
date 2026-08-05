@@ -53,10 +53,10 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **98 件**(core 46 / docs-html 19 / web 33。generator は 0 件) |
+| テスト | **123 件**(core 46 / docs-html 19 / web 58。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
-| 本番ビルド | 成功(JS 256.17 KB / gzip 79.54 KB、CSS 232.38 KB / gzip 34.12 KB) |
+| 本番ビルド | 成功(JS 306.34 KB / gzip 95.27 KB、CSS 232.38 KB / gzip 34.12 KB) |
 
 ⚠️ **CSS 232 KB は Mantine の全スタイルである。**
 部品ごとの CSS が配布されているので削減はできるが、**切り替えは使う部品が固まる
