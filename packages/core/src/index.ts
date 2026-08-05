@@ -10,11 +10,40 @@
  * 詳細は docs/architecture/system-architecture.md の
  * 「`core` が守る 3 つの制約」を参照。
  *
- * 中身の実装は工程 2(担当 agent-b)。ここにあるのは骨組みだけである。
+ * ここは公開する入口だけを置く。実装は各 module にある。
  */
 
-/** 盤面の一辺のセル数。 */
-export const BOARD_SIZE = 9;
+export type { Board, Candidates } from "./board";
+export {
+  ALL_CANDIDATES,
+  BOARD_SIZE,
+  BOX_OF,
+  BOX_SIZE,
+  CELL_COUNT,
+  COLUMN_OF,
+  PEER_COUNT,
+  PEERS,
+  ROW_OF,
+  UNIT_COUNT,
+  UNITS,
+  UNITS_OF,
+  boardsEqual,
+  candidateDigits,
+  cellIndex,
+  cloneBoard,
+  computeCandidates,
+  countCandidates,
+  createEmptyBoard,
+  findConflicts,
+  formatBoard,
+  isComplete,
+  isSolvedBoard,
+  isValidBoard,
+  isValidPlacement,
+  lowestDigit,
+  maskOfDigit,
+  parseBoard,
+  tryParseBoard,
+} from "./board";
 
-/** 盤面のセル数。 */
-export const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
+export { countSolutions, findSolutions, hasUniqueSolution, solveBoard } from "./search-solver";
