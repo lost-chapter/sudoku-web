@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { BOARD_SIZE, CELL_COUNT, formatBoard, isSolvedBoard } from "./board";
-import { generateSolvedBoard } from "./generate";
+import type { Board } from "./board";
+import { BOARD_SIZE, CELL_COUNT, cloneBoard, formatBoard, isSolvedBoard } from "./board";
+import { digHoles, generatePuzzle, generateSolvedBoard } from "./generate";
 import { createRandom } from "./random";
+import { countSolutions } from "./search-solver";
 
 function generate(seed: string | number): string {
   return formatBoard(generateSolvedBoard(createRandom(seed)));
@@ -59,6 +61,67 @@ describe("完成盤の生成", () => {
     for (const count of counts.values()) {
       expect(count).toBeLessThan(40);
     }
+  });
+});
+
+/** 手がかりの数。 */
+function countClues(board: Board): number {
+  return [...board].filter((digit) => digit !== 0).length;
+}
+
+describe("穴あけ", () => {
+  it("できた問題は一意解である(性質 1)", () => {
+    for (let seed = 0; seed < 10; seed += 1) {
+      const { puzzle } = generatePuzzle(createRandom(`dig-${String(seed)}`));
+      expect(countSolutions(puzzle)).toBe(1);
+    }
+  });
+
+  it("手がかりを 1 つでも消すと一意解でなくなる(性質 2・極小性)", () => {
+    const { puzzle } = generatePuzzle(createRandom("minimal"));
+    for (let index = 0; index < CELL_COUNT; index += 1) {
+      if (puzzle[index] === 0) continue;
+      const reduced = cloneBoard(puzzle);
+      reduced[index] = 0;
+      expect(countSolutions(reduced)).not.toBe(1);
+    }
+  });
+
+  it("同じシードからは同じ問題ができる(性質 3)", () => {
+    const first = generatePuzzle(createRandom("same-seed"));
+    const second = generatePuzzle(createRandom("same-seed"));
+    expect(formatBoard(first.puzzle)).toBe(formatBoard(second.puzzle));
+    expect(formatBoard(first.solution)).toBe(formatBoard(second.solution));
+  });
+
+  it("解は完成盤のままで、手がかりはその一部である", () => {
+    for (let seed = 0; seed < 5; seed += 1) {
+      const { puzzle, solution } = generatePuzzle(createRandom(`subset-${String(seed)}`));
+      expect(isSolvedBoard(solution)).toBe(true);
+      for (let index = 0; index < CELL_COUNT; index += 1) {
+        if (puzzle[index] !== 0) expect(puzzle[index]).toBe(solution[index]);
+      }
+    }
+  });
+
+  it("手がかりは 17 個以上残る", () => {
+    // 一意解を持つ最小の手がかり数は 17(2012 年に網羅探索で証明済み)。
+    // これを下回ったら一意解の判定が壊れている。
+    for (let seed = 0; seed < 10; seed += 1) {
+      const { puzzle } = generatePuzzle(createRandom(`clues-${String(seed)}`));
+      expect(countClues(puzzle)).toBeGreaterThanOrEqual(17);
+      expect(countClues(puzzle)).toBeLessThan(CELL_COUNT);
+    }
+  });
+
+  it("完成盤を渡すと手がかりが減る", () => {
+    const random = createRandom("dig-only");
+    const solution = generateSolvedBoard(random);
+    const before = cloneBoard(solution);
+    const puzzle = digHoles(solution, random);
+    // 入力の完成盤を書き換えない。
+    expect(formatBoard(solution)).toBe(formatBoard(before));
+    expect(countClues(puzzle)).toBeLessThan(CELL_COUNT);
   });
 });
 
