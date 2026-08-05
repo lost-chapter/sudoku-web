@@ -381,7 +381,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
 .icon-button:hover { background: var(--surface-2); }
 
 /* ---- 狭い画面 ---- */
-@media (max-width: 1100px) {
+/* ⚠️ 3 段のまま窓を狭めると、両脇(17rem + 18rem)は変わらず本文だけが痩せる。
+   1150px では本文欄が 444px しか残らず、表も図も縮んでいた(2026-08-06 実測)。
+   目次を早めに畳んで本文へ幅を返す。1250px で畳むと本文は 790px になる。 */
+@media (max-width: 1250px) {
   .layout { grid-template-columns: 16rem minmax(0, 1fr); }
   .toc { display: none; }
 }
