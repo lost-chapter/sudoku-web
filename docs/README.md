@@ -48,13 +48,13 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [調査: 数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md) — 同型変換の罠・最小 17 手がかり・相関表・81 文字 1 行
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
 - [検証: 問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md) — 1 問 1.56 ms・毎秒 640 問。**手がかり数は 24〜25 に山**
-- [検証: 難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md) — **やさしい 40.3% / 評価できない 41.5% の 2 山。**難問・最難関はまだ作れない
+- [検証: 難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md) — **5 クラスすべてを収録できるようになった。**しきい値は確定
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
 
 > **工程 2(盤面ロジックと生成)と工程 3(遊べる最小の UI)が完了している。**
-> 同梱パック 3,000 問を収録済み。次はレベル 5 以降の手筋(工程 2 の 7)と工程 4。
+> 同梱パックは 5 クラス 5,000 問。次は工程 4 の残りと工程 5(本番構成)。
 
 ## 初めて参加する開発者が読む順序
 
