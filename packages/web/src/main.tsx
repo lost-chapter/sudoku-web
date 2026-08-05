@@ -40,6 +40,10 @@ import "@mantine/core/styles/Text.layer.css";
 import "@mantine/core/styles/Title.layer.css";
 import "@mantine/core/styles/VisuallyHidden.layer.css";
 
+// 自前の上書き。**Mantine のあとに読む**(レイヤーの外なので順序に関係なく勝つが、
+// 何を上書きしているかを読み手に分かりやすくするため後ろに置く)。
+import "./app/theme.css";
+
 import { App } from "./app/App";
 
 const container = document.getElementById("root");

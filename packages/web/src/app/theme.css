@@ -1,0 +1,17 @@
+/*
+ * アプリ全体の色の上書き。
+ *
+ * **@layer mantine の外に書いてあるので、import 順に関係なく Mantine より勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。
+ */
+
+:root {
+  /*
+   * ⚠️ **Mantine の既定の `dimmed` は地の上で 4.04:1 しかなく、本文の目安 4.5:1 を割る。**
+   * パック名・経過時間・残り数など、控えめに出したい文字はすべてこれを使うので、
+   * **1 か所で濃さを上げる。**個別に色を指定して回ると次に足す文字で必ず漏れる。
+   *
+   * 実測(2026-08-05): ライト 8.18:1 / ダーク 7.48:1。
+   */
+  --mantine-color-dimmed: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+}
