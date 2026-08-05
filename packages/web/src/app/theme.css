@@ -23,6 +23,18 @@
    * ライトは red-9 を 1 割だけ黒へ寄せ、ダークは 1 段明るい red-3 にした。
    * **赤に見えること自体が情報なので、灰色へは寄せない。**
    */
+  /*
+   * あきらめたときに出す解の色。**遊技者が自分で入れた正解と見分けが付くこと。**
+   *
+   * ⚠️ **色だけに載せない。**細字(手がかりは太字)と、セル右上の点で区別する。
+   * **背景は変えない** —— 背景を変えると、強調が重なるたびに文字のコントラストが
+   * 変わり、測る組み合わせが倍になる。点なら文字の読みやすさに影響しない。
+   *
+   * いまの値は `--mantine-color-dimmed` と同じ組み合わせだが、
+   * **別の変数にしてある**(片方だけ調整したくなったときに困らないため)。
+   */
+  --sudoku-color-revealed: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+
   --sudoku-color-alert: light-dark(
     color-mix(in srgb, var(--mantine-color-red-9) 90%, black),
     var(--mantine-color-red-3)
