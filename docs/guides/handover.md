@@ -211,11 +211,7 @@ agent-b は `core` / `generator` の担当なので開発サーバを立てな�
 | agent-b | 工程 2 の 1〜2(盤面の表現・規則の検証・探索ソルバ) | ✅ **完了・統合済み(2026-08-05)。**所要時間を[検証](../reports/2026-08-05-search-solver-benchmark.md)へ記録 |
 | agent-b | 工程 2 の 3〜4(完成盤の生成・穴あけ) | ✅ **完了・統合済み(2026-08-05)。**手がかり数の分布を[検証](../reports/2026-08-05-puzzle-generation-benchmark.md)へ記録 |
 | agent-b | 工程 2 の 5(難易度評価・手筋ソルバ) | ✅ **完了・統合済み(2026-08-05)。**`core` のテスト 96 件。**レベル 1〜4 まで実装**。分布を[検証](../reports/2026-08-05-difficulty-distribution.md)へ記録 |
-<<<<<<< HEAD
 | agent-b | 工程 2 の 6(パック出力・並列生成) | ✅ **完了(2026-08-05)。**`core/src/puzzle-file.ts` + `generator`。**同梱パックを生成して仮置きを差し替えた**。⚠️ **agent-c の `puzzleLine.ts` / `pack.ts` は `core` へ寄せられる状態**(`decodePuzzleLine` / `decodePack` が同じ名前で入っている) |
-=======
-| agent-b | 工程 2 の 6(パック出力・並列生成) | ✅ **完了(2026-08-05)。**`core/src/puzzle-file.ts` + `generator`。**同梱パックを 3,000 問生成して仮置きを差し替えた**。⚠️ **agent-c の `puzzleLine.ts` / `pack.ts` は `core` へ寄せられる状態**(`decodePuzzleLine` / `decodePack` が同じ名前で入っている) |
->>>>>>> cc/agent-b
 | agent-b | 工程 2 の 7(レベル 5〜7 の手筋) | ✅ **完了(2026-08-05)。**X-Wing / Swordfish / Jellyfish / XY-Wing / XYZ-Wing / X-Chain を実装し、**5 クラス 5,000 問を収録**。評価できない問題は 41.5% → 30.1% |
 | agent-c | 工程 3(`web`) | ✅ **完了・統合済み(2026-08-05)。**マニフェスト → パック → 1 問 → 入力 → 完成の判定 → 次の問題まで一本の経路が通った |
 | agent-c | 工程 4(遊技機能の横展開) | ⏳ **5 項目すべて統合済み(2026-08-05)。**⚠️ **完了条件の最後の 2 点が未検証**(下記) |
