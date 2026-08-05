@@ -1,26 +1,42 @@
 #!/usr/bin/env node
 /**
- * Markdown を人間が読みやすい HTML へ変換する。
+ * docs/ の Markdown を、人間が読みやすい HTML のサイトへ変換する。
  *
  * この変換は純粋関数として扱う。契約は
  * .claude/skills/docs-markdown-to-html/SKILL.md にある。
  *
  *   1. 決定性     同じ入力からは常に同じ出力(日時・乱数を埋め込まない)
  *   2. 入力不変   .md を書き換えない
- *   3. 副作用限定 出力する .html 以外を作らない・消さない
- *   4. 自己完結   CSS はインライン。外部 CDN を参照しない
+ *   3. 副作用限定 出力ディレクトリ以外を作らない・消さない
+ *   4. 自己完結   CSS と JS はインライン。外部 CDN を参照しない
+ *
+ * 「入力」は 1 ファイルではなく **docs/ のツリー全体**である。
+ * サイドメニューが全文書の一覧を持つため、文書が 1 つ増えると全ページが変わる。
  *
  * 使い方:
- *   node tools/docs-html/render.mjs <path...> [--out <dir>]
+ *   node tools/docs-html/render.mjs [--src docs] [--out docs-html]
  */
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { dirname, extname, join, relative, resolve, sep } from "node:path";
+import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { dirname, extname, join, posix, resolve, sep } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import MarkdownIt from "markdown-it";
 
+import { buildNav, extractTitle, toHref } from "./nav.mjs";
+import { PAGE_SCRIPT } from "./script.mjs";
 import { PAGE_STYLE } from "./style.mjs";
+
+const DEFAULT_SRC = "docs";
+const DEFAULT_OUT = "docs-html";
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 /** 見出しの id を見出しテキストから決定的に作る。重複したら連番を足す。 */
 function slugify(text, used) {
@@ -37,22 +53,33 @@ function slugify(text, used) {
   return seen === 0 ? base : `${base}-${seen + 1}`;
 }
 
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+/**
+ * 相対リンクを HTML 側の宛先へ書き換える。
+ *
+ * - `.md` → `.html`(`README.md` は入口なので `index.html`)
+ * - `guides/` のようなディレクトリ参照 → そのカテゴリの先頭ページ。
+ *   HTML にはディレクトリの索引が無いため、放っておくと行き止まりになる
+ */
+function rewriteHref(href, dirIndex) {
+  const directory = /(?:^|\/)([^/]+)\/$/.exec(href);
+  if (directory) {
+    const first = dirIndex[directory[1]];
+    if (first) return `${href}${first}`;
+  }
+
+  return href
+    .replace(/(?:^|(?<=\/))README\.md(?=$|[#?])/, "index.html")
+    .replace(/\.md(?=$|[#?])/, ".html");
 }
 
 /**
- * markdown-it のトークン列へ手を入れる。
+ * トークン列へ手を入れ、目次の材料を返す。
  *
- * - 見出しに決定的な id を振る
+ * - 見出しに決定的な id と、見出しへ戻れるアンカーを付ける
  * - 相対リンクの .md を .html へ書き換える(外部リンクとアンカーは触らない)
- * - 表を横スクロールできる器で包む
+ * - 外部リンクは別タブで開き、印を付ける
  */
-function transform(tokens) {
+function transform(tokens, dirIndex) {
   const usedIds = new Map();
   const headings = [];
 
@@ -64,9 +91,14 @@ function transform(tokens) {
       const text = inline && inline.type === "inline" ? inline.content : "";
       const id = slugify(text, usedIds);
       token.attrSet("id", id);
+
       const level = Number(token.tag.slice(1));
-      if (level === 2 || level === 3) {
-        headings.push({ id, level, text });
+      if (level === 2 || level === 3) headings.push({ id, level, text });
+
+      if (inline && inline.type === "inline") {
+        const anchor = new inline.constructor("html_inline", "", 0);
+        anchor.content = ` <a class="anchor" href="#${id}" aria-label="この見出しへのリンク">#</a>`;
+        inline.children.push(anchor);
       }
       continue;
     }
@@ -75,8 +107,17 @@ function transform(tokens) {
       for (const child of token.children) {
         if (child.type !== "link_open") continue;
         const href = child.attrGet("href");
-        if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("#")) continue;
-        child.attrSet("href", href.replace(/\.md(?=$|[#?])/, ".html"));
+        if (!href) continue;
+
+        if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
+          child.attrSet("target", "_blank");
+          child.attrSet("rel", "noopener noreferrer");
+          child.attrJoin("class", "external");
+          continue;
+        }
+        if (href.startsWith("#")) continue;
+
+        child.attrSet("href", rewriteHref(href, dirIndex));
       }
     }
   }
@@ -94,14 +135,68 @@ function renderToc(headings) {
     )
     .join("\n");
 
-  return `<nav class="toc" aria-label="目次">\n<p class="toc-title">目次</p>\n<ul>\n${items}\n</ul>\n</nav>\n`;
+  return `<nav class="toc" aria-label="このページの目次">\n<p class="toc-title">このページ</p>\n<ul>\n${items}\n</ul>\n</nav>`;
+}
+
+/** ページからの相対パスを組む(出力はサブディレクトリを持つため)。 */
+function relativeHref(fromHref, toTarget) {
+  const depth = fromHref.split("/").length - 1;
+  return depth === 0 ? toTarget : `${"../".repeat(depth)}${toTarget}`;
+}
+
+function renderSidebar(nav, currentHref) {
+  const groups = nav
+    .map(({ label, items }) => {
+      const links = items
+        .map((item) => {
+          const current = item.href === currentHref;
+          const href = relativeHref(currentHref, item.href);
+          const attrs = current ? ' aria-current="page"' : "";
+          return `<li><a href="${href}"${attrs}>${escapeHtml(item.title)}</a></li>`;
+        })
+        .join("\n");
+      return `<div class="nav-group">\n<p>${escapeHtml(label)}</p>\n<ul>\n${links}\n</ul>\n</div>`;
+    })
+    .join("\n");
+
+  const home = relativeHref(currentHref, "index.html");
+
+  return [
+    '<nav class="sidebar" id="sidebar" aria-label="ドキュメント一覧">',
+    '<div class="sidebar-head">',
+    `<a href="${home}">sudoku-web ドキュメント</a>`,
+    '<button type="button" class="icon-button" id="theme-toggle" aria-label="テーマを切り替える">◐</button>',
+    "</div>",
+    '<input type="search" id="nav-filter" placeholder="絞り込む" aria-label="ドキュメントを絞り込む">',
+    groups,
+    "</nav>",
+  ].join("\n");
+}
+
+function renderPager(prev, next, currentHref) {
+  if (!prev && !next) return "";
+
+  const link = (page, kind, label) =>
+    page
+      ? `<a class="${kind}" href="${relativeHref(currentHref, page.href)}"><span>${label}</span>${escapeHtml(page.title)}</a>`
+      : "<span></span>";
+
+  return `<nav class="pager" aria-label="前後のドキュメント">\n${link(prev, "prev", "前")}\n${link(next, "next", "次")}\n</nav>`;
 }
 
 /**
- * Markdown の文字列を HTML の文字列にする。**この関数が純粋関数の本体である。**
+ * 1 ページ分の HTML を組み立てる。**これが純粋関数の本体である。**
  * ここで日時や乱数に触ってはいけない。
  */
-export function renderMarkdown(markdown, fallbackTitle) {
+export function renderPage({
+  markdown,
+  title,
+  nav = [],
+  currentHref = "index.html",
+  prev,
+  next,
+  dirIndex = {},
+}) {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 
   // 表は横に溢れたら表だけがスクロールする。ページ全体を横スクロールさせない。
@@ -109,11 +204,7 @@ export function renderMarkdown(markdown, fallbackTitle) {
   md.renderer.rules.table_close = () => "</table>\n</div>\n";
 
   const tokens = md.parse(markdown, {});
-  const headings = transform(tokens);
-
-  const firstH1 = tokens.findIndex((t) => t.type === "heading_open" && t.tag === "h1");
-  const title = firstH1 >= 0 && tokens[firstH1 + 1] ? tokens[firstH1 + 1].content : fallbackTitle;
-
+  const headings = transform(tokens, dirIndex);
   const body = md.renderer.render(tokens, md.options, {});
 
   return [
@@ -122,85 +213,123 @@ export function renderMarkdown(markdown, fallbackTitle) {
     "<head>",
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<title>${escapeHtml(title)}</title>`,
+    `<title>${escapeHtml(title)} | sudoku-web</title>`,
     `<style>\n${PAGE_STYLE}</style>`,
     "</head>",
     "<body>",
+    '<div class="topbar">',
+    `<strong>${escapeHtml(title)}</strong>`,
+    '<button type="button" class="icon-button" onclick="document.getElementById(\'sidebar\').hidden = !document.getElementById(\'sidebar\').hidden">☰ 目次</button>',
+    "</div>",
+    '<div class="layout">',
+    renderSidebar(nav, currentHref),
     '<main class="page">',
-    renderToc(headings),
     body,
+    renderPager(prev, next, currentHref),
     "</main>",
+    renderToc(headings),
+    "</div>",
+    `<script>${PAGE_SCRIPT}</script>`,
     "</body>",
     "</html>",
     "",
   ].join("\n");
 }
 
-async function collectMarkdownFiles(target) {
-  const entries = await readdir(target, { withFileTypes: true }).catch(() => null);
-  if (entries === null) {
-    return extname(target) === ".md" ? [target] : [];
-  }
+/** ディレクトリを再帰的に走査する。並びは決定的(名前順)。 */
+async function walk(root, current = "") {
+  const entries = await readdir(join(root, current), { withFileTypes: true });
+  const files = [];
 
-  const found = [];
   for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
     if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
-    const child = join(target, entry.name);
-    found.push(...(await collectMarkdownFiles(child)));
+    const child = current === "" ? entry.name : `${current}/${entry.name}`;
+    if (entry.isDirectory()) files.push(...(await walk(root, child)));
+    else files.push(child);
   }
-  return found;
+
+  return files;
 }
 
 function parseArgs(argv) {
-  const inputs = [];
-  let out = null;
+  let src = DEFAULT_SRC;
+  let out = DEFAULT_OUT;
 
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === "--out") {
-      out = argv[i + 1] ?? null;
-      i += 1;
-      continue;
-    }
-    inputs.push(argv[i]);
+    if (argv[i] === "--src" && argv[i + 1]) src = argv[(i += 1)];
+    else if (argv[i] === "--out" && argv[i + 1]) out = argv[(i += 1)];
   }
 
-  return { inputs, out };
+  return { src, out };
 }
 
 async function main(argv) {
-  const { inputs, out } = parseArgs(argv);
+  const { src, out } = parseArgs(argv);
 
-  if (inputs.length === 0) {
-    process.stderr.write("使い方: node tools/docs-html/render.mjs <path...> [--out <dir>]\n");
+  const all = (await walk(src).catch(() => null)) ?? null;
+  if (all === null) {
+    process.stderr.write(`入力ディレクトリが読めない: ${src}\n`);
     return 1;
   }
 
-  const files = [];
-  for (const input of inputs) {
-    files.push(...(await collectMarkdownFiles(input)));
-  }
-
-  if (files.length === 0) {
+  const markdownFiles = all.filter((file) => extname(file) === ".md");
+  if (markdownFiles.length === 0) {
     process.stderr.write("変換対象の .md が見つからない\n");
     return 1;
   }
 
-  for (const file of files) {
-    const markdown = await readFile(file, "utf8");
-    const fallbackTitle = file.split(sep).at(-1).replace(/\.md$/, "");
-    const html = renderMarkdown(markdown, fallbackTitle);
+  // 先に全ページの見出しを読む。サイドメニューが一覧を持つため。
+  const pages = [];
+  for (const file of markdownFiles) {
+    const markdown = await readFile(join(src, file), "utf8");
+    pages.push({
+      source: file,
+      href: toHref(file),
+      title: extractTitle(markdown, file.split("/").at(-1).replace(/\.md$/, "")),
+      category: file.includes("/") ? file.split("/")[0] : "",
+      markdown,
+    });
+  }
 
-    // --out を使うときもディレクトリ構造を保つ(文書間の相対リンクを壊さないため)
-    const destination =
-      out === null
-        ? file.replace(/\.md$/, ".html")
-        : resolve(out, relative(inputs[0], file).replace(/\.md$/, ".html"));
+  const nav = buildNav(pages);
+  const ordered = nav.flatMap((group) => group.items);
 
+  // ディレクトリ参照(`guides/`)の宛先。HTML には索引が無いので先頭ページへ繋ぐ。
+  const dirIndex = {};
+  for (const page of ordered) {
+    if (page.category && !dirIndex[page.category]) {
+      dirIndex[page.category] = page.href.split("/").at(-1);
+    }
+  }
+
+  for (let i = 0; i < ordered.length; i += 1) {
+    const page = ordered[i];
+    const html = renderPage({
+      markdown: page.markdown,
+      title: page.title,
+      nav,
+      currentHref: page.href,
+      prev: ordered[i - 1],
+      next: ordered[i + 1],
+      dirIndex,
+    });
+
+    const destination = resolve(out, page.href);
     await mkdir(dirname(destination), { recursive: true });
     await writeFile(destination, html, "utf8");
   }
 
-  process.stdout.write(`${files.length} 件を HTML へ変換した\n`);
+  // 画像などの添付は構造を保って複製する(相対パスがそのまま効くように)
+  const assets = all.filter((file) => extname(file) !== ".md");
+  for (const asset of assets) {
+    const destination = resolve(out, asset.split("/").join(sep));
+    await mkdir(dirname(destination), { recursive: true });
+    await copyFile(join(src, asset), destination);
+  }
+
+  process.stdout.write(
+    `${ordered.length} 件を ${posix.join(out, "index.html")} へ変換した(添付 ${assets.length} 件)\n`,
+  );
   return 0;
 }
 

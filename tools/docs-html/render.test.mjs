@@ -3,12 +3,13 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { renderMarkdown } from "./render.mjs";
+import { buildNav, extractTitle, toHref } from "./nav.mjs";
+import { renderPage } from "./render.mjs";
 
 const SAMPLE = [
   "# 見出し",
   "",
-  "本文と[相対リンク](../guides/handover.md)と[外部リンク](https://example.com/a.md)。",
+  "本文と[相対リンク](../guides/handover.md)と[入口](../README.md)と[外部](https://example.com/a.md)。",
   "",
   "## 節",
   "",
@@ -26,52 +27,106 @@ const SAMPLE = [
   "",
 ].join("\n");
 
-describe("renderMarkdown", () => {
+const NAV = [
+  { label: "入口", items: [{ href: "index.html", title: "ドキュメント" }] },
+  {
+    label: "手順書",
+    items: [
+      { href: "guides/handover.html", title: "作業の引き継ぎ" },
+      { href: "guides/local-setup.html", title: "ローカル環境の構築" },
+    ],
+  },
+];
+
+function render(overrides = {}) {
+  return renderPage({
+    markdown: SAMPLE,
+    title: "見出し",
+    nav: NAV,
+    currentHref: "guides/handover.html",
+    ...overrides,
+  });
+}
+
+describe("renderPage", () => {
   it("同じ入力からは常に同じ出力になる(決定性)", () => {
-    expect(renderMarkdown(SAMPLE, "sample")).toBe(renderMarkdown(SAMPLE, "sample"));
+    expect(render()).toBe(render());
   });
 
   it("日時や乱数を埋め込まない", () => {
-    const html = renderMarkdown(SAMPLE, "sample");
-    // 生成日時を入れると決定性が壊れる。年らしき 4 桁が出ていないことで見張る。
-    expect(html).not.toMatch(/20\d{2}-\d{2}-\d{2}/);
+    expect(render()).not.toMatch(/20\d{2}-\d{2}-\d{2}T/);
   });
 
-  it("先頭の h1 を title にする", () => {
-    expect(renderMarkdown(SAMPLE, "sample")).toContain("<title>見出し</title>");
+  it("title に文書の見出しを使う", () => {
+    expect(render()).toContain("<title>見出し | sudoku-web</title>");
   });
 
-  it("h1 が無ければファイル名を title にする", () => {
-    expect(renderMarkdown("本文だけ\n", "fallback")).toContain("<title>fallback</title>");
-  });
-
-  it("相対リンクの .md だけを .html へ書き換える", () => {
-    const html = renderMarkdown(SAMPLE, "sample");
+  it("相対リンクの .md を .html にし、README.md は index.html にする", () => {
+    const html = render();
     expect(html).toContain('href="../guides/handover.html"');
+    expect(html).toContain('href="../index.html"');
+  });
+
+  it("ディレクトリ参照はそのカテゴリの先頭ページへ繋ぐ", () => {
+    const html = render({
+      markdown: "# 題\n\n[手順書](../guides/)と[検証](verification/)。\n",
+      dirIndex: { guides: "branch-strategy.html", verification: "testing-policy.html" },
+    });
+    expect(html).toContain('href="../guides/branch-strategy.html"');
+    expect(html).toContain('href="verification/testing-policy.html"');
+  });
+
+  it("外部リンクは書き換えず、別タブで開く", () => {
+    const html = render();
     expect(html).toContain('href="https://example.com/a.md"');
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
   });
 
   it("見出しに決定的な id を振り、重複したら連番を足す", () => {
-    const html = renderMarkdown(SAMPLE, "sample");
+    const html = render();
     expect(html).toContain('<h2 id="節">');
     expect(html).toContain('<h2 id="節-2">');
   });
 
-  it("見出しが 2 つ以上あれば目次を出す", () => {
-    expect(renderMarkdown(SAMPLE, "sample")).toContain('<nav class="toc"');
-    expect(renderMarkdown("# 題\n\n本文\n", "x")).not.toContain('<nav class="toc"');
+  it("見出しへのアンカーを付ける", () => {
+    expect(render()).toContain('<a class="anchor" href="#節"');
+  });
+
+  it("サイドメニューに全文書を出し、現在のページに印を付ける", () => {
+    const html = render();
+    expect(html).toContain('class="sidebar"');
+    expect(html).toContain("ローカル環境の構築");
+    expect(html).toContain('href="../guides/handover.html" aria-current="page"');
+    // 階層の違うページへは相対パスで辿れる
+    expect(html).toContain('href="../index.html">ドキュメント</a>');
+  });
+
+  it("前後のドキュメントへの導線を出す", () => {
+    const html = render({
+      prev: { href: "index.html", title: "ドキュメント" },
+      next: { href: "guides/local-setup.html", title: "ローカル環境の構築" },
+    });
+    expect(html).toContain('class="pager"');
+    expect(html).toContain('class="prev"');
+    expect(html).toContain('class="next"');
+  });
+
+  it("見出しが 2 つ以上あればページ内の目次を出す", () => {
+    expect(render()).toContain('<nav class="toc"');
+    expect(render({ markdown: "# 題\n\n本文\n" })).not.toContain('<nav class="toc"');
   });
 
   it("表を横スクロールできる器で包む", () => {
-    expect(renderMarkdown(SAMPLE, "sample")).toContain('<div class="table-scroll">');
+    expect(render()).toContain('<div class="table-scroll">');
   });
 
   it("生の HTML はエスケープする", () => {
-    expect(renderMarkdown(SAMPLE, "sample")).not.toContain("<script>alert(1)</script>");
+    expect(render()).not.toContain("<script>alert(1)</script>");
   });
 
   it("外部リソースを参照しない(オフラインで開ける)", () => {
-    const html = renderMarkdown(SAMPLE, "sample");
+    const html = render();
     expect(html).not.toMatch(/<link[^>]+href=/);
     expect(html).not.toMatch(/<script[^>]+src=/);
   });
@@ -79,7 +134,33 @@ describe("renderMarkdown", () => {
   it("入力の .md を書き換えない(副作用なし)", async () => {
     const path = fileURLToPath(new URL("./render.test.mjs", import.meta.url));
     const before = await stat(path);
-    renderMarkdown(await readFile(path, "utf8"), "self");
+    renderPage({ markdown: await readFile(path, "utf8"), title: "self" });
     expect((await stat(path)).mtimeMs).toBe(before.mtimeMs);
+  });
+});
+
+describe("nav", () => {
+  it("README.md は入口(index.html)にする", () => {
+    expect(toHref("README.md")).toBe("index.html");
+    expect(toHref("guides/handover.md")).toBe("guides/handover.html");
+  });
+
+  it("先頭の h1 を見出しにし、無ければ代替を使う", () => {
+    expect(extractTitle("# 題\n\n本文", "x")).toBe("題");
+    expect(extractTitle("本文だけ", "x")).toBe("x");
+  });
+
+  it("カテゴリの並びは固定で、未知のカテゴリは末尾へ出す", () => {
+    const nav = buildNav([
+      { href: "zzz/a.html", title: "未知", category: "zzz" },
+      { href: "guides/a.html", title: "手順", category: "guides" },
+      { href: "index.html", title: "入口", category: "" },
+    ]);
+    expect(nav.map((group) => group.label)).toEqual(["入口", "手順書", "zzz"]);
+  });
+
+  it("文書が無いカテゴリは出さない", () => {
+    const nav = buildNav([{ href: "index.html", title: "入口", category: "" }]);
+    expect(nav).toHaveLength(1);
   });
 });
