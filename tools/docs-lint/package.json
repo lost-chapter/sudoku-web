@@ -1,0 +1,13 @@
+{
+  "name": "@sudoku/docs-lint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "docs/ の Markdown で和文の強調が閉じられているかを検査する",
+  "bin": {
+    "docs-lint": "./check-emphasis.mjs"
+  },
+  "scripts": {
+    "test": "node --test check-emphasis.test.mjs"
+  }
+}

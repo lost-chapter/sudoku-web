@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数独</title>
+    <!--
+      ⚠️ **`%BASE_URL%` を使う。**指定が無いとブラウザが `/favicon.ico` を勝手に要求し、
+      サブパスへ置いたときだけ 404 になる(2026-08-06 に `preview:subpath` で検出)。
+      Vite が変換時に base(手元は `/`、Pages は `/sudoku-web/`)へ置き換える。
+    -->
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <!--
+      テーマのフラッシュ防止(ADR 0002)。
+
+      React が動く前に data-mantine-color-scheme を決めておく。
+      これが無いと、保存した選択が端末の設定と違うときに
+      初回描画で一瞬だけ元のテーマが見える。
+
+      ⚠️ 中身は Mantine の ColorSchemeScript が出すものと同じにする。
+      既定値(auto)と localStorage の鍵は MantineProvider の設定と揃えること。
+      片方だけ変えると、描画前と描画後で違うテーマになる。
+    -->
+    <script data-mantine-script="true">
+      try {
+        var _colorScheme = window.localStorage.getItem("mantine-color-scheme-value");
+        var colorScheme =
+          _colorScheme === "light" || _colorScheme === "dark" || _colorScheme === "auto"
+            ? _colorScheme
+            : "auto";
+        var computedColorScheme =
+          colorScheme !== "auto"
+            ? colorScheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.setAttribute("data-mantine-color-scheme", computedColorScheme);
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

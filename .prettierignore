@@ -1,0 +1,15 @@
+# 生成物と外部データは整形しない
+dist/
+puzzles/
+pnpm-lock.yaml
+
+# ⚠️ **E2E の痕跡。Git 管理外だが Prettier は .gitignore を見ない。**
+# ここを外さないと、E2E を回したあとの `pnpm format:check` が
+# test-results/.last-run.json を整形違反として落とす(2026-08-05 に踏んだ)。
+test-results/
+playwright-report/
+blob-report/
+
+# ドキュメントは整形で改行位置が変わると差分が読みにくくなる
+docs/
+*.md

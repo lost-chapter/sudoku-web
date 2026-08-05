@@ -1,0 +1,175 @@
+/*
+ * 盤面の CSS。
+ *
+ * **@layer mantine の外に書いてあるので、import 順に関係なく Mantine より必ず勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。!important を積まないこと。
+ *
+ * 色は Mantine の CSS 変数から取る。ライト / ダークの切替が自動で効く。
+ */
+
+.board {
+  display: grid;
+  grid-template-rows: repeat(9, 1fr);
+  aspect-ratio: 1;
+  /*
+   * 盤面は常に正方形。画面の短辺に合わせて拡縮する(画面構成と操作仕様)。
+   *
+   * ⚠️ **一辺は外から `--board-size` で渡せる。**スマホ版は高さが足りないので、
+   * 幅だけで決めると縦にはみ出す。既定は従来どおり幅に追従する。
+   */
+  width: var(--board-size, 100%);
+  max-width: min(100%, 32rem);
+  margin-inline: auto;
+  border: 3px solid var(--mantine-color-text);
+  background: var(--mantine-color-body);
+  /* ダブルタップの拡大を抑えて、連続入力を軽くする。 */
+  touch-action: manipulation;
+}
+
+.board:focus-visible {
+  outline: 3px solid var(--mantine-primary-color-filled);
+  outline-offset: 3px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* セルは指で押せる大きさを下限にする(目安 44px)。 */
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--mantine-color-default-border);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  /* 拡大表示で崩れないよう、字の大きさもセルに追従させる。 */
+  font-size: clamp(1rem, 4vmin, 1.75rem);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.row:last-child .cell {
+  border-bottom: 0;
+}
+
+.cell:last-child {
+  border-right: 0;
+}
+
+/* 3×3 のブロックの区切りだけ太くする。位置で決まるので nth-child で引く。 */
+.cell:nth-child(3n):not(:last-child) {
+  border-right: 3px solid var(--mantine-color-text);
+}
+
+.row:nth-child(3n):not(:last-child) .cell {
+  border-bottom: 3px solid var(--mantine-color-text);
+}
+
+/*
+ * 手がかりと入力の区別は**色だけに載せない**(画面構成と操作仕様のアクセシビリティ)。
+ * 手がかりは太字、入力は細字 + 別の色にしてある。
+ */
+.given {
+  font-weight: 700;
+  color: var(--mantine-color-text);
+}
+
+/*
+ * 入力の色は **選択中の薄い背景の上でも 4.5:1 を切らない濃さ**にする。
+ * 既定の primary(blue-6)はライトテーマの白地で 3.4:1 しかなく、本文の目安を割る。
+ */
+.entry {
+  font-weight: 400;
+  /*
+   * ⚠️ **いちばん明るい強調(同じ数字)の背景の上でも 4.5:1 を切らない濃さにする。**
+   * 地の上だけで測ると足りる色でも、強調が敷かれた上では割る。
+   * 実測(2026-08-05): ダークで blue-4 は同じ数字の背景の上で 4.06:1 だったので
+   * blue-3 まで上げた(5.11:1)。ライトの blue-9 は同じ条件で 4.67:1。
+   */
+  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3));
+}
+
+/*
+ * メモ(候補)。3×3 に並べ、**数字の位置で何が立っているかを読めるようにする。**
+ * 立っていない候補も場所を空けたままにするのはそのためである。
+ */
+.notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 6%;
+  /*
+   * 控えめな文字の色は app/theme.css で 1 か所に集めてある
+   * (Mantine の既定は 4.04:1 で本文の目安を割るため上書きしている)。
+   * メモは確定値と**大きさと位置**でも区別が付くので、色だけに頼っていない。
+   */
+  color: var(--mantine-color-dimmed);
+  font-size: clamp(0.5rem, 2.6vmin, 0.75rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.notes > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * 補助表示。**書く順序がそのまま重なりの順序になる**(同じ詳細度なので後勝ち)。
+ * 薄い敷き → 同じ数字 → 選択、の順に強くする。
+ */
+
+/* 選択中のセルが属する行・列・ブロック。**薄く敷くだけ。** */
+.unit {
+  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+}
+
+/* 選択中のセルと同じ数字。 */
+.sameDigit {
+  background: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+/*
+ * あきらめたときに出した解。**遊技者が自分で入れた正解と見分けが付くこと。**
+ *
+ * ⚠️ **色だけに載せない。**細字(手がかりは太字)に加えて**右上の点**で示す。
+ * 読み上げのラベルにも「答え」を載せる。
+ */
+.revealed {
+  color: var(--sudoku-color-revealed);
+  font-weight: 400;
+  position: relative;
+}
+
+.revealed::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  right: 8%;
+  width: 0.28em;
+  height: 0.28em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 選択も色だけに頼らない。背景に加えて内側の枠でも分かるようにする。 */
+.selected {
+  background: var(--mantine-primary-color-light);
+  box-shadow: inset 0 0 0 2px var(--mantine-primary-color-filled);
+}
+
+.cell:focus {
+  /* フォーカスは盤面が 1 つで持つ(81 個を Tab で辿らせない)。 */
+  outline: none;
+}

@@ -1,0 +1,235 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "cc/**"]
+  pull_request:
+    branches: [main, develop]
+
+# 同じブランチへ続けて push したときは古い実行を打ち切る
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markers:
+    name: 競合マーカーの残存
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 2026-08-05: 管理役がマージの解決漏れを develop まで通した。
+      # 人が気をつけるだけでは防げないので CI で見張る。
+      - name: 競合マーカーが残っていないことを確認
+        run: |
+          if git grep -nE '^(<<<<<<<|=======$|>>>>>>>)' -- . ':(exclude)pnpm-lock.yaml'; then
+            echo "マージの解決漏れがある(上記)"
+            exit 1
+          fi
+          echo "競合マーカーは無い"
+
+  check:
+    name: 静的検査とテスト
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm の版は package.json の packageManager から読まれる
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: 整形の確認
+        run: pnpm format:check
+
+      - name: 型チェック
+        run: pnpm typecheck
+
+      - name: テスト
+        run: pnpm test
+
+      - name: 本番ビルド
+        run: pnpm build
+
+  puzzles:
+    name: パックの再現性
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # ADR 0003 は「管理外のパックはシードから作り直せる」ことに依存している。
+      # ここが壊れても、収録済みのパックを読むだけのテストでは気づけない。
+      #
+      # ⚠️ ワーカー数を収録時(8)と変えて回す。
+      #    「並列度を変えても中身が変わらない」ことも同時に見張れる。
+      #
+      # 5 クラス全部は回さない。easy が最も安く、extreme は実装している手筋
+      # (レベル 1〜7)を全部通るので、この 2 つで足りる。
+      - name: easy を作り直して 1 バイトも違わないことを確認
+        run: |
+          pnpm --filter @sudoku/generator generate \
+            --difficulty easy --count 1000 --workers 3 --out /tmp/puzzles-check
+          diff /tmp/puzzles-check/packs/easy-000.txt puzzles/packs/easy-000.txt
+          echo "easy-000 はシードから 1 バイト違わず作り直せる"
+
+      # ⚠️ **少ない問数で作り直したものは「先頭が一致」しない。**
+      #    パックは難易度クラスとスコアの昇順で書くので(採用した順ではない)、
+      #    200 問版は 1,000 問版の先頭ではなく、全体に散らばる。
+      #    実測でも先頭 200 行のうち 169 行が違った。
+      #
+      #    **代わりに「部分集合か」を見る。** 採用は試行番号の昇順で決まるので、
+      #    200 問版は「1,000 問版が採用した先頭 200 個」と必ず同じ集合になる。
+      #    ⇒ 200 問版の全行が 1,000 問版に含まれていればよい。
+      #
+      #    ここを 1,000 問にすると時間が 6 倍になる(手元で 2.3 秒 → 13.1 秒)。
+      #    extreme は採用率が 5.5% しかないためである。
+      - name: extreme を 200 問だけ作り直して収録済みに含まれることを確認
+        run: |
+          pnpm --filter @sudoku/generator generate \
+            --difficulty extreme --count 200 --workers 3 --out /tmp/puzzles-sample
+          comm -23 \
+            <(sort /tmp/puzzles-sample/packs/extreme-000.txt) \
+            <(sort puzzles/packs/extreme-000.txt) > /tmp/missing.txt
+          if [ -s /tmp/missing.txt ]; then
+            echo "収録済みに無い問題が出た(生成が変わっている):"
+            head -3 /tmp/missing.txt
+            exit 1
+          fi
+          echo "extreme-000 の先頭 200 問は収録済みと同じ問題である"
+
+      # 収録済みのパックを書き換えていないこと(--out を付け忘れると上書きされる)。
+      - name: 収録済みのパックが変わっていないことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "作業ツリーが変わっている:"
+            git status --short
+            exit 1
+          fi
+
+  e2e:
+    name: キーボード操作(E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # 2026-08-05: **この 2 点は手で触るまで確かめられなかった。**
+      # ブラウザ面から送る合成キーではネイティブのボタン活性化が起きないため、
+      # 「Enter で始まるか」「モーダルを閉じたらフォーカスが戻るか」を
+      # 誰も自動で見られなかった。**代わりが無いので CI に入れる。**
+      #
+      # ⚠️ **ここを広げない。**盤面の遷移は Vitest の reducer テストで押さえてある。
+      #    E2E は遅く壊れやすいので、本物のキーイベントでしか出ないものだけを置く。
+
+      # ブラウザ本体(約 196 MB)は毎回取りに行くと遅い。版に紐づけてキャッシュする。
+      - name: Playwright の版を取り出す
+        id: pw
+        run: |
+          version=$(node -p "require('./packages/web/node_modules/@playwright/test/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Playwright $version"
+
+      - name: ブラウザをキャッシュする
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: ブラウザを取得する(キャッシュが無いとき)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @sudoku/web exec playwright install --with-deps chromium
+
+      # ⚠️ **システムライブラリは apt で入るのでキャッシュに乗らない。**
+      #    キャッシュが当たった回も、これだけは毎回入れる必要がある。
+      - name: システムライブラリを入れる(キャッシュが当たったとき)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @sudoku/web exec playwright install-deps chromium
+
+      - name: E2E
+        run: pnpm test:e2e
+
+      # 失敗したときだけ、原因を追える材料を残す。
+      - name: 失敗したときの記録を残す
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/web/playwright-report/
+          retention-days: 7
+
+  docs:
+    name: ドキュメントの検査と変換の決定性
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # 2026-08-06: **規則を書いても、管理役が同じ書き方を続けた。**
+      # 和文で `**強調。**次` と書くと CommonMark は強調にせず、`**` が本文へ出る。
+      # 変換側で救ってはいるが、GitHub と VS Code では壊れたままになる。
+      #
+      # ⚠️ 人が気をつけるだけでは止まらないので仕掛けにする(競合マーカーと同じ)。
+      #    直し方は docs/guides/documentation-guidelines.md にある。
+      - name: 和文の強調が壊れていないことを確認
+        run: pnpm docs:lint
+
+      # docs-markdown-to-html は「同じ入力から常に同じ出力」を契約にしている。
+      # 2 回流して差が出たら、決定性が壊れている。
+      - name: 2 回変換して出力が一致することを確認
+        run: |
+          pnpm docs:html
+          find docs-html -type f | sort | xargs shasum > /tmp/docs-a.txt
+          pnpm docs:html
+          find docs-html -type f | sort | xargs shasum > /tmp/docs-b.txt
+          diff /tmp/docs-a.txt /tmp/docs-b.txt
+
+      # 生成物は Git 管理外。追跡されていたら .gitignore が効いていない。
+      - name: 生成物が Git を汚していないことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "生成物が Git に出ている:"
+            git status --short
+            exit 1
+          fi

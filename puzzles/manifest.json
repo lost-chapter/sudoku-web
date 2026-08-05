@@ -1,0 +1,59 @@
+{
+  "formatVersion": 1,
+  "generatedWith": {
+    "generator": "0.1.0",
+    "techniques": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "packs": [
+    {
+      "path": "packs/easy-000.txt",
+      "difficulty": "easy",
+      "count": 1000,
+      "seed": "easy-000",
+      "bytes": 172000
+    },
+    {
+      "path": "packs/normal-000.txt",
+      "difficulty": "normal",
+      "count": 1000,
+      "seed": "normal-000",
+      "bytes": 174074
+    },
+    {
+      "path": "packs/hard-000.txt",
+      "difficulty": "hard",
+      "count": 1000,
+      "seed": "hard-000",
+      "bytes": 172549
+    },
+    {
+      "path": "packs/expert-000.txt",
+      "difficulty": "expert",
+      "count": 1000,
+      "seed": "expert-000",
+      "bytes": 175000
+    },
+    {
+      "path": "packs/extreme-000.txt",
+      "difficulty": "extreme",
+      "count": 1000,
+      "seed": "extreme-000",
+      "bytes": 176000
+    }
+  ],
+  "totals": {
+    "easy": 1000,
+    "normal": 1000,
+    "hard": 1000,
+    "expert": 1000,
+    "extreme": 1000
+  }
+}

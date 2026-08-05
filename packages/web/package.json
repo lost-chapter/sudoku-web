@@ -1,0 +1,33 @@
+{
+  "name": "@sudoku/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm sync:assets && vite",
+    "build": "pnpm sync:assets && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
+    "sync:assets": "pnpm sync:puzzles && pnpm sync:release-notes",
+    "sync:puzzles": "node ../../tools/puzzles-sync/sync.mjs",
+    "sync:release-notes": "node ../../tools/release-notes/build.mjs"
+  },
+  "dependencies": {
+    "@mantine/core": "^9.5.1",
+    "@mantine/hooks": "^9.5.1",
+    "@sudoku/core": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,117 @@
+/*
+ * スマホ向けの骨組み。**ヘッダ・盤面・パッドを 1 画面へ収める。**
+ *
+ * ⚠️ **ここは並べ方と寸法だけを持つ。**状態・キー操作・保存は Game 側にある。
+ * **分けてよいのは見た目だけ**で、意味づけを分けると片方だけ壊れる。
+ */
+
+.screen {
+  /*
+   * ⚠️ **`svh` を使う**(2026-08-06 決定)。`dvh` はブラウザのバーの出入りに
+   * 追従するので、遊技中に盤面の大きさが変わる。**同じマスを何度も見る遊びなので、
+   * 寸法が動くほうが追従性より高くつく。**バーが縮んだときは下に余白が出る。
+   */
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+
+  --pad-gap: 8px;
+  --pad-key-height: 48px;
+}
+
+.header {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+}
+
+/*
+ * 盤面は残りの高さいっぱいに、正方形を保ったまま**下へ寄せる**。
+ *
+ * ⚠️ **一辺は「残った幅と高さの小さいほう」。**幅だけで決めると縦にはみ出す。
+ * コンテナクエリの単位(`cqw` / `cqh`)なら、JS を挟まずに正確に取れる。
+ *
+ * ⚠️ **盤面は幅で頭打ちになるので、余った高さは必ず空白になる**(375px 幅で 231px)。
+ * **中央に置くと空白が上下へ割れ、目線(盤面)と指(パッド)の距離が開く。**
+ * 下へ寄せれば空白は**上の 1 か所にまとまり**、よく見るものとよく押すものが近づく。
+ *
+ * ⚠️ **上に寄せない。**空白が盤面とパッドの間に来て、いちばん離れる。
+ */
+.boardArea {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+  padding: 0 4px 8px;
+  container-type: size;
+}
+
+.boardArea > * {
+  --board-size: min(100cqw, 100cqh);
+}
+
+.pad {
+  flex: 0 0 auto;
+}
+
+/*
+ * ⚠️ **高さが足りない端末では 1 画面を諦める**(app/layout.ts の
+ * MIN_ONE_SCREEN_HEIGHT)。「スクロールしない」と「1 セル 24px 以上」は
+ * 両立しないので、**盤面が読めるほうを守る**。
+ *
+ * **そのときもパッドは下に固定したまま、盤面の領域だけをスクロールさせる。**
+ * 全部を一緒に流すと、数字を入れるたびにパッドを探すことになる。
+ */
+@media (max-height: 441px) {
+  .boardArea {
+    overflow: auto;
+    align-items: flex-start;
+  }
+
+  /*
+   * ⚠️ **ここで高さを見るのをやめる。**高さに合わせ続けると盤面が縮み、
+   * 24px を割ってしまう(実測: 320×440 で 22.3px)。**幅で決めて、はみ出させる。**
+   */
+  .boardArea > * {
+    --board-size: 100cqw;
+  }
+}
+
+/* 横向きは盤面を左・パッドを右。仕様の「横画面では横に置く」。 */
+.landscape {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.landscape .header {
+  /* ヘッダは横向きでは左端の細い列に畳む。 */
+  display: none;
+}
+
+/*
+ * ⚠️ **横向きは中央のまま。**盤面は高さで頭打ちになるので余りが出ず、
+ * 寄せる理由が無い。**パッドは右にあるので、下へ寄せても指へ近づかない。**
+ */
+.landscape .boardArea {
+  align-items: center;
+  padding: 4px;
+}
+
+/*
+ * ⚠️ **パッドは要るぶんだけ。**広げると盤面がその分だけ小さくなる。
+ * 45% の根拠(実測・568×320): 50% だと盤面 276px(1 セル 30px)、
+ * 45% で 305px(33.2px)。**24px の下限には両方とも届くが、盤面は大きいほどよい。**
+ */
+.landscape .pad {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 45%;
+}
+
+/* 横向きのヘッダは、パッドの上に小さく載せる。 */
+.landscapeHeader {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+}
