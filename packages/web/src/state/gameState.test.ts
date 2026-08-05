@@ -60,6 +60,19 @@ describe("履歴に積むもの", () => {
   });
 });
 
+describe("あきらめたあと", () => {
+  it("取り消しもやり直しもできない", () => {
+    const played = run(initial, { type: "inputDigit", digit: 4 }, { type: "undo" });
+    expect(canRedo(played)).toBe(true);
+
+    const gaveUp = run(played, { type: "giveUp" });
+    expect(canUndo(gaveUp)).toBe(false);
+    expect(canRedo(gaveUp)).toBe(false);
+    expect(run(gaveUp, { type: "undo" }).present).toBe(gaveUp.present);
+    expect(run(gaveUp, { type: "redo" }).present).toBe(gaveUp.present);
+  });
+});
+
 describe("取り消しとやり直し", () => {
   it("直前の入力を戻す", () => {
     const filled = run(initial, { type: "inputDigit", digit: 4 });

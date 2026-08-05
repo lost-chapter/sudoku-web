@@ -3,6 +3,7 @@ import { BOARD_SIZE, CELL_COUNT, candidateDigits, maskOfDigit } from "@sudoku/co
 import {
   columnOf,
   isGiven,
+  isRevealed,
   notesAt,
   rowOf,
   valueAt,
@@ -78,9 +79,10 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
   const notes = notesAt(state, index);
+  const revealed = isRevealed(state, index);
   const className = [
     classes.cell,
-    given ? classes.given : classes.entry,
+    given ? classes.given : revealed ? classes.revealed : classes.entry,
     // 強調は選択より下に敷く。順序を入れ替えると選択が見えなくなる。
     highlights.units.has(index) ? classes.unit : "",
     highlights.sameDigit.has(index) ? classes.sameDigit : "",
@@ -95,7 +97,7 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
       role="gridcell"
       aria-selected={selected}
       aria-readonly={given || undefined}
-      aria-label={cellLabel(index, value, given, notes)}
+      aria-label={cellLabel(index, value, given, notes, revealed)}
       className={className}
       onPointerDown={() => onSelect(index)}
     >
@@ -132,7 +134,13 @@ function cellId(index: CellIndex): string {
  * 画面に印を出さなくなったので、読み上げだけ残すと**見える人と見えない人で
  * 分かることが変わってしまう**。
  */
-function cellLabel(index: CellIndex, value: number, given: boolean, notes: number): string {
+function cellLabel(
+  index: CellIndex,
+  value: number,
+  given: boolean,
+  notes: number,
+  revealed: boolean,
+): string {
   const position = `${rowOf(index) + 1} 行 ${columnOf(index) + 1} 列`;
   if (value === 0) {
     return notes === 0
@@ -140,5 +148,10 @@ function cellLabel(index: CellIndex, value: number, given: boolean, notes: numbe
       : `${position}、候補 ${candidateDigits(notes).join(" ")}`;
   }
 
-  return given ? `${position}、手がかり ${value}` : `${position}、${value}`;
+  if (given) {
+    return `${position}、手がかり ${value}`;
+  }
+  // ⚠️ **画面で区別が付くものは、読み上げでも区別が付くようにする。**
+  // 片方だけにすると、見える人と見えない人で分かることが変わる。
+  return revealed ? `${position}、答え ${value}` : `${position}、${value}`;
 }

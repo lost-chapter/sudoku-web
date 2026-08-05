@@ -5,6 +5,7 @@ import type { Difficulty } from "@sudoku/core";
 
 import { GameScreen } from "./GameScreen";
 import { HomeScreen } from "./HomeScreen";
+import { useLayout } from "./layout";
 
 /**
  * アプリの入口。
@@ -41,6 +42,37 @@ export function App() {
 
   return (
     <MantineProvider defaultColorScheme="auto" theme={THEME}>
+      <Shell screen={screen} setScreen={setScreen} />
+    </MantineProvider>
+  );
+}
+
+/**
+ * ⚠️ **スマホ版のゲーム画面だけ、外枠(タイトル・余白)を外す。**
+ * 1 画面に収めるのが要件で、**外枠のぶんだけ盤面が小さくなる**ため。
+ * ホーム画面と PC 版は今までどおり。
+ */
+function Shell({
+  screen,
+  setScreen,
+}: {
+  readonly screen: Screen;
+  readonly setScreen: (screen: Screen) => void;
+}) {
+  const phone = useLayout() !== "desktop";
+
+  if (screen.name === "game" && phone) {
+    return (
+      <GameScreen
+        difficulty={screen.playing.difficulty}
+        resume={screen.playing.resume}
+        onHome={() => setScreen({ name: "home" })}
+      />
+    );
+  }
+
+  return (
+    <>
       <Container size="sm" px="xs" py="md">
         <Stack gap="md">
           <Title order={1} size="h2">
@@ -62,6 +94,6 @@ export function App() {
           )}
         </Stack>
       </Container>
-    </MantineProvider>
+    </>
   );
 }

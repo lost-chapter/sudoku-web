@@ -11,20 +11,65 @@ export interface GameHeaderProps {
   /** どのパックから取ったか。同梱の 1 問で遊んでいるときは空。 */
   readonly packLabel: string;
   readonly onOpenSettings: () => void;
+  readonly onGiveUp: () => void;
+  /** 終わったあとは押せない。 */
+  readonly canGiveUp: boolean;
+  /**
+   * ホームへ戻る。**スマホ版だけ渡す。**
+   *
+   * PC 版は画面の下に置く余裕があるが、スマホ版は 1 画面に収めるので
+   * ヘッダへ寄せる。⚠️ **押してほしくないものはヘッダ**、という並べ方は同じ。
+   */
+  readonly onHome?: () => void;
+  /**
+   * 幅が無いとき(横向き)は文字を落として 1 行に収める。
+   *
+   * ⚠️ **難易度はホーム画面で選んでいるので、遊技中は無くても困らない。**
+   * 折り返すと 2 行になり、**縦の余裕が無い横向きでは中身がはみ出す**(実測)。
+   */
+  readonly compact?: boolean;
 }
 
-export function GameHeader({ difficulty, packLabel, onOpenSettings }: GameHeaderProps) {
+export function GameHeader({
+  difficulty,
+  packLabel,
+  onOpenSettings,
+  onGiveUp,
+  canGiveUp,
+  onHome,
+  compact,
+}: GameHeaderProps) {
   return (
-    <Group justify="space-between" align="center" wrap="nowrap">
-      <Text fw={500}>{DIFFICULTY_LABELS[difficulty]}</Text>
+    // ⚠️ **横向きのヘッダは幅が狭い。**折り返しを許さないと文字が切れる。
+    <Group justify="space-between" align="center" gap="xs">
+      <Group gap="xs" wrap="nowrap">
+        {onHome && (
+          <Button variant="default" size="xs" onClick={onHome}>
+            ホーム
+          </Button>
+        )}
+        {!compact && <Text fw={500}>{DIFFICULTY_LABELS[difficulty]}</Text>}
+      </Group>
 
-      <Text size="xs" c="dimmed" truncate>
-        {packLabel}
-      </Text>
+      {!onHome && (
+        <Text size="xs" c="dimmed" truncate>
+          {packLabel}
+        </Text>
+      )}
 
-      <Button variant="default" size="xs" onClick={onOpenSettings}>
-        設定
-      </Button>
+      <Group gap="xs" wrap="nowrap">
+        {/*
+          ⚠️ **あきらめるはヘッダに置く。**親指の付け根から最も遠く、
+          遊技中に誤って触りにくい(docs/ui/screens-and-interactions.md)。
+          押すと確認のモーダルが出るので、置き場所と合わせて二重に防いでいる。
+        */}
+        <Button variant="default" size="xs" disabled={!canGiveUp} onClick={onGiveUp}>
+          あきらめる
+        </Button>
+        <Button variant="default" size="xs" onClick={onOpenSettings}>
+          設定
+        </Button>
+      </Group>
     </Group>
   );
 }
