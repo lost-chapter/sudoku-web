@@ -31,6 +31,16 @@ git stash list
 1. `ops-branch-merge` スキルで各作業ブランチを `develop` へマージする
 2. **ユーザーの指示を得てから** `git push origin develop` する
 
+⚠️ **SSH の鍵はこのセッションから使えない**(2026-08-05 実測。`ssh-add -l` が空)。
+`gh` が認証済みなので、**設定を変えずに一時的な認証ヘルパで送る**。
+
+```bash
+git -c credential.helper='!gh auth git-credential' \
+  push https://github.com/Tenryu/sudoku-web.git develop:develop
+```
+
+**2026-08-05 に初回のプッシュを実施済み**(129 コミット)。CI 4 ジョブは実機で通った。
+
 `git stash` の中身と、コミットしていない作業ディレクトリの変更も同様に消える。
 `git status` が clean であることまで確認する。
 
