@@ -7,7 +7,7 @@
 [盤面の生成](../algorithms/board-generation.md) と [解法(ソルバ)](../algorithms/solver.md) の
 どちらにも「工程 2 で実測する」と書いてあった宿題である。
 
-**知りたいのは 1 点。**[穴あけ](../algorithms/board-generation.md#2-穴をあける)は
+**知りたいのは 1 点**。[穴あけ](../algorithms/board-generation.md#2-穴をあける)は
 1 マス消すごとに `countSolutions` を回すので、**一意解の判定が生成の律速になるかどうか**。
 
 ## 実施日・条件

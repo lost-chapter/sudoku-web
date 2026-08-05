@@ -6,6 +6,24 @@
  *
  * 版面は 3 段。狭い画面では 1 段へ畳む。
  *   サイドメニュー | 本文 | 目次
+ *
+ * ## ⚠️ 色を足したら測る(2026-08-06 に 1 度差し戻された)
+ *
+ * **目視では分からない。** highlight.js の既定の灰色をそのまま使ったところ、
+ * ライトのコメントが **4.27:1** で基準(4.5:1)を割っていた。
+ * **和文の説明はコメントに書かれるので、いちばん読ませたい所が読みにくかった。**
+ *
+ * - **その文字が実際に乗る背景の上で測る。** コードは `--bg` ではなく
+ *   `--surface` の上に乗る。**白の上で測ると足りて見える**
+ * - **ライトとダークの両方で測る。**片方だけ直しても意味がない
+ * - 測り方は [画面構成と操作仕様](../../docs/ui/screens-and-interactions.md) の
+ *   「コントラストの測り方」に従う
+ *
+ * ## ⚠️ この見た目は自動では見張っていない
+ *
+ * **表の見出しの固定・図・色は、テストでは押さえられない。**
+ * `pnpm docs:html` の出力を**実ブラウザで開いて確かめてから**変えること。
+ * (`file:` ではなく、配信して開くほうが確実)
  */
 export const PAGE_STYLE = `:root {
   color-scheme: light dark;
@@ -19,6 +37,17 @@ export const PAGE_STYLE = `:root {
   --accent: #0969da;
   --warn-bg: #fff8c5;
   --warn-border: #d4a72c;
+  --ok-bg: rgba(46, 160, 67, 0.09);
+  --ng-bg: rgba(207, 34, 46, 0.07);
+  /* ⚠️ コードの色は --surface(#f6f8fa)の上に乗る。白の上で測ると足りて見える。
+     highlight.js の既定の灰色 #6e7781 は白の上で 4.55 だが、この背景では 4.27 で失格。
+     2026-08-06 に実測して差し替えた。 */
+  --code-muted: #5f6873;
+  --code-string: #0a3069;
+  --code-keyword: #cf222e;
+  --code-name: #6f42c1;
+  --code-number: #0550ae;
+  --code-meta: #953800;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -32,9 +61,25 @@ export const PAGE_STYLE = `:root {
     --accent: #4493f8;
     --warn-bg: #272115;
     --warn-border: #bb8009;
+    --ok-bg: rgba(63, 185, 80, 0.12);
+    --ng-bg: rgba(248, 81, 73, 0.11);
+    --code-muted: #8b949e;
+    --code-string: #a5d6ff;
+    --code-keyword: #ff7b72;
+    --code-name: #d2a8ff;
+    --code-number: #79c0ff;
+    --code-meta: #ffa657;
   }
 }
 :root[data-theme="dark"] {
+  --ok-bg: rgba(63, 185, 80, 0.12);
+  --ng-bg: rgba(248, 81, 73, 0.11);
+  --code-muted: #8b949e;
+  --code-string: #a5d6ff;
+  --code-keyword: #ff7b72;
+  --code-name: #d2a8ff;
+  --code-number: #79c0ff;
+  --code-meta: #ffa657;
   --bg: #0d1117;
   --fg: #e6edf3;
   --muted: #9198a1;
@@ -61,9 +106,9 @@ body {
 /* ---- 版面 ---- */
 .layout {
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr) 15rem;
+  grid-template-columns: 17rem minmax(0, 1fr) 18rem;
   gap: 2.5rem;
-  max-width: 90rem;
+  max-width: 94rem;
   margin: 0 auto;
   padding: 0 1.5rem;
   align-items: start;
@@ -151,7 +196,7 @@ body {
   max-height: 100vh;
   overflow-y: auto;
   padding: 2.6rem 0 3rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border-left: 1px solid var(--border);
   padding-left: 1rem;
 }
@@ -164,13 +209,15 @@ body {
   text-transform: uppercase;
 }
 .toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+/* 見出しは和文で長い。折り返す前提で、行間を詰めて項目の間を空ける。 */
 .toc a {
   display: block;
-  padding: 0.15rem 0;
+  padding: 0.2rem 0 0.2rem 0.6rem;
   color: var(--muted);
   text-decoration: none;
   border-left: 2px solid transparent;
-  padding-left: 0.6rem;
+  line-height: 1.45;
 }
 .toc a:hover { color: var(--fg); }
 .toc a.is-current { color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
@@ -236,10 +283,49 @@ blockquote {
   border-left: 4px solid var(--warn-border);
   border-radius: 0 6px 6px 0;
 }
+/* ⚠️ で始まる段落は注意書き。引用と同じ見た目にして、読み手の語彙を増やさない。 */
+p.warn {
+  padding: 0.7rem 1rem;
+  background: var(--warn-bg);
+  border-left: 4px solid var(--warn-border);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ---- 図(mermaid の flowchart をビルド時に SVG へ変換したもの) ---- */
+.diagram-figure {
+  margin: 1.6em 0;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.diagram { max-width: 100%; height: auto; font-family: inherit; }
+.dg-node { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.dg-label { fill: var(--fg); font-size: 14px; text-anchor: middle; }
+.dg-edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.dg-dashed { stroke-dasharray: 5 4; }
+.dg-thick { stroke-width: 3; }
+.dg-arrow-head { fill: var(--muted); }
+.dg-edge-label-bg { fill: var(--surface); }
+.dg-edge-label { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.diagram-fallback { margin: 1.6em 0; }
+.diagram-fallback > p { margin-bottom: 0.4em; font-size: 0.85rem; color: var(--muted); }
+
+/* ---- コードの色(highlight.js のクラス名に対応する) ---- */
+.hljs-comment, .hljs-quote { color: var(--code-muted); font-style: italic; }
+.hljs-string, .hljs-attr, .hljs-attribute { color: var(--code-string); }
+.hljs-keyword, .hljs-literal, .hljs-type { color: var(--code-keyword); }
+.hljs-built_in, .hljs-title, .hljs-title.function_ { color: var(--code-name); }
+.hljs-number, .hljs-variable, .hljs-template-variable { color: var(--code-number); }
+.hljs-meta, .hljs-symbol, .hljs-regexp { color: var(--code-meta); }
 /* 表は横に溢れたら表だけがスクロールする(ページ全体は横スクロールさせない)。
    ⚠️ overflow-x を付けると縦もスクロールコンテナになるため、th の sticky は
    ページのスクロールでは効かない。画面より高い表だけ器の高さを止め、
-   その中で見出し行を固定する(is-tall は script.mjs が付ける)。 */
+   その中で見出し行を固定する(is-tall は script.mjs が付ける)。
+   ⚠️ この挙動は自動では見張っていない。変えたら実ブラウザで、
+   長い表(guides/handover.html)を器の中でスクロールして確かめること。 */
 .table-scroll {
   overflow-x: auto;
   margin: 1.2em 0;
@@ -253,6 +339,9 @@ th + th, td + td { border-left: 1px solid var(--border); }
 tr:last-child td { border-bottom: none; }
 th { background: var(--surface); position: sticky; top: 0; z-index: 1; }
 .is-tall th { box-shadow: 0 1px 0 var(--border); }
+/* ✅ / ❌ で始まるセルは淡く色を敷く。⚠️ 濃くすると表が信号機になって読めない。 */
+td.cell-ok { background: var(--ok-bg); }
+td.cell-ng { background: var(--ng-bg); }
 tbody tr:hover { background: var(--surface); }
 img { max-width: 100%; height: auto; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
@@ -315,7 +404,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
   :root { --bg: #ffffff; --fg: #000000; --surface: #ffffff; --warn-bg: #ffffff; }
   .sidebar, .toc, .topbar, .pager, .copy, .anchor { display: none !important; }
   .layout { display: block; max-width: none; padding: 0; }
-  pre, .table-scroll { break-inside: avoid; }
+  pre, .table-scroll, .diagram-figure { break-inside: avoid; }
   /* 紙には器のスクロールが無い。高さを止めると表が途中で切れる。 */
   .table-scroll.is-tall { max-height: none; overflow: visible; }
 }

@@ -97,6 +97,12 @@ importers:
 
   tools/docs-html:
     dependencies:
+      '@dagrejs/dagre':
+        specifier: ^3.1.0
+        version: 3.1.0
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
       markdown-it:
         specifier: ^15.0.0
         version: 15.0.0
@@ -173,6 +179,12 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
+
+  '@dagrejs/dagre@3.1.0':
+    resolution: {integrity: sha512-22SWJOfiQVCSFF0qN43SMiYS7Ch9Z6HZoO8+5PycGzGgmtdXIvHoZ2DoT5BweVGf+wwHxBFZu4eO0do0RIYQaw==}
+
+  '@dagrejs/graphlib@4.0.3':
+    resolution: {integrity: sha512-9kvysNliOxG5m3lr1Qq5uCc+SYxx+BaLDM2SDGkgoZvKJ1bSESzbZ3gn4rSxqX1xR07swcSdeuGyKYQhAURxAA==}
 
   '@esbuild/aix-ppc64@0.28.1':
     resolution: {integrity: sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ==}
@@ -896,6 +908,10 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  highlight.js@11.11.1:
+    resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
+    engines: {node: '>=12.0.0'}
+
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
@@ -1515,6 +1531,12 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@dagrejs/dagre@3.1.0':
+    dependencies:
+      '@dagrejs/graphlib': 4.0.3
+
+  '@dagrejs/graphlib@4.0.3': {}
 
   '@esbuild/aix-ppc64@0.28.1':
     optional: true
@@ -2149,6 +2171,8 @@ snapshots:
   hermes-parser@0.25.1:
     dependencies:
       hermes-estree: 0.25.1
+
+  highlight.js@11.11.1: {}
 
   ignore@5.3.2: {}
 

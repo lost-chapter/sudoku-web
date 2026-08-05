@@ -23,7 +23,7 @@ worktree や別端末で足りないものを揃える手順は `ops-dev-environ
 | `pnpm dev` | 開発サーバ(`@sudoku/web`)。既定は <http://localhost:5173> |
 | `pnpm build` | 本番ビルド。出力は `packages/web/dist/` |
 | `pnpm test` | 全パッケージのテスト(Vitest) |
-| `pnpm test:e2e` | **ブラウザでのキーボード操作(Playwright)。**開発サーバは自前で立つ。⚠️ **初回だけ `pnpm --filter @sudoku/web exec playwright install chromium` が要る**(196 MB・14 秒) |
+| `pnpm test:e2e` | **ブラウザでのキーボード操作(Playwright)**。開発サーバは自前で立つ。⚠️ **初回だけ `pnpm --filter @sudoku/web exec playwright install chromium` が要る**(196 MB・14 秒) |
 | `pnpm typecheck` | 全パッケージの型チェック |
 | `pnpm lint` | ESLint |
 | `pnpm format` / `pnpm format:check` | Prettier |
@@ -82,7 +82,7 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 - **`pnpm install` で esbuild のビルドスクリプトを許可している**
   (`pnpm-workspace.yaml` の `allowBuilds`)。拒否すると Vite と Vitest が動かない
 - **ポートが衝突したら `PORT` を変える。** 複数の worktree で同時に立てると起きる
-- **`pnpm test:e2e` は 5175 を使う。**塞がっていると
+- **`pnpm test:e2e` は 5175 を使う**。塞がっていると
   「already used」で止まる(**別のサーバを再利用して謎の失敗をするより、
   名指しで止まるほうがよい**ため、あえてそうしてある)
 - **`docs-html/` はコミットしない。** 正本は `docs/` の `.md`
