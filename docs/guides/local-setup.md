@@ -53,7 +53,7 @@ tools/docs-html      Markdown → HTML(管理役が持つ)
 
 | 項目 | 値 |
 |------|-----|
-| テスト | **156 件**(core 68 / docs-html 19 / web 69。generator は 0 件) |
+| テスト | **184 件**(core 96 / docs-html 19 / web 69。generator は 0 件) |
 | 型チェック | 4 パッケージ 0 エラー |
 | Lint | 0 エラー |
 | 本番ビルド | 成功(JS 307.75 KB / gzip 95.71 KB、CSS 232.77 KB / gzip 34.19 KB) |
