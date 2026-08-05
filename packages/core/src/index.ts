@@ -45,3 +45,5 @@ export {
   parseBoard,
   tryParseBoard,
 } from "./board";
+
+export { countSolutions, findSolutions, hasUniqueSolution, solveBoard } from "./search-solver";
