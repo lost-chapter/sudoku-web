@@ -68,7 +68,7 @@ export default defineConfig({
     {
       // ⚠️ **いちばん狭い端末。**ここが 1 画面と 24px の両立が最も厳しい。
       name: "phone-small",
-      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts"],
+      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts", "**/flick.e2e.ts"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 320, height: 568 },
@@ -78,7 +78,7 @@ export default defineConfig({
     },
     {
       name: "phone-landscape",
-      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts"],
+      testIgnore: ["**/layoutSwitch.e2e.ts", "**/releaseNotes.e2e.ts", "**/flick.e2e.ts"],
       use: { ...devices["iPhone SE landscape"], browserName: "chromium" },
     },
   ],

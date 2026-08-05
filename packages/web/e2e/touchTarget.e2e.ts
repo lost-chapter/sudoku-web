@@ -26,7 +26,10 @@ function minimumSize(testInfo: TestInfo): number {
 }
 
 async function expectEveryButtonIsBigEnough(page: Page, minimum: number): Promise<void> {
-  const buttons = page.getByRole("button");
+  // 🔴 **役割ではなく要素で拾う。**`getByRole("button")` にすると、
+  // **`role="switch"` にした瞬間に走査から外れる**(2026-08-06 にメモのスイッチで踏んだ)。
+  // ⚠️ **代表を絞らない、と同じ話である** —— **絞る軸を変えても漏れる。**
+  const buttons = page.locator("button");
   const count = await buttons.count();
   // ⚠️ **0 個でも for 文は通る。**「走査した」と「見た」を分けるために数を確かめる。
   expect(count).toBeGreaterThan(0);

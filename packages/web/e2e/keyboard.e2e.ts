@@ -64,3 +64,21 @@ test("設定を Escape で閉じるとフォーカスが「設定」へ戻る", 
   // 画面の先頭から Tab をやり直すことになる。
   await expect(settings).toBeFocused();
 });
+
+test("メモのスイッチを Space で切り替えられる", async ({ page }) => {
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
+
+  // ⚠️ **`role="switch"` にしても `<button>` の既定動作は変わらない**ことを見る。
+  // 役割を変えたのは 2026-08-06 で、**変えた側が壊していないかは実キーでしか分からない**。
+  const memo = page.getByRole("switch", { name: "メモ" });
+  await expect(memo).toHaveAttribute("aria-checked", "false");
+
+  await memo.focus();
+  await page.keyboard.press("Space");
+  await expect(memo).toHaveAttribute("aria-checked", "true");
+
+  await page.keyboard.press("Space");
+  await expect(memo).toHaveAttribute("aria-checked", "false");
+});
