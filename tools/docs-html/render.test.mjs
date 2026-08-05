@@ -176,6 +176,22 @@ describe("renderPage", () => {
     expect(html).toContain("<p>本文は続く</p>");
   });
 
+  it("往復する矢印のラベルを重ねない", () => {
+    const html = render({
+      markdown: "# 題\n\n```mermaid\nflowchart LR\n  A -->|行き| B\n  B -->|帰り| A\n```\n",
+    });
+    const at = (text) => {
+      const found = new RegExp(
+        `<text class="dg-edge-label" x="([\\d.]+)" y="([\\d.]+)">${text}<`,
+      ).exec(html);
+      return { x: Number(found[1]), y: Number(found[2]) };
+    };
+    // 中点へ揃えると読めなくなるので、線の上で離す
+    const a = at("行き");
+    const b = at("帰り");
+    expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(20);
+  });
+
   it("同じページに図が 2 つあっても id がぶつからない", () => {
     const html = render({
       markdown:
