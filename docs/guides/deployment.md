@@ -41,13 +41,39 @@ gh secret list --repo lost-chapter/sudoku-web   # 2026-08-06 時点で 0 件
 ⚠️ **既定の「Deploy from a branch」のままでは workflow が効かない。**
 ここを変えないと、`pages.yml` が成功しているのにサイトが更新されない。
 
-### 3. 確かめる
+### 🔴 3. 出せるブランチを `main` にする
+
+**Settings → Environments → `github-pages` → Deployment branches and tags**
+
+1. **`develop` を削除する**
+2. **`main` を追加する**
+
+🔴 **ここを飛ばすと、ビルドは成功するのに配置だけが落ちる。**
+
+```
+Branch "main" is not allowed to deploy to github-pages
+due to environment protection rules.
+```
+
+⚠️ **GitHub は Pages を有効にしたとき、既定ブランチを自動で登録する。**
+このリポジトリの既定ブランチは **`develop`** なので、
+**`develop` だけが許可された状態で始まる**(2026-08-06 実測)。
+
+**このプロジェクトは「出すのは `main` だけ」と決めている**([ブランチ戦略](branch-strategy.md))ので、
+**既定のままでは必ず食い違う。**
+
+⚠️ **`develop` を残さない。** 残すと `workflow_dispatch` で
+**`develop` からも手で出せてしまい**、決めたことと合わなくなる。
+
+### 4. 確かめる
 
 ```bash
 gh api repos/lost-chapter/sudoku-web/pages --jq '{status, html_url, build_type}'
+gh api repos/lost-chapter/sudoku-web/environments/github-pages/deployment-branch-policies \
+  --jq '[.branch_policies[].name]'
 ```
 
-`build_type` が `workflow` になっていること。
+**`build_type` が `workflow`、許可ブランチが `["main"]` になっていること。**
 
 ## 出すとき
 
