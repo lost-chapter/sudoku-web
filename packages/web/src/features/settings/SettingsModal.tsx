@@ -5,7 +5,7 @@ import type { Settings } from "./settings";
 /**
  * 設定。**ゲーム画面からモーダルで開く**(docs/ui/screens-and-interactions.md)。
  *
- * いまは補助表示だけ。テーマの切替は工程 4 の最後の区切り。
+ * 中身はテーマと、盤面の強調 2 つだけである。
  */
 export interface SettingsModalProps {
   readonly opened: boolean;
@@ -23,7 +23,8 @@ interface Item {
 /**
  * 並びは仕様の表と同じにする。
  *
- * ⚠️ **「矛盾の表示」と「誤りの即時指摘」は別物である。**説明でそれが分かるようにする。
+ * ⚠️ **2026-08-06 に「矛盾の表示」「残り数の表示」「誤りの即時指摘」を消した**
+ * (発注者の要望)。**間違いを教えない**のがこのアプリの方針である。
  */
 const ITEMS: readonly Item[] = [
   {
@@ -35,21 +36,6 @@ const ITEMS: readonly Item[] = [
     key: "highlightUnits",
     label: "行・列・ブロックの強調",
     description: "選択中のセルが属する 3 方向を薄く敷く",
-  },
-  {
-    key: "showConflicts",
-    label: "矛盾の表示",
-    description: "同じ行・列・ブロックで数字が重なったら印を付ける（数独の規則だけを見る）",
-  },
-  {
-    key: "showRemaining",
-    label: "残り数の表示",
-    description: "各数字があと何個入るか。0 になった数字はパッドで落とす",
-  },
-  {
-    key: "showMistakes",
-    label: "誤りの即時指摘",
-    description: "解と違う入力をその場で指摘する（遊びの質が変わるので既定は切）",
   },
 ];
 

@@ -12,8 +12,7 @@ import { Game } from "./Game";
  * ゲーム画面。**アプリの本体**(docs/ui/screens-and-interactions.md)。
  *
  * ここが持つのは「どの問題を遊ぶか」と設定だけで、
- * 盤面とヘッダ(難易度 / 経過時間 / 設定)は {@link Game} が持つ。
- * 経過時間を止める条件(完成したか)がそちらにしか無いためである。
+ * 盤面とヘッダ(難易度 / 設定)は {@link Game} が持つ。
  *
  * 問題が変わったら `key` で作り直す。
  */
@@ -25,7 +24,7 @@ export interface GameScreenProps {
 }
 
 export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
-  const { status, puzzle, source, restored, elapsedMs, puzzleKey, next } = usePuzzle({
+  const { status, puzzle, source, restored, puzzleKey, next } = usePuzzle({
     difficulty,
     resume,
   });
@@ -41,7 +40,6 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
           settings={settings}
           source={source}
           restored={restored}
-          initialElapsedMs={elapsedMs}
           onNext={next}
           onOpenSettings={settingsModal.open}
         />

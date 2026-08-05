@@ -1,4 +1,4 @@
-import { Button, Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Button, Group, SimpleGrid, Stack } from "@mantine/core";
 import { BOARD_SIZE } from "@sudoku/core";
 
 /**
@@ -19,11 +19,6 @@ export interface NumberPadProps {
   readonly noteMode: boolean;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
-  /**
-   * 各数字があと何個入るか。添字 0 が数字 1。
-   * **`null` なら残り数の表示が切られている**(設定)。
-   */
-  readonly remaining: readonly number[] | null;
   /** 手がかりのセルを選んでいるときは押しても何も起きないので、落としておく。 */
   readonly disabled?: boolean;
 }
@@ -39,42 +34,27 @@ export function NumberPad({
   noteMode,
   canUndo,
   canRedo,
-  remaining,
   disabled,
 }: NumberPadProps) {
   return (
     <Stack gap="xs">
       <SimpleGrid cols={{ base: 5, xs: 9 }} spacing="xs">
-        {DIGITS.map((digit) => {
-          const left = remaining?.[digit - 1];
-          // **入りきった数字はパッドで落とす**(仕様の「残り数の表示」)。
-          // メモは入りきった数字でも立てたいことがあるので落とさない。
-          const usedUp = !noteMode && left === 0;
-
-          return (
-            <Button
-              key={digit}
-              variant="default"
-              size="lg"
-              disabled={disabled || usedUp}
-              aria-label={
-                left === undefined
-                  ? `${digit} を${noteMode ? "メモする" : "入力"}`
-                  : `${digit} を${noteMode ? "メモする" : "入力"}、残り ${left}`
-              }
-              onClick={() => onDigit(digit)}
-            >
-              <Stack gap={0} align="center">
-                <span>{digit}</span>
-                {left !== undefined && (
-                  <Text component="span" size="xs" c="dimmed" aria-hidden="true">
-                    {left}
-                  </Text>
-                )}
-              </Stack>
-            </Button>
-          );
-        })}
+        {/*
+          ⚠️ **2026-08-06 に「残り数」を消した**(発注者の要望)。
+          入りきった数字を落とす挙動も一緒に無くなっている。**パッドは数字だけ。**
+        */}
+        {DIGITS.map((digit) => (
+          <Button
+            key={digit}
+            variant="default"
+            size="lg"
+            disabled={disabled}
+            aria-label={`${digit} を${noteMode ? "メモする" : "入力"}`}
+            onClick={() => onDigit(digit)}
+          >
+            {digit}
+          </Button>
+        ))}
       </SimpleGrid>
 
       {/* 「消す」と「メモ」は数字と並べると幅が足りず文字が折り返す。別の行に置く。 */}

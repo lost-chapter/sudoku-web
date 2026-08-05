@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Group, Stack, Text } from "@mantine/core";
 
-import { formatElapsed } from "../features/progress/useElapsedTime";
 import { readProgress, type StorageLike } from "../features/progress/progressStorage";
 import { isStale, type SavedProgress } from "../features/progress/progress";
 import { availableDifficulties } from "../features/puzzle/packSelection";
@@ -59,7 +58,7 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
           <Stack gap="sm">
             <Text fw={500}>遊びかけがあります</Text>
             <Text size="sm" c="dimmed">
-              {DIFFICULTY_LABELS[saved.difficulty]} / {formatElapsed(saved.elapsedMs)}
+              {DIFFICULTY_LABELS[saved.difficulty]}
             </Text>
             <Button onClick={() => onStart(saved.difficulty, true)}>続きから</Button>
           </Stack>
