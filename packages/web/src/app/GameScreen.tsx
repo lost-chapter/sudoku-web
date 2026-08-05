@@ -1,7 +1,7 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import type { Difficulty } from "../features/puzzle/types";
+import type { Difficulty } from "@sudoku/core";
 import { usePuzzle, type PuzzleStatus } from "../features/puzzle/usePuzzle";
 import { SettingsModal } from "../features/settings/SettingsModal";
 import { useSettings } from "../features/settings/useSettings";

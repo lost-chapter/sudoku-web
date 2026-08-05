@@ -6,7 +6,7 @@ import type { RestoredBoard } from "../../state/boardState";
 
 import { loadPuzzleAt, loadRandomPuzzle, type LoadedPuzzle } from "./loadPuzzle";
 import { SAMPLE_PUZZLE } from "./samplePuzzle";
-import type { Difficulty, Puzzle } from "./types";
+import type { Difficulty, Puzzle } from "@sudoku/core";
 
 /**
  * 問題を 1 問取ってきて、遊べる状態にする。

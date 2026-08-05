@@ -1,4 +1,4 @@
-import type { Puzzle } from "../features/puzzle/types";
+import type { Puzzle } from "@sudoku/core";
 
 import {
   boardReducer,

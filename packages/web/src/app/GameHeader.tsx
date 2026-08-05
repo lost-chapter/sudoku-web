@@ -1,6 +1,6 @@
 import { Button, Group, Text } from "@mantine/core";
 
-import type { Difficulty } from "../features/puzzle/types";
+import type { Difficulty } from "@sudoku/core";
 
 /**
  * ゲーム画面のヘッダ。**難易度 / パック名 / 設定**

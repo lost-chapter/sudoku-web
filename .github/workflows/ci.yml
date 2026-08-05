@@ -12,6 +12,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  markers:
+    name: 競合マーカーの残存
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 2026-08-05: 管理役がマージの解決漏れを develop まで通した。
+      # 人が気をつけるだけでは防げないので CI で見張る。
+      - name: 競合マーカーが残っていないことを確認
+        run: |
+          if git grep -nE '^(<<<<<<<|=======$|>>>>>>>)' -- . ':(exclude)pnpm-lock.yaml'; then
+            echo "マージの解決漏れがある(上記)"
+            exit 1
+          fi
+          echo "競合マーカーは無い"
+
   check:
     name: 静的検査とテスト
     runs-on: ubuntu-latest

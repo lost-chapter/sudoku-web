@@ -1,6 +1,6 @@
 import { CELL_COUNT } from "@sudoku/core";
 
-import { DIFFICULTIES, type Difficulty } from "../puzzle/types";
+import { DIFFICULTIES, type Difficulty } from "@sudoku/core";
 
 /**
  * 遊びかけの進行。
