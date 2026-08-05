@@ -11,7 +11,7 @@ import { clearProgress, writeProgress } from "../features/progress/progressStora
 import type { LoadedPuzzle } from "../features/puzzle/loadPuzzle";
 import type { Puzzle } from "@sudoku/core";
 import type { Settings } from "../features/settings/settings";
-import { isGiven, matchesSolution, type RestoredBoard } from "../state/boardState";
+import { isGiven, isSolvedByPlayer, type RestoredBoard } from "../state/boardState";
 import {
   canRedo,
   canUndo,
@@ -62,7 +62,9 @@ export function Game({
     createGameState,
   );
   const state = game.present;
-  const completed = matchesSolution(state);
+  // ⚠️ **あきらめて解が出た状態を「完成」と呼ばない。**
+  // 盤面は解と一致するが、解いたのは遊技者ではない。
+  const completed = isSolvedByPlayer(state);
   // ⚠️ **完成もあきらめも「終わった状態」。**どちらでも盤面は動かさない。
   const finished = completed || state.gaveUp;
   const highlights = computeHighlights(state, settings);
@@ -226,16 +228,23 @@ export function Game({
         既定のフォーカスは「やめる」に置く。Enter の連打で確定させないため。
         置き場所(ヘッダ = 親指から最も遠い)と合わせて二重に防いでいる。
       */}
+      {/*
+        ⚠️ **閉じるボタンを置かない。**Mantine は開いたときに最初の押せる要素へ
+        フォーカスを移すので、閉じるボタンがあるとそちらへ行き、
+        **「やめる」に置くという設計が効かない**(実測して気づいた)。
+        Escape でも閉じられるので、閉じる手段が減るわけではない。
+      */}
       <Modal
         opened={confirmingGiveUp}
         onClose={() => setConfirmingGiveUp(false)}
         title="あきらめますか?"
         centered
+        withCloseButton={false}
       >
         <Stack gap="md">
           <Text>正解が表示され、この問題は終わります。</Text>
           <Group grow>
-            <Button variant="default" onClick={() => setConfirmingGiveUp(false)} autoFocus>
+            <Button variant="default" onClick={() => setConfirmingGiveUp(false)}>
               やめる
             </Button>
             <Button

@@ -8,6 +8,7 @@ import {
   createBoardState,
   isGiven,
   isRevealed,
+  isSolvedByPlayer,
   matchesSolution,
   notesAt,
   valueAt,
@@ -277,6 +278,24 @@ describe("あきらめる", () => {
   it("選択の移動だけは効く(読み上げで盤面を辿れるように)", () => {
     const moved = boardReducer(gaveUp, { type: "moveSelection", direction: "down" });
     expect(moved.selected).toBe(gaveUp.selected + 9);
+  });
+
+  it("⚠️ あきらめて解が出ても「完成」ではない", () => {
+    // 盤面は解と一致するが、解いたのは遊技者ではない。
+    // ここを取り違えると、諦めた遊技者に「完成しました」と知らせることになる。
+    expect(matchesSolution(gaveUp)).toBe(true);
+    expect(isSolvedByPlayer(gaveUp)).toBe(false);
+  });
+
+  it("自分で解き終えたときは「完成」になる", () => {
+    const solved = SAMPLE_PUZZLE.solution.reduce<BoardState>((state, digit, index) => {
+      if (isGiven(state, index)) {
+        return state;
+      }
+      return boardReducer(select(state, index), { type: "inputDigit", digit });
+    }, initial);
+
+    expect(isSolvedByPlayer(solved)).toBe(true);
   });
 
   it("メモモードは切れる(次の問題で入力先を取り違えない)", () => {
