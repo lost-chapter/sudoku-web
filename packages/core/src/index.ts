@@ -70,3 +70,16 @@ export {
 
 export type { Difficulty, DifficultyRating } from "./difficulty";
 export { DIFFICULTIES, rateDifficulty } from "./difficulty";
+
+export type { Manifest, PackDescriptor, PackEntry, Puzzle } from "./puzzle-file";
+export {
+  PUZZLE_FILE_FORMAT_VERSION,
+  comparePuzzles,
+  countTotals,
+  decodePack,
+  decodePuzzleLine,
+  encodeManifest,
+  encodePack,
+  encodePuzzleLine,
+  tryParseManifest,
+} from "./puzzle-file";
