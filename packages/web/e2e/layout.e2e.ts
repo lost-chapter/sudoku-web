@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * **1 画面に収まること**と**盤面が読める大きさであること**。
@@ -37,10 +37,36 @@ test("盤面のセルは 24px 四方を下回らない", async ({ page }) => {
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);
 });
 
-test("入力パッドのキーは 44px 四方を下回らない", async ({ page }) => {
-  // こちらは大きさを自由に取れるので下げない(同上)。
-  const box = await page.getByRole("button", { name: /^1 を入力$/ }).boundingBox();
+/**
+ * ⚠️ **パッドのキーだけを見ない。**大きさを自由に取れるものは**すべて**下限を守る。
+ * 入力パッドだけ測っていたので、**ホームの難易度ボタンが 36px のまま残っていた**
+ * (2026-08-06 に管理役が発見)。
+ */
+async function expectAllButtonsAreTouchable(page: Page): Promise<void> {
+  const buttons = page.getByRole("button");
+  const count = await buttons.count();
+  expect(count).toBeGreaterThan(0);
 
-  expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  for (let index = 0; index < count; index += 1) {
+    const button = buttons.nth(index);
+    const [box, label] = await Promise.all([button.boundingBox(), button.textContent()]);
+
+    expect(box?.width ?? 0, `「${label}」の幅`).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0, `「${label}」の高さ`).toBeGreaterThanOrEqual(44);
+  }
+}
+
+test("ゲーム画面の押せるものは 44px 四方を下回らない", async ({ page }) => {
+  await expectAllButtonsAreTouchable(page);
+});
+
+test("ホーム画面の押せるものは 44px 四方を下回らない", async ({ page }) => {
+  // ⚠️ **1 つ入れてから戻る。**空の盤面は保存されないので、
+  // そのまま戻ると「続きから」が出ず、**測る対象が 1 つ減る。**
+  await page.locator('[role="gridcell"][aria-label$="、空"]').first().click();
+  await page.getByRole("button", { name: /^1 を入力$/ }).click();
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "続きから" })).toBeVisible();
+
+  await expectAllButtonsAreTouchable(page);
 });

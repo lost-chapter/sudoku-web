@@ -2,6 +2,8 @@ import { Button, Group, Text } from "@mantine/core";
 
 import type { Difficulty } from "@sudoku/core";
 
+import { TOUCH_TARGET } from "./layout";
+
 /**
  * ゲーム画面のヘッダ。**難易度 / パック名 / 設定**
  * (docs/ui/screens-and-interactions.md「ゲーム画面の構成」)。
@@ -43,8 +45,12 @@ export function GameHeader({
     // ⚠️ **横向きのヘッダは幅が狭い。**折り返しを許さないと文字が切れる。
     <Group justify="space-between" align="center" gap="xs">
       <Group gap="xs" wrap="nowrap">
+        {/*
+          ⚠️ **高さだけを 44px へ上げる。**幅は文字数で決まり、いずれも足りている。
+          `size` を上げると文字も大きくなり、横向きのヘッダが 2 行になる(実測)。
+        */}
         {onHome && (
-          <Button variant="default" size="xs" onClick={onHome}>
+          <Button variant="default" size="xs" h={TOUCH_TARGET} onClick={onHome}>
             ホーム
           </Button>
         )}
@@ -63,10 +69,16 @@ export function GameHeader({
           遊技中に誤って触りにくい(docs/ui/screens-and-interactions.md)。
           押すと確認のモーダルが出るので、置き場所と合わせて二重に防いでいる。
         */}
-        <Button variant="default" size="xs" disabled={!canGiveUp} onClick={onGiveUp}>
+        <Button
+          variant="default"
+          size="xs"
+          h={TOUCH_TARGET}
+          disabled={!canGiveUp}
+          onClick={onGiveUp}
+        >
           あきらめる
         </Button>
-        <Button variant="default" size="xs" onClick={onOpenSettings}>
+        <Button variant="default" size="xs" h={TOUCH_TARGET} onClick={onOpenSettings}>
           設定
         </Button>
       </Group>
