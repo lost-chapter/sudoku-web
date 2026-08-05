@@ -2,8 +2,9 @@ import { BOARD_SIZE } from "@sudoku/core";
 
 import { Icon } from "../../ui/Icon";
 
+import { NoteSwitch } from "./NoteSwitch";
 import type { PadProps } from "./padProps";
-import { useFlickUp } from "./useFlick";
+import { useTouchInput } from "./useFlick";
 
 import classes from "./TouchPad.module.css";
 
@@ -45,7 +46,12 @@ function DigitKey({
   disabled,
   onDigit,
 }: { readonly digit: number } & Pick<PadProps, "noteMode" | "disabled" | "onDigit">) {
-  const flick = useFlickUp(() => onDigit(digit, true));
+  // ⚠️ **指のときは `click` を使わない**(`useTouchInput` が `preventDefault` する)。
+  // **マウスとキーボードは `onClick` のまま** —— そちらに `touchend` は来ない。
+  const touch = useTouchInput({
+    onFlickUp: () => onDigit(digit, true),
+    onTap: () => onDigit(digit),
+  });
 
   return (
     <button
@@ -54,7 +60,7 @@ function DigitKey({
       disabled={disabled}
       aria-label={noteMode ? `${digit} をメモする` : `${digit} を入力`}
       onClick={() => onDigit(digit)}
-      {...flick}
+      {...touch}
     >
       {digit}
     </button>
@@ -114,25 +120,11 @@ export function TouchPad({
       <div className={landscape ? classes.utilityLandscape : classes.utility}>
         {landscape && <ClearKey disabled={disabled} onClear={onClear} />}
         {/*
-          ⚠️ **「メモ」だけは文字を消さない。**押しっぱなしの状態を持つので、
-          **記号だけにすると「入」か「切」かが色でしか分からなくなる**
-          (色だけに情報を載せない、という仕様の約束に反する)。
+          🔴 **メモはスイッチにする**(2026-08-06・発注者の要望)。
+          **「メモ 切」は状態にも命令にも読めた。**状態を持つものは状態を表す形にする。
+          ⚠️ **横向きは幅が無いので文字を落とす。**つまみの位置で状態は分かる。
         */}
-        <button
-          type="button"
-          className={[classes.key, noteMode ? classes.pressed : ""].join(" ")}
-          /*
-            ⚠️ **画面から「メモ」の 2 文字が消えたぶんを名前で補う。**
-            見えている「入 / 切」を名前に含めてあるので、
-            **音声で操作する人が「メモ 入」と言える**(WCAG 2.5.3)。
-          */
-          aria-label={`メモ ${noteMode ? "入" : "切"}`}
-          aria-pressed={noteMode}
-          onClick={onToggleNoteMode}
-        >
-          <Icon name="pencil" size={18} />
-          {noteMode ? "入" : "切"}
-        </button>
+        <NoteSwitch checked={noteMode} onChange={onToggleNoteMode} compact={landscape} />
         <button
           type="button"
           className={classes.key}

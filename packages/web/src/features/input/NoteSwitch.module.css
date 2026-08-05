@@ -1,0 +1,106 @@
+/*
+ * メモモードのスイッチ。
+ *
+ * ⚠️ **`@layer mantine` の外なので、import 順に関係なく Mantine より勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。!important は使わない。
+ *
+ * 🔴 **状態を「つまみの位置」で表す。**色だけに載せない
+ * (docs/ui/screens-and-interactions.md「色だけに情報を載せない」)。
+ */
+
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  /* ⚠️ **押せる下限を割らない。**スイッチは絵が小さくなりがちで、
+     絵の大きさをそのまま押せる大きさにすると 44px を切る。 */
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  /* ⚠️ **折り返させない。**狭いところで「メモ」が縦に割れる(実測)。 */
+  white-space: nowrap;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/*
+ * ⚠️ **横向きは補助行に 4 つ並ぶので、絵を詰める。**
+ * 詰めないと**このスイッチが列を押し広げ、隣の「消す」が 44px を割る**(実測 43.2px)。
+ * **押せる大きさは高さで確保してあるので、絵を小さくしても下限は割らない。**
+ */
+.compact {
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  /*
+   * 切のときの溝。**入との差は色だけではない**(つまみの位置が主)。
+   *
+   * 🔴 **つまみとの明暗差を 3:1 以上にする**(WCAG 1.4.11)。
+   * ⚠️ **`gray-5` では 2.07 しかなく、つまみの位置が読み取れなかった**(実測)。
+   * **位置で状態を伝える設計なので、つまみが見えないと設計ごと効かない。**
+   */
+  background: var(--mantine-color-gray-7);
+  transition: background-color 120ms ease;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--mantine-color-white);
+  transition: transform 120ms ease;
+}
+
+.compact .track {
+  width: 28px;
+  height: 16px;
+}
+
+.compact .thumb {
+  width: 12px;
+  height: 12px;
+}
+
+/* 入。**つまみが右へ寄る。** */
+.switch[aria-checked="true"] .track {
+  background: var(--mantine-primary-color-filled);
+}
+
+.switch[aria-checked="true"] .thumb {
+  transform: translateX(14px);
+}
+
+.compact[aria-checked="true"] .thumb {
+  transform: translateX(12px);
+}
+
+.switch:focus-visible {
+  outline: 3px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* ⚠️ **動きを減らす設定を尊重する。**位置は変わるが、滑らせない。 */
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .thumb {
+    transition: none;
+  }
+}
