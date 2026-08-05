@@ -215,7 +215,17 @@ git worktree add .claude/worktrees/<名前> cc/agent-b
 | agent-a | 工程 0(技術構成の選定と設計) | ✅ **完了(2026-08-05)。**ADR 0001〜0003 + アルゴリズム 3 本 + ファイル形式 + UI 仕様。[保留中の判断事項](../reference/pending-decisions.md) は全件決着 |
 | agent-a | 工程 1(開発基盤) | ✅ **完了(2026-08-05)。**`pnpm install` → `pnpm dev` で起動を実測。テスト 12 件・型 0 エラー・Lint 0 エラー・本番ビルド成功 |
 | agent-b | 工程 2(`core` + `generator`) | 🔜 **着手できる。**[盤面の生成](../algorithms/board-generation.md) →[解法](../algorithms/solver.md) →[難易度の評価](../algorithms/difficulty-rating.md) の順に読む |
-| agent-c | 工程 3〜4(`web`) | 🔜 **着手できる。**[画面構成と操作仕様](../ui/screens-and-interactions.md) と[問題ファイルの形式](../api/puzzle-file-format.md) を読む |
+| agent-c | 工程 3〜4(`web`) | ⏳ **進行中(2026-08-05)。**盤面の描画・セルの選択・数字の入力まで通した(web のテスト 33 件)。次は完成の判定 → 問題の取得。**設計との食い違いを 2 件、管理役へ上げてある**(下記) |
+
+### agent-c から管理役へ上げてある設計との食い違い(未決着)
+
+**[並列エージェントの運用](parallel-agent-operations.md#触ってよいファイルの境界) に従い、
+実装を先に進めつつ文書は直していない。** 決着したら文書とコードを揃える。
+
+| # | 食い違い | 実装のいま | 決めること |
+|---|---------|-----------|-----------|
+| 1 | [システム構成](../architecture/system-architecture.md) は盤面の reducer を **`core` に置く**と読める。一方、境界の規約では `core` は agent-b が持ち c は読むだけ | `packages/web/src/state/boardState.ts` に純粋な reducer として置いた(React には依存していないので移設はできる) | `core` へ移すか、web に置いたままにして文書を直すか |
+| 2 | 同文書は**問題ファイルの読み書きを `core` の責務**としているが、`core` にはまだ無い | `packages/web/src/features/puzzle/puzzleLine.ts` に暫定で置いた(⚠️ コメント付き) | agent-b が `core` に実装したら差し替える。**両方が実装すると検証が割れる** |
 
 ### 設計時に確かめた事実で、失うと痛いもの
 
