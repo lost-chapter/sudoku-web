@@ -43,9 +43,22 @@ export interface TouchInput {
   readonly onFlickUp: () => void;
   /** そのまま離した(キーの中で)。 */
   readonly onTap: () => void;
+  /**
+   * 上フリックを見るか(設定。既定は入)。
+   *
+   * 🔴 **切っても、この hook ごと外さないこと。**
+   * **外すとタップの経路が `click` 任せに戻り、slop の分だけ無反応の範囲が復活する。**
+   * ⚠️ **切ったときの上フリックは「キーの外で離した」に落ちる**(= 取り消し)。
+   * **ボタンとして自然な振る舞いであり、確定入力が入るよりも驚きが小さい。**
+   */
+  readonly flickEnabled?: boolean;
 }
 
-export function useTouchInput({ onFlickUp, onTap }: TouchInput): FlickHandlers {
+export function useTouchInput({
+  onFlickUp,
+  onTap,
+  flickEnabled = true,
+}: TouchInput): FlickHandlers {
   const start = useRef<{ x: number; y: number } | null>(null);
 
   return {
@@ -71,7 +84,7 @@ export function useTouchInput({ onFlickUp, onTap }: TouchInput): FlickHandlers {
       const sideways = Math.abs(touch.clientX - from.x);
       // ⚠️ **縦が横を上回ることも見る。**斜めの動きを上フリックにすると、
       // 隣のキーへ滑らせただけで候補が立つ。
-      if (up >= FLICK_DISTANCE && up > sideways) {
+      if (flickEnabled && up >= FLICK_DISTANCE && up > sideways) {
         onFlickUp();
         return;
       }

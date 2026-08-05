@@ -60,6 +60,12 @@ const ITEMS: readonly Item[] = [
     label: "行・列・ブロックの強調",
     description: "選択中のセルが属する 3 方向を薄く敷く",
   },
+  {
+    key: "flickToNote",
+    // ⚠️ **「フリック」と書かない。**遊ぶ人の言葉で、**何が起きるか**を書く。
+    label: "上へはじいてメモ",
+    description: "スマートフォンで、数字を上へはじくと候補になります",
+  },
 ];
 
 export function SettingsModal({ opened, settings, onChange, onClose }: SettingsModalProps) {

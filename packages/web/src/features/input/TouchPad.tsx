@@ -26,6 +26,14 @@ import classes from "./TouchPad.module.css";
 export interface TouchPadProps extends PadProps {
   /** 横向きは幅に余裕があるので数字を 3 列に並べる。 */
   readonly landscape?: boolean;
+  /**
+   * 上へはじいてメモを使うか(設定で切れる。既定は入)。
+   *
+   * ⚠️ **切ったときは指の振り分けごと止める。**
+   * **フリックの判定だけを止めると、タップの経路が `click` 任せに戻り、
+   * 指が少し滑った範囲が無反応になる**(tap slop。{@link ./useFlick})。
+   */
+  readonly flickToNote?: boolean;
 }
 
 const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
@@ -45,12 +53,17 @@ function DigitKey({
   noteMode,
   disabled,
   onDigit,
-}: { readonly digit: number } & Pick<PadProps, "noteMode" | "disabled" | "onDigit">) {
+  flickToNote,
+}: { readonly digit: number; readonly flickToNote?: boolean } & Pick<
+  PadProps,
+  "noteMode" | "disabled" | "onDigit"
+>) {
   // ⚠️ **指のときは `click` を使わない**(`useTouchInput` が `preventDefault` する)。
   // **マウスとキーボードは `onClick` のまま** —— そちらに `touchend` は来ない。
   const touch = useTouchInput({
     onFlickUp: () => onDigit(digit, true),
     onTap: () => onDigit(digit),
+    flickEnabled: flickToNote,
   });
 
   return (
@@ -96,6 +109,7 @@ export function TouchPad({
   canRedo,
   disabled,
   landscape,
+  flickToNote,
 }: TouchPadProps) {
   return (
     <div className={classes.pad}>
@@ -107,6 +121,7 @@ export function TouchPad({
             noteMode={noteMode}
             disabled={disabled}
             onDigit={onDigit}
+            flickToNote={flickToNote}
           />
         ))}
         {/*

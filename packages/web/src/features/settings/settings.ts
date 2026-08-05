@@ -14,11 +14,19 @@ export interface Settings {
   readonly highlightSameDigit: boolean;
   /** 選択中のセルが属する行・列・ブロックを薄く敷く。 */
   readonly highlightUnits: boolean;
+  /**
+   * スマホで、数字を上へはじくとメモになる(2026-08-06・発注者の要望)。
+   *
+   * ⚠️ **既定は入。**
+   * **知らなければ気づかないだけで損はせず、既定で切ると誰にも届かない。**
+   */
+  readonly flickToNote: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   highlightSameDigit: true,
   highlightUnits: true,
+  flickToNote: true,
 };
 
 /**
