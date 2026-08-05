@@ -47,12 +47,13 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [調査: UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md) — 5 候補の実測比較。shadcn/ui は 2026-07 に基盤が変わった
 - [調査: 数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md) — 同型変換の罠・最小 17 手がかり・相関表・81 文字 1 行
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
+- [検証: 問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md) — 1 問 1.56 ms・毎秒 640 問。**手がかり数は 24〜25 に山**
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
 
-> **工程 2 の 1〜2(盤面の表現・探索ソルバ)まで完了している。**
-> 完成盤の生成・穴あけ・難易度評価(工程 2 の 3〜6)と画面(工程 3)はこれから。
+> **工程 2 の 1〜4(盤面の表現・探索ソルバ・完成盤の生成・穴あけ)まで完了している。**
+> 難易度評価とパック出力(工程 2 の 5〜6)、画面(工程 3)はこれから。
 
 ## 初めて参加する開発者が読む順序
 
@@ -78,6 +79,7 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
   - [UI ライブラリの選定](reports/2026-08-05-ui-library-survey.md)
   - [数独の生成・難易度評価・ファイル形式](reports/2026-08-05-sudoku-generation-survey.md)
   - [探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md)
+  - [問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md)
 
 ## ドキュメントを追加・変更するとき
 
