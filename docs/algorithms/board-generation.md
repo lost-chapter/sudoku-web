@@ -70,16 +70,17 @@ generatePuzzle(rng: () => number, options)
 
 **実装は `packages/core/src/generate.ts` の `digHoles`。**
 
-```
-完成盤から始める
-  ↓
-消す位置をランダムな順に選ぶ
-  ↓
-1 マス消して countSolutions(board, 2) を回す
-  ↓  == 1 なら消したままにする
-  ↓  != 1 なら戻す(この位置はもう試さない)
-  ↓
-消せる位置が尽きたら終了 → minimal(極小)な問題ができる
+```mermaid
+flowchart TD
+  start["完成盤から始める"] --> pick["消す位置をランダムな順に選ぶ"]
+  pick --> dig["1 マス消して countSolutions(board, 2) を回す"]
+  dig --> unique{"解は 1 個か"}
+  unique -->|はい| keep["消したままにする"]
+  unique -->|いいえ| back["戻す<br/>この位置はもう試さない"]
+  keep --> rest{"消せる位置が残っているか"}
+  back --> rest
+  rest -->|はい| pick
+  rest -->|いいえ| done["終了<br/>minimal(極小)な問題ができる"]
 ```
 
 **一意解の判定は [探索ソルバ](solver.md) の `countSolutions` に任せる。**
