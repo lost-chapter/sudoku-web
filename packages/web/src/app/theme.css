@@ -1,0 +1,30 @@
+/*
+ * アプリ全体の色の上書き。
+ *
+ * **@layer mantine の外に書いてあるので、import 順に関係なく Mantine より勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。
+ */
+
+:root {
+  /*
+   * ⚠️ **Mantine の既定の `dimmed` は地の上で 4.04:1 しかなく、本文の目安 4.5:1 を割る。**
+   * パック名・経過時間・残り数など、控えめに出したい文字はすべてこれを使うので、
+   * **1 か所で濃さを上げる。**個別に色を指定して回ると次に足す文字で必ず漏れる。
+   *
+   * 実測(2026-08-05): ライト 8.18:1 / ダーク 7.48:1。
+   */
+  --mantine-color-dimmed: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+
+  /*
+   * 矛盾と誤りを示す赤。**盤面の強調が敷かれた上でも 4.5:1 を満たす濃さ。**
+   *
+   * ⚠️ Mantine の red-9 / red-4 では、同じ数字の強調や選択の背景と重なったとき
+   * 4.19〜4.42 まで落ちる(実測・幅 375px)。**地の上だけで測ると足りて見える。**
+   * ライトは red-9 を 1 割だけ黒へ寄せ、ダークは 1 段明るい red-3 にした。
+   * **赤に見えること自体が情報なので、灰色へは寄せない。**
+   */
+  --sudoku-color-alert: light-dark(
+    color-mix(in srgb, var(--mantine-color-red-9) 90%, black),
+    var(--mantine-color-red-3)
+  );
+}

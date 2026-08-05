@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, MantineProvider, Stack, Title } from "@mantine/core";
+import { Container, MantineProvider, Stack, Title, type MantineThemeOverride } from "@mantine/core";
 
 import type { Difficulty } from "@sudoku/core";
 
@@ -22,11 +22,25 @@ interface Playing {
   readonly resume: boolean;
 }
 
+/**
+ * ⚠️ **塗りつぶしのボタンの濃さを両テーマとも 8 段目に固定する。**
+ *
+ * Mantine の既定はライトが 6 段目で、白文字を載せると **3.56:1** と本文の目安を割る
+ * (「続きから」「次の問題へ」「メモ 入」が該当)。8 段目にすると **5.02:1**。
+ *
+ * ⚠️ **CSS 変数の上書きでは直らない。**Button は描画時に色を解決して
+ * `--button-bg` を要素へ直接書くので、`:root` を書き換えても効かない。
+ * **テーマの設定で変える必要がある。**
+ */
+const THEME: MantineThemeOverride = {
+  primaryShade: { light: 8, dark: 8 },
+};
+
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: "home" });
 
   return (
-    <MantineProvider defaultColorScheme="auto">
+    <MantineProvider defaultColorScheme="auto" theme={THEME}>
       <Container size="sm" px="xs" py="md">
         <Stack gap="md">
           <Title order={1} size="h2">

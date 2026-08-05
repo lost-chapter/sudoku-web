@@ -1,0 +1,4 @@
+# Playwright が実行のたびに作る。失敗したときの痕跡なので残さない
+/test-results/
+/playwright-report/
+/blob-report/

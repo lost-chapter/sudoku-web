@@ -129,6 +129,67 @@ jobs:
             exit 1
           fi
 
+  e2e:
+    name: キーボード操作(E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # 2026-08-05: **この 2 点は手で触るまで確かめられなかった。**
+      # ブラウザ面から送る合成キーではネイティブのボタン活性化が起きないため、
+      # 「Enter で始まるか」「モーダルを閉じたらフォーカスが戻るか」を
+      # 誰も自動で見られなかった。**代わりが無いので CI に入れる。**
+      #
+      # ⚠️ **ここを広げない。**盤面の遷移は Vitest の reducer テストで押さえてある。
+      #    E2E は遅く壊れやすいので、本物のキーイベントでしか出ないものだけを置く。
+
+      # ブラウザ本体(約 196 MB)は毎回取りに行くと遅い。版に紐づけてキャッシュする。
+      - name: Playwright の版を取り出す
+        id: pw
+        run: |
+          version=$(node -p "require('./packages/web/node_modules/@playwright/test/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Playwright $version"
+
+      - name: ブラウザをキャッシュする
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: ブラウザを取得する(キャッシュが無いとき)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @sudoku/web exec playwright install --with-deps chromium
+
+      # ⚠️ **システムライブラリは apt で入るのでキャッシュに乗らない。**
+      #    キャッシュが当たった回も、これだけは毎回入れる必要がある。
+      - name: システムライブラリを入れる(キャッシュが当たったとき)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @sudoku/web exec playwright install-deps chromium
+
+      - name: E2E
+        run: pnpm test:e2e
+
+      # 失敗したときだけ、原因を追える材料を残す。
+      - name: 失敗したときの記録を残す
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/web/playwright-report/
+          retention-days: 7
+
   docs:
     name: ドキュメント変換の決定性
     runs-on: ubuntu-latest

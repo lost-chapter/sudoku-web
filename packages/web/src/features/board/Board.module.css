@@ -83,7 +83,13 @@
  */
 .entry {
   font-weight: 400;
-  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-4));
+  /*
+   * ⚠️ **いちばん明るい強調(同じ数字)の背景の上でも 4.5:1 を切らない濃さにする。**
+   * 地の上だけで測ると足りる色でも、強調が敷かれた上では割る。
+   * 実測(2026-08-05): ダークで blue-4 は同じ数字の背景の上で 4.06:1 だったので
+   * blue-3 まで上げた(5.11:1)。ライトの blue-9 は同じ条件で 4.67:1。
+   */
+  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3));
 }
 
 /*
@@ -98,10 +104,11 @@
   height: 100%;
   padding: 6%;
   /*
-   * `--mantine-color-dimmed` は地の上で 4.04:1 しかなく、本文の目安 4.5:1 を割る。
-   * メモは確定値と**大きさと位置**で区別が付くので、色は読める濃さまで上げてよい。
+   * 控えめな文字の色は app/theme.css で 1 か所に集めてある
+   * (Mantine の既定は 4.04:1 で本文の目安を割るため上書きしている)。
+   * メモは確定値と**大きさと位置**でも区別が付くので、色だけに頼っていない。
    */
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+  color: var(--mantine-color-dimmed);
   font-size: clamp(0.5rem, 2.6vmin, 0.75rem);
   font-weight: 400;
   line-height: 1;
@@ -132,15 +139,25 @@
  * 矛盾(規則の重複)と誤り(解と違う)は**別物**なので、印も分ける。
  * どちらも色だけに情報を載せない —— 矛盾は波線、誤りは破線の枠で示す。
  */
+/*
+ * ⚠️ **矛盾のセルは「同じ数字の強調」や選択の背景と重なる。**
+ * 重複した数字を選べば、そのセルは矛盾でも強調でも選択中でもある。
+ * **いちばん明るい(ライト)/ 暗い(ダーク)背景の上で 4.5:1 を満たす濃さにする。**
+ *
+ * ⚠️ **赤く見えること自体が情報なので、灰色に寄せない。**
+ * ライトは red-9 を 1 割だけ黒へ寄せ、ダークは red-4 を red-3 へ 1 段明るくした。
+ * どちらも色相は赤のままで、確定値(青)・手がかり(地の色)とは一目で分かる。
+ * 実測(2026-08-05・幅 375px): ライト 4.95〜6.45 / ダーク 5.46〜8.44。
+ */
 .conflict {
-  color: light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
+  color: var(--sudoku-color-alert);
   text-decoration: underline wavy;
   text-underline-offset: 0.15em;
 }
 
 .mistake {
-  color: light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
-  outline: 2px dashed light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
+  color: var(--sudoku-color-alert);
+  outline: 2px dashed var(--sudoku-color-alert);
   outline-offset: -4px;
 }
 
