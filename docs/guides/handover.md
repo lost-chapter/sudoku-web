@@ -36,14 +36,19 @@ git stash list
 
 ```bash
 git -c credential.helper='!gh auth git-credential' \
-  push https://github.com/Tenryu/sudoku-web.git develop:develop
+  push https://github.com/lost-chapter/sudoku-web.git develop:develop
 ```
 
-**2026-08-05 に初回のプッシュを実施済み**(129 コミット)。CI 4 ジョブは実機で通った。
+🔴 **2026-08-06 にリポジトリを個人から Organization へ移した。**
+**remote は `github.com/lost-chapter/sudoku-web` である**(旧 `Tenryu/sudoku-web`)。
+GitHub が旧 URL からリダイレクトするので古い clone でも動いてしまうが、
+**古い URL を書いた文書やスクリプトを見つけたら直すこと。**
 
-⚠️ **その後の分は手元に留めてある**(2026-08-05・ユーザーの判断)。
-**`develop` はマージ済みだがプッシュしていない。**
-工程 4 の完了(E2E とコントラスト)と **5 つ目の CI ジョブは実機で回していない。**
+```bash
+git remote -v          # origin が lost-chapter になっているか
+```
+
+**2026-08-06 時点で `develop` はプッシュ済み**(`origin/develop` と同一)。
 **次にプッシュする人は、E2E ジョブの初回が 1 分ほど長いこと**
 (ブラウザ 196 MB の取得。2 回目以降はキャッシュが効く)**を見込んでおくこと。**
 

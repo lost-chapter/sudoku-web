@@ -110,6 +110,10 @@ importers:
 
   tools/docs-lint: {}
 
+  tools/release-notes: {}
+
+  tools/subpath-preview: {}
+
 packages:
 
   '@babel/code-frame@7.29.7':
