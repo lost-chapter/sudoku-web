@@ -4,6 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>数独</title>
+    <!--
+      テーマのフラッシュ防止(ADR 0002)。
+
+      React が動く前に data-mantine-color-scheme を決めておく。
+      これが無いと、保存した選択が端末の設定と違うときに
+      初回描画で一瞬だけ元のテーマが見える。
+
+      ⚠️ 中身は Mantine の ColorSchemeScript が出すものと同じにする。
+      既定値(auto)と localStorage の鍵は MantineProvider の設定と揃えること。
+      片方だけ変えると、描画前と描画後で違うテーマになる。
+    -->
+    <script data-mantine-script="true">
+      try {
+        var _colorScheme = window.localStorage.getItem("mantine-color-scheme-value");
+        var colorScheme =
+          _colorScheme === "light" || _colorScheme === "dark" || _colorScheme === "auto"
+            ? _colorScheme
+            : "auto";
+        var computedColorScheme =
+          colorScheme !== "auto"
+            ? colorScheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.setAttribute("data-mantine-color-scheme", computedColorScheme);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
