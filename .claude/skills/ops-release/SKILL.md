@@ -36,8 +36,8 @@ git log --oneline --no-merges develop..main | cat # 🔴 空であること(戻�
 
 | 何を見るか | 何が分かるか |
 |-----------|------------|
-| **`git diff --stat develop main`** | **中身が一致しているか。**これが空なら戻し漏れは無い |
-| **`git log --no-merges develop..main`** | **`main` にしか無い実体のあるコミット。**マージコミットは数えない |
+| **`git diff --stat develop main`** | **中身が一致しているか。** これが空なら戻し漏れは無い |
+| **`git log --no-merges develop..main`** | **`main` にしか無い実体のあるコミット。** マージコミットは数えない |
 
 ⚠️ **`main` にあって `develop` に無い実体のコミットが 1 つでもあったら未完了である。**
 戻し忘れると、次のリリースで必ず競合する。
@@ -264,7 +264,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://lost-chapter.github.io/sudoku-w
 | 落とし穴 | どうなるか |
 |---------|-----------|
 | 🔴 **`develop` へ戻し忘れる** | 版を上げたコミットが `develop` に無く、次のリリースで必ず競合する |
-| 🔴 **`develop..main` が空でないのを異常だと読む** | **`main` のマージコミットは必ず残る。**空になることはない。`git diff` と `--no-merges` で見る |
+| 🔴 **`develop..main` が空でないのを異常だと読む** | **`main` のマージコミットは必ず残る。** 空になることはない。`git diff` と `--no-merges` で見る |
 | 🔴 **`pnpm preview` で確かめて満足する** | あれはルートで配るので**サブパスの 404 が見つからない**。`preview:subpath` を使う |
 | **版を片方だけ上げる** | `package.json` とリリースノートのファイル名が食い違う。3 の検査で止める |
 | **リリースブランチで機能を足す** | 固める場所である。足したくなったら `develop` へ入れて次の版に回す |
