@@ -7,6 +7,7 @@ import { SettingsModal } from "../features/settings/SettingsModal";
 import { useSettings } from "../features/settings/useSettings";
 
 import { Game } from "./Game";
+import { useLayout } from "./layout";
 
 /**
  * ゲーム画面。**アプリの本体**(docs/ui/screens-and-interactions.md)。
@@ -30,6 +31,9 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
   });
   const { settings, setSetting } = useSettings();
   const [settingsOpened, settingsModal] = useDisclosure(false);
+  // ⚠️ **スマホ版は 1 画面に収める。**画面の下に行を足す余裕が無いので、
+  // 「難易度を選び直す」はヘッダへ寄せ、パックの名前と状態は出さない。
+  const phone = useLayout() !== "desktop";
 
   return (
     <Stack gap="md">
@@ -42,6 +46,7 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
           restored={restored}
           onNext={next}
           onOpenSettings={settingsModal.open}
+          onHome={phone ? onHome : undefined}
         />
       ) : (
         <Text size="sm" c="dimmed" role="status" aria-live="polite">
@@ -49,15 +54,17 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
         </Text>
       )}
 
-      <Group justify="space-between" align="center">
-        {/* `subtle` は文字色が primary になり白地で 3.4:1 と本文の目安を割る。使わない。 */}
-        <Button variant="default" size="xs" onClick={onHome}>
-          難易度を選び直す
-        </Button>
-        <Text size="xs" c="dimmed" role="status" aria-live="polite">
-          {statusMessage(status)}
-        </Text>
-      </Group>
+      {!phone && (
+        <Group justify="space-between" align="center">
+          {/* `subtle` は文字色が primary になり白地で 3.4:1 と本文の目安を割る。使わない。 */}
+          <Button variant="default" size="xs" onClick={onHome}>
+            難易度を選び直す
+          </Button>
+          <Text size="xs" c="dimmed" role="status" aria-live="polite">
+            {statusMessage(status)}
+          </Text>
+        </Group>
+      )}
 
       <SettingsModal
         opened={settingsOpened}

@@ -35,6 +35,13 @@ export interface BoardState {
   readonly notes: readonly number[];
   /** メモモードか。**入力先が確定値かメモかを決める。** */
   readonly noteMode: boolean;
+  /**
+   * あきらめたか。**押すと解が出て、そこで終わる。**
+   *
+   * ⚠️ **終わった状態なので、以後は盤面が変わらない。**
+   * 入力・メモ・取り消しをすべて止める(docs/ui/screens-and-interactions.md)。
+   */
+  readonly gaveUp: boolean;
   /** 選択中のセル。**常に 1 つで、選択が無い状態は持たない。** */
   readonly selected: CellIndex;
 }
@@ -46,7 +53,8 @@ export type BoardAction =
   | { readonly type: "moveSelection"; readonly direction: Direction }
   | { readonly type: "inputDigit"; readonly digit: number }
   | { readonly type: "clearCell" }
-  | { readonly type: "toggleNoteMode" };
+  | { readonly type: "toggleNoteMode" }
+  | { readonly type: "giveUp" };
 
 /** 保存から戻す入力とメモ。どちらも 81 要素。 */
 export interface RestoredBoard {
@@ -75,6 +83,7 @@ export function createBoardState(puzzle: Puzzle, restored?: RestoredBoard): Boar
     solution: puzzle.solution,
     notes: restored ? restored.notes.map(dropOnGivens(puzzle)) : empty(),
     noteMode: false,
+    gaveUp: false,
     selected: firstEmpty === -1 ? 0 : firstEmpty,
   };
 }
@@ -91,6 +100,12 @@ function dropOnGivens(puzzle: Puzzle): (value: number, index: number) => number 
  * React の再描画を省くためである。
  */
 export function boardReducer(state: BoardState, action: BoardAction): BoardState {
+  // ⚠️ **あきらめたあとは盤面が変わらない。**選択の移動だけは許す
+  // (読み上げで盤面を辿れる必要があるため)。
+  if (state.gaveUp && action.type !== "selectCell" && action.type !== "moveSelection") {
+    return state;
+  }
+
   switch (action.type) {
     case "selectCell": {
       if (!isCellIndex(action.index) || action.index === state.selected) {
@@ -147,6 +162,12 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
     case "toggleNoteMode": {
       return { ...state, noteMode: !state.noteMode };
     }
+
+    case "giveUp": {
+      // ⚠️ **メモモードも切る。**終わった盤面で「メモ 入」が残っていると、
+      // 次の問題へ進んだときに入力先を取り違える。
+      return { ...state, gaveUp: true, noteMode: false };
+    }
   }
 }
 
@@ -157,7 +178,24 @@ export function isGiven(state: BoardState, index: CellIndex): boolean {
 
 /** そのセルに見えている数字。0 は空。 */
 export function valueAt(state: BoardState, index: CellIndex): number {
-  return state.givens[index] !== 0 ? state.givens[index] : state.entries[index];
+  if (state.givens[index] !== 0) {
+    return state.givens[index];
+  }
+  // ⚠️ **あきらめたら、間違って入れていたマスも解で上書きする。**
+  // 「最後に正解が分かる」が目的なので、誤答を残すと果たせない。
+  return state.gaveUp ? state.solution[index] : state.entries[index];
+}
+
+/**
+ * あきらめて出した解か。**遊技者が自分で入れた正解とは区別する。**
+ *
+ * 自分で当てたマスは自分の入力のままにしておく。**そこまでは自分で解いた**ので、
+ * 全部を「答え」に見せるのは事実と違う。
+ */
+export function isRevealed(state: BoardState, index: CellIndex): boolean {
+  return (
+    state.gaveUp && state.givens[index] === 0 && state.entries[index] !== state.solution[index]
+  );
 }
 
 /**

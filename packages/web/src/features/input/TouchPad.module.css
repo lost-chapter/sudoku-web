@@ -35,6 +35,13 @@
   gap: var(--pad-gap);
 }
 
+/* 横向きは「消す」もここへ来るので 4 列。 */
+.utilityLandscape {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--pad-gap);
+}
+
 .key {
   height: var(--pad-key-height);
   padding: 0;
@@ -54,6 +61,11 @@
 /* 文字の操作(消す・メモ・取り消し)は数字より小さくてよい。 */
 .utility .key {
   font-size: 0.95rem;
+}
+
+/* 横向きは 4 列に詰めるので、折り返さない大きさまで落とす。 */
+.utilityLandscape .key {
+  font-size: 0.8rem;
 }
 
 .key:disabled {

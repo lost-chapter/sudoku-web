@@ -42,7 +42,7 @@ export function createGameState({ puzzle, restored }: GameInit): GameState {
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   if (action.type === "undo") {
-    const previous = state.past.at(-1);
+    const previous = state.present.gaveUp ? undefined : state.past.at(-1);
     if (!previous) {
       return state;
     }
@@ -54,7 +54,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   }
 
   if (action.type === "redo") {
-    const next = state.future.at(-1);
+    const next = state.present.gaveUp ? undefined : state.future.at(-1);
     if (!next) {
       return state;
     }
@@ -79,12 +79,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   return { present, past: [...state.past, state.present], future: [] };
 }
 
+/** ⚠️ **あきらめたあとは戻せない。**終わった盤面なので、履歴を辿る意味が無い。 */
 export function canUndo(state: GameState): boolean {
-  return state.past.length > 0;
+  return !state.present.gaveUp && state.past.length > 0;
 }
 
 export function canRedo(state: GameState): boolean {
-  return state.future.length > 0;
+  return !state.present.gaveUp && state.future.length > 0;
 }
 
 function changesBoard(before: BoardState, after: BoardState): boolean {

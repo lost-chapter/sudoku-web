@@ -27,9 +27,44 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
   },
-  // Chromium だけで足りる。確かめたいのはブラウザ差ではなく、
-  // 「本物のキーイベントで動くか」だけである。
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  /*
+   * ⚠️ **同じ検査を、レイアウトが分かれた両方の幅へ当てる。**
+   * テストは増やしていない —— 面が 2 つに分かれたので、両方へ回すだけである。
+   *
+   * スマホ幅でキーボードを試すことに実用上の意味は薄い(スマホで Tab は使わない)。
+   * **それでも回すのは、「同じ DOM と意味づけを保つ」という方針の検査になるから**で、
+   * 落ちたら「レイアウトを分けた副作用で意味づけが壊れた」という知らせになる。
+   */
+  projects: [
+    /*
+     * ⚠️ **寸法の検査は PC 版では回さない。**「1 画面に収める」はスマホ版の要件で、
+     * 狭くした PC のウィンドウ(`pointer: fine`)は PC 版のまま縦に伸びてよい。
+     */
+    { name: "desktop", testMatch: "**/keyboard.e2e.ts", use: { ...devices["Desktop Chrome"] } },
+    /*
+     * ⚠️ **端末定義の既定は WebKit だが、Chromium で回す。**
+     * 確かめたいのはブラウザ差ではなく「レイアウトを分けても意味づけが保たれるか」で、
+     * **2 つ目のエンジンを CI へ持ち込む価値は無い**(取得も実行も倍になる)。
+     */
+    {
+      name: "phone",
+      use: { ...devices["iPhone 12"], browserName: "chromium" },
+    },
+    {
+      // ⚠️ **いちばん狭い端末。**ここが 1 画面と 24px の両立が最も厳しい。
+      name: "phone-small",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 320, height: 568 },
+        hasTouch: true,
+        isMobile: true,
+      },
+    },
+    {
+      name: "phone-landscape",
+      use: { ...devices["iPhone SE landscape"], browserName: "chromium" },
+    },
+  ],
   webServer: {
     // 開発サーバへ当てる。ビルド成果物ではないので、待ち時間が短い。
     // ⚠️ ポートは他の担当と衝突しないものを使う(既定 5175)。
