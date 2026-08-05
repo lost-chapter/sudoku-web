@@ -57,7 +57,7 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
           難易度を選び直す
         </Button>
         <Text size="xs" c="dimmed" role="status" aria-live="polite">
-          {statusMessage(status, source?.packPath)}
+          {statusMessage(status)}
         </Text>
       </Group>
 
@@ -75,12 +75,13 @@ export function GameScreen({ difficulty, resume, onHome }: GameScreenProps) {
  * 取得に失敗したことは伝えるが、**遊技は止めない**
  * (docs/architecture/system-architecture.md「エラーハンドリングの方針」)。
  */
-function statusMessage(status: PuzzleStatus, packPath?: string): string {
+function statusMessage(status: PuzzleStatus): string {
   switch (status) {
     case "loading":
       return "";
     case "loaded":
-      return packPath ?? "";
+      // パック名はヘッダに出ているので、ここでは何も言わない。
+      return "";
     case "resumed":
       return "遊びかけから再開しました";
     case "fallback":
