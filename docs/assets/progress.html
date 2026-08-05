@@ -354,8 +354,9 @@
     <p class="now">
       🎯 <b>0.1.0 を公開した。</b>
       <a href="https://lost-chapter.github.io/sudoku-web/">lost-chapter.github.io/sudoku-web</a>
-      で遊べる（本番で 1 問入れて確認済み）。工程 0〜8 はすべて完了。
-      <b>次に決めることは、上フリックを残すかと、次に何を作るか。</b>
+      で遊べる（本番で 1 問入れて確認済み）。
+      <b>触った発注者から FB が届き、工程 9 に入った</b>——ホーム画面の作り込みと、
+      フリック入力の設定化。<b>上フリックは「残す」で決着した。</b>
     </p>
     <dl class="figures">
       <div class="figure">
@@ -427,6 +428,50 @@
         <span class="no">v0.1.0</span><span class="name">公開</span
         ><span class="state">2026-08-06</span>
       </div>
+      <div class="phase active">
+        <span class="no">9</span><span class="name">公開後の FB への対応</span
+        ><span class="state">0 / 2</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>工程 9 の内訳（いまここ）</h2>
+    <p class="lead">
+      🎯 ここからは<b>遊んでみて出てくるもの</b>なので、先回りで作らない。
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>作業</th>
+            <th>担当</th>
+            <th>状態</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ホーム画面のレイアウトを作り込む</td>
+            <td>agent-c</td>
+            <td><span class="pill work">作業中</span></td>
+            <td>
+              <b>「レベルが低く見える」の原因を実測で 6 点に特定して渡した。</b>
+              いちばん効いているのは、ボタンの幅が文字数で決まって 3 + 2 に折り返すことと、
+              5 段階に見た目の差が無いこと
+            </td>
+          </tr>
+          <tr>
+            <td>フリック入力を設定でオンオフできるようにする</td>
+            <td>agent-c</td>
+            <td><span class="pill work">作業中</span></td>
+            <td>
+              <b>上フリックは「残す」で決着。</b>ただし切れるようにする。
+              ⚠️ 既定は「入」——既定で切ると、入れたものが誰にも届かない
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -675,21 +720,13 @@
     <h2>未解決</h2>
     <div class="issues">
       <div class="issue critical">
-        <span class="who"><span class="pill stop">次の一手</span></span>
-        <h3>次に何を作るか決まっていない</h3>
+        <span class="who"><span class="pill stop">作業中</span></span>
+        <h3>最初の画面が「レベルが低く見える」</h3>
         <p>
-          <b>依頼された範囲は出し切った。</b>工程 9 以降は白紙である。
-          手元には「あってもいい」に留めた案（数字を押した行と列の強調）と、実機で確かめきれていない
-          3 点が残っている。<b>遊んでみて出てくる要望のほうが確かなので、まず触ってもらう。</b>
-        </p>
-      </div>
-      <div class="issue">
-        <span class="who"><span class="pill wait">発注者待ち</span></span>
-        <h3>上フリックのメモを残すか</h3>
-        <p>
-          数字キーを上へはじくと、その 1 回だけメモになる（モードは変わらない）。
-          <b>知らなければスイッチを使い続けるだけで損はしない</b>ので、入れても害は無い。
-          <b>画面のどこにも書いていない</b>ので、気づかれない可能性はある。触ってから決めてよい。
+          発注者の FB。<b>原因を実測で 6 点に特定した。</b>いちばん効いているのは
+          <b>難易度ボタンの幅が文字数で決まって 3 + 2 に折り返すこと</b>（94 / 79 / 108 / 66 / 80px）と、
+          <b>5 段階に見た目の差が無いこと</b>。順序のある情報が形に出ていない。
+          画面の 2/3 が空白で、各クラス 1,000 問という持っている情報も出していない。
         </p>
       </div>
       <div class="issue">
