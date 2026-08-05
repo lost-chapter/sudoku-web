@@ -1,0 +1,24 @@
+# Claude Code の個人設定(環境依存の絶対パスを含む)
+.claude/settings.local.json
+
+# docs-markdown-to-html スキルが .md から生成する HTML
+# (正本は .md。HTML は再生成できる派生物なのでコミットしない)
+docs/**/*.html
+
+# git worktree の置き場(端末ごとに作り直す)
+/.claude/worktrees/
+
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# 大量生成した問題(マニフェストのシードから作り直せる。ADR 0003)
+# 同梱パック puzzles/packs/ はコミットする
+/puzzles/generated/
+
+# 環境ごとの接続情報
+.env
+
+# macOS が作るディレクトリ設定ファイル
+.DS_Store

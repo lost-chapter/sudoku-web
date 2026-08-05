@@ -1,0 +1,22 @@
+{
+  "name": "@sudoku/generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "sudoku-generate": "./src/cli.ts"
+  },
+  "scripts": {
+    "generate": "tsx src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.5",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@sudoku/core": "workspace:*"
+  }
+}

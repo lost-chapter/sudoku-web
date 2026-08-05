@@ -1,0 +1,19 @@
+{
+  "name": "@sudoku/docs-html",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "docs/ の Markdown を人間が読みやすい HTML へ決定的に変換する",
+  "bin": {
+    "docs-html": "./render.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "markdown-it": "^15.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

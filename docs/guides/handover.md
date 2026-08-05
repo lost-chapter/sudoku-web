@@ -1,0 +1,231 @@
+# 作業の引き継ぎ(別の端末・別の担当者)
+
+**この文書は「別の端末で作業を再開するとき、何を持っていく必要があるか」だけを扱う。**
+何をすべきかは [実装の進め方と現在地](implementation-roadmap.md) が入口である。
+
+引き継ぎで落ちるのは、**Git に入っていないもの**と**片方の端末にしか無いもの**である。
+順に潰す。
+
+---
+
+## 0. 先に確かめる —— 未プッシュのコミットが無いか
+
+**これがいちばん多い落とし穴である。** このプロジェクトは
+[開発上の約束](../../AGENTS.md)で**指示があるまでプッシュしない**ことにしているため、
+**作業がローカルにしか無い状態が常態**になる。
+
+**ローカルのブランチを全部見る。** 作業ブランチが 2 本以上あるので、
+いま居るブランチだけ確認すると取りこぼす。
+
+```bash
+# ローカルの全ブランチについて、origin/develop より進んでいる数を数える
+git for-each-ref --format='%(refname:short)' refs/heads | while read b; do
+  printf '%-24s %s\n' "$b" "$(git rev-list --count origin/develop.."$b")"
+done
+git status --short
+git stash list
+```
+
+**0 でないブランチがあれば、その端末を離れる前に必ず共有する。** 手順は 2 つ。
+
+1. `ops-branch-merge` スキルで各作業ブランチを `develop` へマージする
+2. **ユーザーの指示を得てから** `git push origin develop` する
+
+`git stash` の中身と、コミットしていない作業ディレクトリの変更も同様に消える。
+`git status` が clean であることまで確認する。
+
+### コミットされていない知識も落ちる
+
+**セッション間でやり取りした判断は Git に残らない。** 複数のセッションで進めるときは
+メッセージで調整することになるが、そこで決まったことは**文書へ書かない限り消える**。
+
+このプロジェクトはそれを前提に、**判断は必ずどれかの文書へ落とす**運用にしている。
+
+| 種類 | 置き場所 |
+|------|---------|
+| 人が決める必要があること | [保留中の判断事項](../reference/pending-decisions.md) |
+| 設計の判断とその理由 | [decisions/](../decisions/)(ADR) |
+| 着手前の調査 | `docs/reports/YYYY-MM-DD-*.md` |
+| 実装の理由・落とし穴 | `docs/algorithms/` `docs/ui/` と**コードの doc コメント** |
+
+**「会話で説明したから大丈夫」は引き継ぎでは成立しない。**
+
+---
+
+## 1. 環境を揃える
+
+**`ops-dev-environment-setup` スキルを使う。** ここでは繰り返さない。
+
+Git 管理外で、クローン直後や新しい worktree で**必ず不足する**ものは次のとおり。
+
+| 対象 | 単位 |
+|------|------|
+| `node_modules/` | worktree ごと(`pnpm install`) |
+| `.claude/settings.local.json`(Claude Code のローカル設定) | worktree ごと |
+| `packages/web/dist/` | ビルドのたび |
+| `puzzles/generated/` | 生成のたび(マニフェストのシードから作り直せる) |
+| `docs/**/*.html` | `pnpm docs:html` のたび |
+
+**Git 管理外が増えたらこの表へ足す。**
+
+---
+
+## 2. 現在地を実測で確かめる
+
+**ドキュメントの記載を信用せず、まず動かす。**
+[ロードマップ](implementation-roadmap.md)の数値は更新漏れがありうる。
+
+```bash
+git log --oneline -5 | cat
+git status --short
+
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+```
+
+2026-08-05 時点の実測値。**ここから乖離していたら、その差が引き継ぎで落ちたものである。**
+
+| 項目 | 値 |
+|------|-----|
+| テスト | **12 件**(core 1 / docs-html 11。generator と web は 0 件) |
+| 型チェック | 4 パッケージ 0 エラー |
+| Lint | 0 エラー |
+| 本番ビルド | 成功(JS gzip 約 73 KB / CSS gzip 約 34 KB) |
+
+詳細と前提(Node 22 以上・pnpm 11 系)は [ローカル環境の構築](local-setup.md)。
+
+---
+
+## 3. いまの体制
+
+**管理役 1 + 実装 2 の 3 体制で進める**(2026-08-05 決定)。
+
+**agent-a は管理役で、実装は持たない**(統合・ロードマップ更新・判断の集約を行う)。
+
+| 呼び名 | ブランチ | 作業場所 | 担当 | 状態 |
+|--------|---------|---------|------|------|
+| agent-a | `feature/agent-a` | メインの作業ディレクトリ | **管理役。**統合・文書更新・判断の集約。**例外として工程 1(開発基盤)は agent-a が通す** | 🔜 工程 1 に着手できる |
+| agent-b | `cc/agent-b` | `.claude/worktrees/agent-b-7e214c` | **`core` + `generator`。**盤面表現 → 探索ソルバ → 完成盤の生成 → 穴あけ → 手筋ソルバ → 難易度評価 → パック出力(工程 2) | ⏸ **worktree 作成済み。工程 1 の完了待ち** |
+| agent-c | `cc/agent-c` | `.claude/worktrees/agent-c-baa07a` | **`web`。**盤面の描画 → セル入力 → 状態管理 → 問題の取得 → 進行の保存(工程 3〜4) | ⏸ **worktree 作成済み。工程 1 の完了待ち** |
+
+**ブランチの規約と統合の権限は [ブランチ戦略](branch-strategy.md) にある。**
+worktree のディレクトリ名の末尾は Claude Code が付けたもので、意味は無い。
+
+### この分け方の理由
+
+**工程 1 は分割しない。** 全員の前提になる設定ファイルを同時に触ると競合するだけなので、
+管理役が 1 人で通す。**b と c を立てるのは工程 1 が終わってから。**
+
+**b と c は工程 2 と工程 3 を並行して進められる。**
+[問題ファイルの形式](../api/puzzle-file-format.md) が契約として先に決まっているため、
+**c は生成器の完成を待たず、手書きの 1 問だけで UI を最後まで作れる**。
+これが 2 並列の成立条件である。
+
+⚠️ **難易度評価(手筋ソルバ)を 3 人目に切り出さない。**
+手筋ソルバは探索ソルバと盤面表現・候補計算のビットマスクを共有するため、
+分けると[同じコードを二重実装する](parallel-agent-operations.md#1-共有ロジックをまたがせない)。
+切り出してよいのは **b が盤面表現と探索ソルバを固めきった後**で、
+かつ手筋を大量に追加する段階に入ってからである。
+
+⚠️ **進行の保存を c から切り離さない。** 盤面の状態そのものに触るため。
+
+### 着手前に各 worktree で要ること
+
+worktree は 2026-08-05 に作成済み。ただし **`node_modules` と
+`.claude/settings.local.json` は worktree ごとに要る**(`ops-dev-environment-setup`)。
+
+**工程 1 が `feature/agent-a` へ入ったら、各 worktree はまずそれを取り込む。**
+
+```bash
+git merge --ff-only feature/agent-a   # 各 worktree で
+pnpm install
+```
+
+**開発サーバのポートは担当ごとに変える。** 割り当ては下表。
+
+| 担当 | ポート |
+|------|--------|
+| agent-a(メイン) | 5173(既定) |
+| agent-c | 5174 |
+
+agent-b は `core` / `generator` の担当なので開発サーバを立てない。
+
+**1 人で進めるなら worktree は要らない。** `feature/agent-a` の 1 本で、
+工程 2 → 工程 3 を直列にやれば設計上どこも破綻しない。
+
+**worktree は Git 管理外である。** ディレクトリ名の末尾のハッシュに意味は無いので、
+別の端末では好きな名前で作り直してよい。
+
+```bash
+git worktree add .claude/worktrees/<名前> cc/agent-b
+```
+
+作ったあと **`node_modules` と `.claude/settings.local.json` は worktree ごとに要る**
+(`ops-dev-environment-setup`)。
+
+**1 人で進めるなら worktree は要らない。** `feature/agent-a` の 1 本で足りる。
+
+### 運用のルールは別文書にある
+
+**担当の立て方・ブランチ規約・触ってよいファイルの境界・統合の作法・禁止事項は
+[並列エージェントの運用](parallel-agent-operations.md) にまとめてある。**
+複数のエージェントで進めるなら、体制を組む前にそれを読む。
+
+並列で進められる単位は
+[ロードマップの「並列化の単位と前提」](implementation-roadmap.md#並列化の単位と前提) にある。
+
+### 管理役(agent-a)を引き継ぐとき
+
+**セッションの文脈は Git に残らない。** 新しい agent-a のセッションは次の順で現在地を掴む。
+
+1. **未統合と未コミットを測る** —— これが最優先。作業が宙に浮いていないか
+   ```bash
+   for b in $(git for-each-ref --format='%(refname:short)' refs/heads/cc); do
+     echo "$b: $(git log --oneline feature/agent-a..$b | wc -l) 件未統合"
+   done
+   git worktree list | cat        # 各 worktree で git status --short も見る
+   ```
+2. **実測する** —— 上の「2. 現在地を実測で確かめる」。
+   ロードマップの数値と合うか(合わなければ文書が古い)
+3. **下の「進行中の作業」を読む** —— 各担当の次の一手が書いてある
+4. 各エージェントへ再開を指示する
+
+**管理役の仕事は 4 つ。**
+
+| 仕事 | 中身 |
+|------|------|
+| 統合 | 区切りの報告が来たら即座に `feature/agent-a` へ no-ff マージ。まとまったら `develop` へ |
+| 実測と数値の管理 | 統合後に測り、ロードマップと引き継ぎの数値を直す。**各自の手元の値を足しても合わない** |
+| 報告の検証 | 主要な主張は**自分でも裏を取る**。鵜呑みにしない |
+| 判断の集約 | 判断待ちは [保留中の判断事項](../reference/pending-decisions.md) へ。人が決めるものはユーザーへ上げる |
+
+---
+
+## 4. 進行中の作業
+
+**中断すると失われる文脈**をここに書く。完了したものはロードマップへ移す。
+
+| 誰 | 内容 | 状態 |
+|----|------|------|
+| agent-a | ドキュメント戦略・スキル戦略・サブエージェント戦略の導入 | ✅ 2026-08-05 に導入。cadapi-2 の構成を sudoku-web 向けに読み替えた |
+| agent-a | `docs-markdown-to-html` スキルの追加と実装 | ✅ 2026-08-05。`tools/docs-html/`。決定性をテスト 11 件で固定 |
+| agent-a | 工程 0(技術構成の選定と設計) | ✅ **完了(2026-08-05)。**ADR 0001〜0003 + アルゴリズム 3 本 + ファイル形式 + UI 仕様。[保留中の判断事項](../reference/pending-decisions.md) は全件決着 |
+| agent-a | 工程 1(開発基盤) | ✅ **完了(2026-08-05)。**`pnpm install` → `pnpm dev` で起動を実測。テスト 12 件・型 0 エラー・Lint 0 エラー・本番ビルド成功 |
+| agent-b | 工程 2(`core` + `generator`) | 🔜 **着手できる。**[盤面の生成](../algorithms/board-generation.md) →[解法](../algorithms/solver.md) →[難易度の評価](../algorithms/difficulty-rating.md) の順に読む |
+| agent-c | 工程 3〜4(`web`) | 🔜 **着手できる。**[画面構成と操作仕様](../ui/screens-and-interactions.md) と[問題ファイルの形式](../api/puzzle-file-format.md) を読む |
+
+### 設計時に確かめた事実で、失うと痛いもの
+
+**セッションの文脈は Git に残らない。** 次の 4 点は調査で裏が取れており、
+**知らずに実装すると作り直しになる**。詳細は
+[調査: UI ライブラリ](../reports/2026-08-05-ui-library-survey.md) と
+[調査: 数独の生成](../reports/2026-08-05-sudoku-generation-survey.md)。
+
+- **同型変換で完成盤を量産してはいけない**(難易度も解き筋も同一になる)
+- **手がかり数は難易度の指標にならない**(人間の体感との相関 0.25〜0.27)
+- **Mantine 9 は React 19.2+ が必須**(React 18 へ戻れない)
+- **生成性能の公開値はすべて C++ / Java のもの**。
+  同じ出典に「JavaScript 版は非常に遅い」とあるので、**TypeScript での実測が要る**
