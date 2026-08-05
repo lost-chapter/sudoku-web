@@ -15,17 +15,16 @@
 
 ## 流れ
 
+```mermaid
+flowchart TB
+  b["cc/agent-b"] -->|報告が来たら即座に| fa["feature/agent-a"]
+  c["cc/agent-c"] --> fa
+  d["cc/agent-d"] --> fa
+  fa -->|区切りのいいタイミングで| dev["develop"]
+  dev -->|リリース時のみ| main["main"]
 ```
-cc/agent-b ─┐
-            ├──(区切りの報告が来たら管理役が即座に)──▶ feature/agent-a
-cc/agent-c ─┘                                              │
-                                                            │(区切りのいいタイミングで管理役が)
-                                                            ▼
-                                                        develop
-                                                            │(リリース時のみ)
-                                                            ▼
-                                                          main
-```
+
+**寄せるのは管理役だけである。**
 
 **2 段で寄せる。** `cc/agent-*` から `develop` へ直接寄せない。
 
