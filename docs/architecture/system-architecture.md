@@ -6,12 +6,15 @@
 
 ## 全体像
 
-```mermaid
-flowchart TB
-  gen["packages/generator(作る側 / Node)"] -->|生成| packs["puzzles/(問題パック)"]
-  packs -->|fetch| web["packages/web(遊ぶ側 / ブラウザ)"]
-  gen --> core["packages/core(盤面ロジック)<br/>生成・解法・検証・難易度評価を両側で共有"]
-  web --> core
+```
+                 [ 作る側 / Node ]                     [ 遊ぶ側 / ブラウザ ]
+
+  packages/generator  ──生成──▶  puzzles/  ──fetch──▶  packages/web
+        │                       (問題パック)                  │
+        └────────┐                                      ┌─────┘
+                 ▼                                      ▼
+                        packages/core(盤面ロジック)
+                     生成・解法・検証・難易度評価を両側で共有
 ```
 
 **`packages/core` を両側から使うことが構成の要である。**
