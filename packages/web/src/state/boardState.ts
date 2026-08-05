@@ -1,4 +1,4 @@
-import { BOARD_SIZE, CELL_COUNT } from "@sudoku/core";
+import { BOARD_SIZE, CELL_COUNT, type Board } from "@sudoku/core";
 
 import type { Puzzle } from "../features/puzzle/types";
 
@@ -20,12 +20,12 @@ import type { Puzzle } from "../features/puzzle/types";
 export type CellIndex = number;
 
 export interface BoardState {
-  /** 手がかり。81 要素。0 は空きマス。**遊技中は変わらない。** */
-  readonly givens: readonly number[];
-  /** 遊技者が入れた数字。81 要素。0 は未入力。 */
+  /** 手がかり。0 は空きマス。**遊技中は変わらない。書き換えない。** */
+  readonly givens: Board;
+  /** 遊技者が入れた数字。81 要素。0 は未入力。**ここだけが遊技で変わる。** */
   readonly entries: readonly number[];
   /** 解。完成の判定に使う(解が問題ファイルに入っているのでソルバは要らない)。 */
-  readonly solution: readonly number[];
+  readonly solution: Board;
   /** 選択中のセル。**常に 1 つで、選択が無い状態は持たない。** */
   readonly selected: CellIndex;
 }
@@ -112,8 +112,11 @@ export function valueAt(state: BoardState, index: CellIndex): number {
  *
  * **解と突き合わせるだけで、ソルバは呼ばない。**
  * 解は問題ファイルに入っている(docs/api/puzzle-file-format.md「なぜ解も持つのか」)。
+ *
+ * ⚠️ `core` の `isComplete`(空きマスが無いか)とは別物である。
+ * こちらは**解と一致しているか**を見るので、埋まっていても間違いがあれば false になる。
  */
-export function isComplete(state: BoardState): boolean {
+export function matchesSolution(state: BoardState): boolean {
   return state.solution.every((value, index) => valueAt(state, index) === value);
 }
 
