@@ -1,4 +1,4 @@
-import { BOARD_SIZE, CELL_COUNT, type Board } from "@sudoku/core";
+import { BOARD_SIZE, CELL_COUNT, maskOfDigit, type Board } from "@sudoku/core";
 
 import type { Puzzle } from "../features/puzzle/types";
 
@@ -26,6 +26,15 @@ export interface BoardState {
   readonly entries: readonly number[];
   /** 解。完成の判定に使う(解が問題ファイルに入っているのでソルバは要らない)。 */
   readonly solution: Board;
+  /**
+   * メモ(候補)。81 要素のビットマスクで、bit n が立っていれば数字 n + 1 を控えている。
+   *
+   * **`core` の候補と同じ持ち方にしてある**(`maskOfDigit` / `candidateDigits` が使える)。
+   * 配列で持つと 1 セルあたり最大 9 個の要素を出し入れすることになる。
+   */
+  readonly notes: readonly number[];
+  /** メモモードか。**入力先が確定値かメモかを決める。** */
+  readonly noteMode: boolean;
   /** 選択中のセル。**常に 1 つで、選択が無い状態は持たない。** */
   readonly selected: CellIndex;
 }
@@ -36,7 +45,8 @@ export type BoardAction =
   | { readonly type: "selectCell"; readonly index: CellIndex }
   | { readonly type: "moveSelection"; readonly direction: Direction }
   | { readonly type: "inputDigit"; readonly digit: number }
-  | { readonly type: "clearCell" };
+  | { readonly type: "clearCell" }
+  | { readonly type: "toggleNoteMode" };
 
 /**
  * 問題から初期状態を作る。
@@ -51,6 +61,8 @@ export function createBoardState(puzzle: Puzzle): BoardState {
     givens: puzzle.givens,
     entries: new Array<number>(CELL_COUNT).fill(0),
     solution: puzzle.solution,
+    notes: new Array<number>(CELL_COUNT).fill(0),
+    noteMode: false,
     selected: firstEmpty === -1 ? 0 : firstEmpty,
   };
 }
@@ -83,16 +95,41 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
       if (!isDigit(action.digit) || isGiven(state, state.selected)) {
         return state;
       }
+
+      if (state.noteMode) {
+        // 確定値が入っているセルにメモは要らない。先に確定値を消してもらう。
+        if (state.entries[state.selected] !== 0) {
+          return state;
+        }
+        // 同じ数字をもう一度でメモが落ちる(トグル)。
+        return withNotes(
+          state,
+          state.selected,
+          state.notes[state.selected] ^ maskOfDigit(action.digit),
+        );
+      }
+
       // 同じ数字をもう一度入れたら消す(トグル)。
       const next = state.entries[state.selected] === action.digit ? 0 : action.digit;
-      return withEntry(state, state.selected, next);
+      // **確定入力を入れるとそのセルのメモは消える。**
+      // 消したときは戻さない(戻すのは取り消し)。仕様は画面構成と操作仕様の「メモ」。
+      return withEntry(
+        next === 0 ? state : withNotes(state, state.selected, 0),
+        state.selected,
+        next,
+      );
     }
 
     case "clearCell": {
       if (isGiven(state, state.selected)) {
         return state;
       }
+      // **確定入力を消してもメモは戻らない。**
       return withEntry(state, state.selected, 0);
+    }
+
+    case "toggleNoteMode": {
+      return { ...state, noteMode: !state.noteMode };
     }
   }
 }
@@ -105,6 +142,16 @@ export function isGiven(state: BoardState, index: CellIndex): boolean {
 /** そのセルに見えている数字。0 は空。 */
 export function valueAt(state: BoardState, index: CellIndex): number {
   return state.givens[index] !== 0 ? state.givens[index] : state.entries[index];
+}
+
+/**
+ * そのセルのメモ。ビットマスクで返す。
+ *
+ * **数字が見えているセルのメモは出さない。** 確定値を入れた時点で消しているので
+ * 通常は 0 だが、手がかりのセルと合わせてここで一度に閉じておく。
+ */
+export function notesAt(state: BoardState, index: CellIndex): number {
+  return valueAt(state, index) === 0 ? state.notes[index] : 0;
 }
 
 /**
@@ -137,6 +184,15 @@ function withEntry(state: BoardState, index: CellIndex, value: number): BoardSta
   const entries = [...state.entries];
   entries[index] = value;
   return { ...state, entries };
+}
+
+function withNotes(state: BoardState, index: CellIndex, mask: number): BoardState {
+  if (state.notes[index] === mask) {
+    return state;
+  }
+  const notes = [...state.notes];
+  notes[index] = mask;
+  return { ...state, notes };
 }
 
 /** **端では止まる。**(反対側へ回り込まない: 画面構成と操作仕様の「セルの選択」) */
