@@ -4,11 +4,12 @@
  * 外部から何も読まない。すべてこの文字列で完結する。
  * ここで日時や乱数に触ってはいけない(決定性が壊れる)。
  *
- * 入れてある機能は 4 つ。どれも「HTML で読むからこそ効くもの」に絞る。
+ * 入れてある機能は 5 つ。どれも「HTML で読むからこそ効くもの」に絞る。
  *   1. サイドメニューの絞り込み
  *   2. 目次のスクロール追従(いま読んでいる節を目次で光らせる)
  *   3. コードブロックのコピー
  *   4. テーマの手動切替(既定は端末の設定に従う)
+ *   5. 画面より高い表の見出し行を固定する
  */
 export const PAGE_SCRIPT = `
 (function () {
@@ -101,5 +102,24 @@ export const PAGE_SCRIPT = `
       }
     });
   }
+
+  // 5. 画面より高い表だけ、器の高さを止めて見出し行を固定する。
+  //    ⚠️ 短い表まで器へ閉じ込めない。ページのスクロールが二重になって読みにくい。
+  function markTallTables() {
+    // 画面の高さが取れない環境では何もしない(全部を器へ閉じ込めてしまうため)
+    var viewport = doc.documentElement.clientHeight || window.innerHeight || 0;
+    if (viewport < 200) return;
+
+    doc.querySelectorAll(".table-scroll").forEach(function (box) {
+      var table = box.querySelector("table");
+      if (!table) return;
+      box.classList.remove("is-tall");
+      if (table.getBoundingClientRect().height > viewport * 0.85) {
+        box.classList.add("is-tall");
+      }
+    });
+  }
+  markTallTables();
+  window.addEventListener("resize", markTallTables);
 })();
 `;
