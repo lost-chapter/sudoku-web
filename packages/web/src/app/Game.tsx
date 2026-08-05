@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { Button, Group, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
+import { Button, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
 import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 
 import { Board } from "../features/board/Board";
@@ -19,6 +19,8 @@ import {
   gameReducer,
   type GameAction,
 } from "../state/gameState";
+
+import { GameHeader } from "./GameHeader";
 
 /**
  * 1 問を遊ぶところ。
@@ -40,9 +42,18 @@ export interface GameProps {
   readonly initialElapsedMs: number;
   /** 完成したあと次の問題へ進む。 */
   readonly onNext: () => void;
+  readonly onOpenSettings: () => void;
 }
 
-export function Game({ puzzle, settings, source, restored, initialElapsedMs, onNext }: GameProps) {
+export function Game({
+  puzzle,
+  settings,
+  source,
+  restored,
+  initialElapsedMs,
+  onNext,
+  onOpenSettings,
+}: GameProps) {
   const [game, dispatch] = useReducer(
     gameReducer,
     { puzzle, restored: restored ?? undefined },
@@ -71,10 +82,11 @@ export function Game({ puzzle, settings, source, restored, initialElapsedMs, onN
       entries: state.entries,
       notes: state.notes,
       elapsedMs,
+      difficulty: puzzle.difficulty,
       formatVersion: source.formatVersion,
       generator: source.generator,
     });
-  }, [completed, elapsedMs, source, state]);
+  }, [completed, elapsedMs, puzzle.difficulty, source, state]);
 
   // 完成したら盤面を動かさない。完成の知らせが入力で消えてしまうのを防ぐ。
   const play = (action: GameAction) => {
@@ -103,15 +115,11 @@ export function Game({ puzzle, settings, source, restored, initialElapsedMs, onN
 
   return (
     <Stack gap="lg">
-      {/*
-        経過時間。**急かす演出はしない**(docs/ui/screens-and-interactions.md)ので、
-        秒までの素の表示に留める。読み上げは 1 秒ごとに割り込ませない。
-      */}
-      <Group justify="flex-end">
-        <Text size="sm" c="dimmed" aria-label={`経過時間 ${formatElapsed(elapsedMs)}`}>
-          {formatElapsed(elapsedMs)}
-        </Text>
-      </Group>
+      <GameHeader
+        difficulty={puzzle.difficulty}
+        elapsedMs={elapsedMs}
+        onOpenSettings={onOpenSettings}
+      />
 
       <Board
         state={state}

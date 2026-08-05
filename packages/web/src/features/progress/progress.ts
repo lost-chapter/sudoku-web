@@ -1,5 +1,7 @@
 import { CELL_COUNT } from "@sudoku/core";
 
+import { DIFFICULTIES, type Difficulty } from "../puzzle/types";
+
 /**
  * 遊びかけの進行。
  *
@@ -16,6 +18,13 @@ export interface SavedProgress {
   /** メモ。81 要素のビットマスク。 */
   readonly notes: readonly number[];
   readonly elapsedMs: number;
+  /**
+   * 遊んでいた難易度。
+   *
+   * パックの位置からも分かるが、**ホーム画面が「続きから」を出すのに
+   * ファイルを取りに行かずに済ませたい**ので持つ。
+   */
+  readonly difficulty: Difficulty;
   /**
    * 保存した時点のパックの版。
    *
@@ -58,7 +67,8 @@ export function normalizeProgress(value: unknown): SavedProgress | null {
     !Number.isFinite(stored.elapsedMs) ||
     (stored.elapsedMs as number) < 0 ||
     !Number.isInteger(stored.formatVersion) ||
-    typeof stored.generator !== "string"
+    typeof stored.generator !== "string" ||
+    !isDifficulty(stored.difficulty)
   ) {
     return null;
   }
@@ -69,6 +79,7 @@ export function normalizeProgress(value: unknown): SavedProgress | null {
     entries,
     notes,
     elapsedMs: stored.elapsedMs as number,
+    difficulty: stored.difficulty,
     formatVersion: stored.formatVersion as number,
     generator: stored.generator,
   };
@@ -89,6 +100,10 @@ export function isEmpty(progress: Pick<SavedProgress, "entries" | "notes">): boo
   return (
     progress.entries.every((value) => value === 0) && progress.notes.every((mask) => mask === 0)
   );
+}
+
+function isDifficulty(value: unknown): value is Difficulty {
+  return typeof value === "string" && (DIFFICULTIES as readonly string[]).includes(value);
 }
 
 function normalizeCells(value: unknown): number[] | null {
