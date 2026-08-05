@@ -64,6 +64,48 @@ jobs:
       - name: 本番ビルド
         run: pnpm build
 
+  puzzles:
+    name: パックの再現性
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存をインストール
+        run: pnpm install --frozen-lockfile
+
+      # ADR 0003 は「管理外のパックはシードから作り直せる」ことに依存している。
+      # ここが壊れても、収録済みのパックを読むだけのテストでは気づけない。
+      #
+      # ⚠️ ワーカー数を収録時(8)と変えて回す。
+      #    「並列度を変えても中身が変わらない」ことも同時に見張れる。
+      #
+      # 5 クラス全部は回さない。easy は最も安く基本の経路を通り、
+      # extreme は実装している手筋(レベル 1〜7)を全部通るので、この 2 つで足りる。
+      # 手元(3 ワーカー・load average 35)で 17 秒だった。
+      - name: 収録済みのパックを作り直して一致することを確認
+        run: |
+          pnpm --filter @sudoku/generator generate \
+            --difficulty easy,extreme --count 1000 --workers 3 --out /tmp/puzzles-check
+          diff /tmp/puzzles-check/packs/easy-000.txt puzzles/packs/easy-000.txt
+          diff /tmp/puzzles-check/packs/extreme-000.txt puzzles/packs/extreme-000.txt
+          echo "収録済みのパックはシードから作り直せる"
+
+      # 収録済みのパックを書き換えていないこと(--out を付け忘れると上書きされる)。
+      - name: 収録済みのパックが変わっていないことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "作業ツリーが変わっている:"
+            git status --short
+            exit 1
+          fi
+
   docs:
     name: ドキュメント変換の決定性
     runs-on: ubuntu-latest
