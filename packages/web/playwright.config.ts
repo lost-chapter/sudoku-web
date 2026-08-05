@@ -40,7 +40,17 @@ export default defineConfig({
      * ⚠️ **寸法の検査は PC 版では回さない。**「1 画面に収める」はスマホ版の要件で、
      * 狭くした PC のウィンドウ(`pointer: fine`)は PC 版のまま縦に伸びてよい。
      */
-    { name: "desktop", testMatch: "**/keyboard.e2e.ts", use: { ...devices["Desktop Chrome"] } },
+    /*
+     * 🔴 **押せる大きさは PC 版でも回す**(2026-08-06 に追加)。
+     * ⚠️ **「1 画面に収まるか」と同じファイルに置いていたせいで、
+     * 要らないほうと一緒に、要るほうまで落ちていた**(PC 版の 3 つが下限を割っていた)。
+     * 🎯 **「この検査は PC に要らない」は、ファイル単位ではなく検査単位で確かめる。**
+     */
+    {
+      name: "desktop",
+      testMatch: ["**/keyboard.e2e.ts", "**/touchTarget.e2e.ts"],
+      use: { ...devices["Desktop Chrome"] },
+    },
     /*
      * ⚠️ **端末定義の既定は WebKit だが、Chromium で回す。**
      * 確かめたいのはブラウザ差ではなく「レイアウトを分けても意味づけが保たれるか」で、
