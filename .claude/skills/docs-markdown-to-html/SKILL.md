@@ -26,8 +26,8 @@ description: sudoku-web の `docs/` 配下の Markdown を、人間が読みや�
 ## 使い方
 
 ```bash
+pnpm docs:html                                                          # docs/ を再帰的に全部
 node tools/docs-html/render.mjs docs/guides/implementation-roadmap.md   # 1 ファイル
-node tools/docs-html/render.mjs docs                                    # 再帰的に全部
 node tools/docs-html/render.mjs docs --out /tmp/docs-html               # 出力先を変える
 ```
 
@@ -36,10 +36,13 @@ node tools/docs-html/render.mjs docs --out /tmp/docs-html               # 出力
 - 同じ場所に出すので、**`docs/assets/` への相対パスがそのまま効く**
 - `--out` を使うときはディレクトリ構造を保って出力する(相対リンクを壊さないため)
 
-> ⚠️ **2026-08-05 時点で `tools/docs-html/render.mjs` は未実装。**
-> 工程 1(開発基盤)の成果物として実装する
-> ([実装の進め方と現在地](../../../docs/guides/implementation-roadmap.md))。
-> それまでは下記「実装の要件」が仕様書である。
+実装は `tools/docs-html/`(2026-08-05 に工程 1 で導入)。
+
+| ファイル | 中身 |
+|---------|------|
+| `render.mjs` | 変換の本体。`renderMarkdown()` が純粋関数 |
+| `style.mjs` | 埋め込む CSS |
+| `render.test.mjs` | 契約を守るテスト 11 件(`pnpm test` に含まれる) |
 
 ## 出力 HTML の要件
 
@@ -60,17 +63,20 @@ node tools/docs-html/render.mjs docs --out /tmp/docs-html               # 出力
 
 ## 実装の要件
 
-- **場所**: `tools/docs-html/render.mjs`(Node で直接動く単一ファイル)
-- **パーサ**: `markdown-it`(GFM の表・チェックリストが要る)。
-  自前でパーサを書かない
+- **場所**: `tools/docs-html/`(Node で直接動く。ビルド不要)
+- **パーサ**: `markdown-it`(GFM の表が要る)。自前でパーサを書かない
 - **HTML エスケープ**: `markdown-it` の既定(`html: false`)を使い、
   .md 内の生 HTML は**エスケープして出す**。文書に書いたタグが実行されないこと
 - **アンカー**: 見出しの id は**見出しテキストから決定的に**作る。
   重複したら連番を付ける(`-2`, `-3`)。乱数やハッシュの時刻依存を使わない
-- **テスト**: `packages/` 側のテストと同じ枠組みで、次の 3 点を固定する
-  1. 代表的な .md 1 本を変換した結果のスナップショット
-  2. **2 回流して出力が完全一致する**(決定性)
-  3. 入力の .md が変更されていない(副作用なし)
+- **import しても走らない**: `render.mjs` は**直接実行されたときだけ** `main()` を呼ぶ。
+  import しただけで変換が始まると「副作用は出力先だけ」の契約が壊れる
+- **テスト**(`render.test.mjs`。`pnpm test` に含まれる)が固定していること
+  1. 同じ入力から同じ出力になる(決定性)
+  2. 日時らしき文字列を埋め込まない
+  3. 相対リンクの `.md` だけを `.html` にする(外部リンクとアンカーは触らない)
+  4. 生 HTML をエスケープする / 外部リソースを参照しない
+  5. 入力の .md を書き換えない(副作用なし)
 
 ## 手順
 
