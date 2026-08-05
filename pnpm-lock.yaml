@@ -108,6 +108,8 @@ importers:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.2)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(tsx@4.23.5))
 
+  tools/docs-lint: {}
+
 packages:
 
   '@babel/code-frame@7.29.7':
