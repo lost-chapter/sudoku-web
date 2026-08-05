@@ -333,8 +333,8 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      工程 0〜5 は完了。いまは <b>工程 6（発注者の要望への対応）</b>で、8 件中 6 件が済んでいる。
-      残りは <b>遊技が消える欠陥の修正</b>と<b>図の書き直し</b>。
+      工程 0〜5 は完了。いまは <b>工程 6（発注者の要望への対応）</b>で、8 件中 7 件が済んでいる。
+      残りは <b>遊技が消える欠陥の修正</b>だけ。
     </p>
     <dl class="figures">
       <div class="figure">
@@ -353,9 +353,13 @@
         <dt>同梱パック</dt>
         <dd>5,000<small>問</small></dd>
       </div>
+      <div class="figure">
+        <dt>図</dt>
+        <dd>11<small>枚</small></dd>
+      </div>
       <div class="figure alert">
         <dt>未プッシュ</dt>
-        <dd>80<small>+ コミット</small></dd>
+        <dd>90<small>+ コミット</small></dd>
       </div>
     </dl>
   </header>
@@ -388,7 +392,7 @@
       </div>
       <div class="phase active">
         <span class="no">6</span><span class="name">発注者の要望への対応</span
-        ><span class="state">6 / 8</span>
+        ><span class="state">7 / 8</span>
       </div>
     </div>
   </section>
@@ -451,8 +455,8 @@
           <tr>
             <td>ASCII 図をすべて mermaid へ（12 個）</td>
             <td>agent-d</td>
-            <td><span class="pill work">作業中</span></td>
-            <td>罫線が環境で崩れるため。最大 474.8px のずれを実測</td>
+            <td><span class="pill done">完了</span></td>
+            <td>図 11 枚。7 枚は mermaid、4 枚は表・箇条書きへ。崩れは 474.8px を実測</td>
           </tr>
         </tbody>
       </table>
@@ -469,14 +473,6 @@
           スマホ幅で 2 マス入れて PC 幅にすると、入力が消え、<code>localStorage</code>
           の保存も消え、別の問題に変わる。「途中でやめて再開できる」という要望を壊している。
           E2E 33 件が通っているのに見つからなかった（レイアウトを跨ぐ検査が無い）。
-        </p>
-      </div>
-      <div class="issue">
-        <span class="who"><span class="pill work">対応中</span></span>
-        <h3>ASCII 図が読む人の環境で崩れる</h3>
-        <p>
-          等幅フォントでも罫線と和文の幅比が 2:1 にならず、枠が閉じない。
-          ディレクトリツリーで最大 474.8px のずれ。図 12 個を mermaid か表へ書き直している。
         </p>
       </div>
       <div class="issue">
