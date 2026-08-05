@@ -1,33 +1,50 @@
-import { Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
 import type { Difficulty } from "../features/puzzle/types";
 import { usePuzzle, type PuzzleStatus } from "../features/puzzle/usePuzzle";
+import { SettingsModal } from "../features/settings/SettingsModal";
+import { useSettings } from "../features/settings/useSettings";
 
 import { Game } from "./Game";
 
 /**
  * ゲーム画面。**アプリの本体**(docs/ui/screens-and-interactions.md)。
  *
- * ここが持つのは「どの問題を遊ぶか」だけで、盤面の中身は {@link Game} が持つ。
+ * ここが持つのは「どの問題を遊ぶか」と設定だけで、盤面の中身は {@link Game} が持つ。
  * 問題が変わったら `key` で作り直す。
  *
- * 難易度の選択(ホーム画面)と経過時間の表示は工程 4。
+ * 難易度の選択(ホーム画面)と経過時間の表示は工程 4 の最後の区切り。
  */
 const DIFFICULTY: Difficulty = "easy";
 
 export function GameScreen() {
   const { status, puzzle, source, puzzleKey, next } = usePuzzle(DIFFICULTY);
+  const { settings, setSetting } = useSettings();
+  const [settingsOpened, settingsModal] = useDisclosure(false);
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="baseline">
+      <Group justify="space-between" align="center">
         <Text fw={500}>難易度: {DIFFICULTY_LABELS[DIFFICULTY]}</Text>
-        <Text size="sm" c="dimmed" role="status" aria-live="polite">
-          {statusMessage(status, source?.packPath)}
-        </Text>
+        <Group gap="sm" align="center">
+          <Text size="sm" c="dimmed" role="status" aria-live="polite">
+            {statusMessage(status, source?.packPath)}
+          </Text>
+          <Button variant="default" size="xs" onClick={settingsModal.open}>
+            設定
+          </Button>
+        </Group>
       </Group>
 
-      {puzzle && <Game key={puzzleKey} puzzle={puzzle} onNext={next} />}
+      {puzzle && <Game key={puzzleKey} puzzle={puzzle} settings={settings} onNext={next} />}
+
+      <SettingsModal
+        opened={settingsOpened}
+        settings={settings}
+        onChange={setSetting}
+        onClose={settingsModal.close}
+      />
     </Stack>
   );
 }

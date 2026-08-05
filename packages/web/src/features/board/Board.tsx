@@ -9,6 +9,7 @@ import {
   type BoardState,
   type CellIndex,
 } from "../../state/boardState";
+import type { BoardHighlights } from "./highlights";
 
 import classes from "./Board.module.css";
 
@@ -27,6 +28,7 @@ import classes from "./Board.module.css";
  */
 export interface BoardProps {
   readonly state: BoardState;
+  readonly highlights: BoardHighlights;
   readonly onSelect: (index: CellIndex) => void;
   /** 盤面自身がキーを拾う。ホットキーの登録は呼び出し側にまとめてある。 */
   readonly boardRef?: React.Ref<HTMLDivElement>;
@@ -36,7 +38,7 @@ const CELL_INDEXES = Array.from({ length: CELL_COUNT }, (_, index) => index);
 
 const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, row * 9 + 9));
 
-export function Board({ state, onSelect, boardRef }: BoardProps) {
+export function Board({ state, highlights, onSelect, boardRef }: BoardProps) {
   return (
     <div
       ref={boardRef}
@@ -53,6 +55,7 @@ export function Board({ state, onSelect, boardRef }: BoardProps) {
               key={index}
               index={index}
               state={state}
+              highlights={highlights}
               selected={index === state.selected}
               onSelect={onSelect}
             />
@@ -66,18 +69,26 @@ export function Board({ state, onSelect, boardRef }: BoardProps) {
 interface CellProps {
   readonly index: CellIndex;
   readonly state: BoardState;
+  readonly highlights: BoardHighlights;
   readonly selected: boolean;
   readonly onSelect: (index: CellIndex) => void;
 }
 
-function Cell({ index, state, selected, onSelect }: CellProps) {
+function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
   const notes = notesAt(state, index);
+  const conflicted = highlights.conflicts.has(index);
+  const mistaken = highlights.mistakes.has(index);
 
   const className = [
     classes.cell,
     given ? classes.given : classes.entry,
+    // 強調は選択より下に敷く。順序を入れ替えると選択が見えなくなる。
+    highlights.units.has(index) ? classes.unit : "",
+    highlights.sameDigit.has(index) ? classes.sameDigit : "",
+    conflicted ? classes.conflict : "",
+    mistaken ? classes.mistake : "",
     selected ? classes.selected : "",
   ]
     .filter(Boolean)
@@ -89,7 +100,7 @@ function Cell({ index, state, selected, onSelect }: CellProps) {
       role="gridcell"
       aria-selected={selected}
       aria-readonly={given || undefined}
-      aria-label={cellLabel(index, value, given, notes)}
+      aria-label={cellLabel(index, value, given, notes, conflicted, mistaken)}
       className={className}
       onPointerDown={() => onSelect(index)}
     >
@@ -119,13 +130,30 @@ function cellId(index: CellIndex): string {
   return `sudoku-cell-${index}`;
 }
 
-/** 例: 「5 行 3 列、手がかり 7」「5 行 3 列、空」「5 行 3 列、候補 1 2 7」 */
-function cellLabel(index: CellIndex, value: number, given: boolean, notes: number): string {
+/**
+ * 例: 「5 行 3 列、手がかり 7」「5 行 3 列、空」「5 行 3 列、候補 1 2 7」
+ * 「5 行 3 列、4、重複」
+ *
+ * **矛盾と誤りは印だけでなく読み上げにも載せる。**印が見えない人にも要る情報である。
+ */
+function cellLabel(
+  index: CellIndex,
+  value: number,
+  given: boolean,
+  notes: number,
+  conflicted: boolean,
+  mistaken: boolean,
+): string {
   const position = `${rowOf(index) + 1} 行 ${columnOf(index) + 1} 列`;
   if (value === 0) {
     return notes === 0
       ? `${position}、空`
       : `${position}、候補 ${candidateDigits(notes).join(" ")}`;
+  }
+
+  const marks = [conflicted ? "重複" : "", mistaken ? "誤り" : ""].filter(Boolean);
+  if (marks.length > 0) {
+    return [position, given ? `手がかり ${value}` : `${value}`, ...marks].join("、");
   }
   return given ? `${position}、手がかり ${value}` : `${position}、${value}`;
 }
