@@ -78,17 +78,12 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
   const notes = notesAt(state, index);
-  const conflicted = highlights.conflicts.has(index);
-  const mistaken = highlights.mistakes.has(index);
-
   const className = [
     classes.cell,
     given ? classes.given : classes.entry,
     // 強調は選択より下に敷く。順序を入れ替えると選択が見えなくなる。
     highlights.units.has(index) ? classes.unit : "",
     highlights.sameDigit.has(index) ? classes.sameDigit : "",
-    conflicted ? classes.conflict : "",
-    mistaken ? classes.mistake : "",
     selected ? classes.selected : "",
   ]
     .filter(Boolean)
@@ -100,7 +95,7 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
       role="gridcell"
       aria-selected={selected}
       aria-readonly={given || undefined}
-      aria-label={cellLabel(index, value, given, notes, conflicted, mistaken)}
+      aria-label={cellLabel(index, value, given, notes)}
       className={className}
       onPointerDown={() => onSelect(index)}
     >
@@ -132,18 +127,12 @@ function cellId(index: CellIndex): string {
 
 /**
  * 例: 「5 行 3 列、手がかり 7」「5 行 3 列、空」「5 行 3 列、候補 1 2 7」
- * 「5 行 3 列、4、重複」
  *
- * **矛盾と誤りは印だけでなく読み上げにも載せる。**印が見えない人にも要る情報である。
+ * ⚠️ **2026-08-06 に「重複」「誤り」の読み上げを消した。**
+ * 画面に印を出さなくなったので、読み上げだけ残すと**見える人と見えない人で
+ * 分かることが変わってしまう**。
  */
-function cellLabel(
-  index: CellIndex,
-  value: number,
-  given: boolean,
-  notes: number,
-  conflicted: boolean,
-  mistaken: boolean,
-): string {
+function cellLabel(index: CellIndex, value: number, given: boolean, notes: number): string {
   const position = `${rowOf(index) + 1} 行 ${columnOf(index) + 1} 列`;
   if (value === 0) {
     return notes === 0
@@ -151,9 +140,5 @@ function cellLabel(
       : `${position}、候補 ${candidateDigits(notes).join(" ")}`;
   }
 
-  const marks = [conflicted ? "重複" : "", mistaken ? "誤り" : ""].filter(Boolean);
-  if (marks.length > 0) {
-    return [position, given ? `手がかり ${value}` : `${value}`, ...marks].join("、");
-  }
   return given ? `${position}、手がかり ${value}` : `${position}、${value}`;
 }

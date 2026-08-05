@@ -35,8 +35,6 @@ export interface UsePuzzleResult {
   readonly source: LoadedPuzzle | null;
   /** 遊びかけから戻す入力とメモ。新しい問題なら `null`。 */
   readonly restored: RestoredBoard | null;
-  /** 遊びかけの経過時間。新しい問題なら 0。 */
-  readonly elapsedMs: number;
   /**
    * 盤面を作り直す目印。**同じ問題を引き直しても値が変わる**ので、
    * これを `key` に使えば「次の問題へ」で盤面が必ず初期化される。
@@ -50,7 +48,6 @@ interface Attempt {
   readonly key: string;
   readonly loaded: LoadedPuzzle | null;
   readonly restored: RestoredBoard | null;
-  readonly elapsedMs: number;
 }
 
 export interface UsePuzzleOptions {
@@ -99,7 +96,6 @@ export function usePuzzle({ difficulty, resume }: UsePuzzleOptions): UsePuzzleRe
       puzzle: null,
       source: null,
       restored: null,
-      elapsedMs: 0,
       puzzleKey: key,
       next,
     };
@@ -111,7 +107,6 @@ export function usePuzzle({ difficulty, resume }: UsePuzzleOptions): UsePuzzleRe
       puzzle: SAMPLE_PUZZLE,
       source: null,
       restored: null,
-      elapsedMs: 0,
       puzzleKey: key,
       next,
     };
@@ -122,7 +117,6 @@ export function usePuzzle({ difficulty, resume }: UsePuzzleOptions): UsePuzzleRe
     puzzle: current.loaded.puzzle,
     source: current.loaded,
     restored: current.restored,
-    elapsedMs: current.elapsedMs,
     puzzleKey: `${key}:${current.loaded.packPath}:${current.loaded.line}`,
     next,
   };
@@ -131,7 +125,7 @@ export function usePuzzle({ difficulty, resume }: UsePuzzleOptions): UsePuzzleRe
 type LoadResult = Omit<Attempt, "key">;
 
 async function loadFresh(difficulty: Difficulty): Promise<LoadResult> {
-  return { loaded: await loadRandomPuzzle({ difficulty }), restored: null, elapsedMs: 0 };
+  return { loaded: await loadRandomPuzzle({ difficulty }), restored: null };
 }
 
 /**
@@ -153,9 +147,5 @@ async function resumeOrLoad(difficulty: Difficulty): Promise<LoadResult> {
     return loadFresh(difficulty);
   }
 
-  return {
-    loaded,
-    restored: { entries: saved.entries, notes: saved.notes },
-    elapsedMs: saved.elapsedMs,
-  };
+  return { loaded, restored: { entries: saved.entries, notes: saved.notes } };
 }
