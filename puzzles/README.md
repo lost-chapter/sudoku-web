@@ -24,16 +24,15 @@ puzzles/
 | `packs/easy-000.txt` | やさしい | 1,000 | 172,000 バイト |
 | `packs/normal-000.txt` | ふつう | 1,000 | 174,074 バイト |
 | `packs/hard-000.txt` | むずかしい | 1,000 | 172,549 バイト |
+| `packs/expert-000.txt` | 難問 | 1,000 | 175,000 バイト |
+| `packs/extreme-000.txt` | 最難関 | 1,000 | 176,000 バイト |
 
-**難問(`expert`)と最難関(`extreme`)は 0 問である。**
-レベル 5 以降の手筋(X-Wing / XY-Wing / チェーン系)が未実装で、
-**評価できない問題に難易度を付けない**ことにしているため
-([難易度の評価](../docs/algorithms/difficulty-rating.md#実装していない手筋の扱い))。
+**5 クラスすべてが揃っている**(2026-08-05 にレベル 5〜7 の手筋を実装して収録)。
 
 ## 作り直しかた
 
 ```bash
-pnpm --filter @sudoku/generator generate --difficulty easy,normal,hard --count 1000
+pnpm --filter @sudoku/generator generate --difficulty easy,normal,hard,expert,extreme --count 1000
 ```
 
 **同じ指定からは 1 バイト違わず同じファイルができる。**
