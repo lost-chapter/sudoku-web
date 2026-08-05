@@ -3,6 +3,8 @@ import { BOARD_SIZE } from "@sudoku/core";
 
 import { Icon } from "../../ui/Icon";
 
+import { NoteSwitch } from "./NoteSwitch";
+
 /**
  * 画面の入力パッド。
  *
@@ -75,15 +77,12 @@ export function NumberPad({
         >
           消す
         </Button>
-        <Button
-          variant={noteMode ? "filled" : "default"}
-          size="lg"
-          leftSection={<Icon name="pencil" />}
-          aria-pressed={noteMode}
-          onClick={onToggleNoteMode}
-        >
-          メモ{noteMode ? " 入" : " 切"}
-        </Button>
+        {/*
+          🔴 **メモはスイッチにする**(2026-08-06・発注者の要望)。
+          ⚠️ **PC 版とスマホ版で同じ部品を使う。**同じ迷いが両方で起きるので、
+          片方だけ直すと食い違う。
+        */}
+        <NoteSwitch checked={noteMode} onChange={onToggleNoteMode} />
       </Group>
 
       {/*

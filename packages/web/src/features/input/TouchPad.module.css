@@ -29,16 +29,24 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
+/*
+ * ⚠️ **メモのスイッチだけ広く取る。**等分だと「メモ」の 2 文字が縦に折り返す(実測)。
+ * 取り消しとやり直しは記号だけなので、狭くしても読めなくならない。
+ */
 .utility {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1.5fr 1fr 1fr;
   gap: var(--pad-gap);
 }
 
-/* 横向きは「消す」もここへ来るので 4 列。 */
+/*
+ * 横向きは「消す」もここへ来るので 4 つ。
+ * ⚠️ **等分にしない。**メモのスイッチだけ中身が広く、等分だと**そこが列を押し広げて
+ * 隣が 44px を割る**(実測 43.2px)。**先に取り分を決めておく。**
+ */
 .utilityLandscape {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1.6fr 1fr 1fr;
   gap: var(--pad-gap);
 }
 
@@ -83,11 +91,4 @@
 .key:focus-visible {
   outline: 3px solid var(--mantine-primary-color-filled);
   outline-offset: 2px;
-}
-
-/* メモモードは押しっぱなしの状態。**色だけでなく文字でも「入 / 切」を出す。** */
-.pressed {
-  border-color: var(--mantine-primary-color-filled);
-  background: var(--mantine-primary-color-filled);
-  color: var(--mantine-color-white);
 }
