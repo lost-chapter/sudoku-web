@@ -198,6 +198,32 @@ describe("メモ", () => {
     expect(boardReducer(onGiven, { type: "inputDigit", digit: 7 })).toBe(onGiven);
   });
 
+  // ⚠️ **その 1 回だけメモにする経路**(上フリックが使う)。**モードは動かさない。**
+  describe("asNote", () => {
+    it("メモモードが切でも候補が立つ", () => {
+      const noted = boardReducer(initial, { type: "inputDigit", digit: 7, asNote: true });
+      expect(notesAt(noted, EMPTY_INDEX)).toBe(maskOfDigit(7));
+      expect(valueAt(noted, EMPTY_INDEX)).toBe(0);
+    });
+
+    it("モードは切り替わらない", () => {
+      const noted = boardReducer(initial, { type: "inputDigit", digit: 7, asNote: true });
+      expect(noted.noteMode).toBe(false);
+    });
+
+    it("メモモードが入でも false なら確定値が入る", () => {
+      const filled = boardReducer(noteMode, { type: "inputDigit", digit: 7, asNote: false });
+      expect(valueAt(filled, EMPTY_INDEX)).toBe(7);
+      expect(notesAt(filled, EMPTY_INDEX)).toBe(0);
+    });
+
+    it("省略するとモードに従う", () => {
+      expect(boardReducer(noteMode, { type: "inputDigit", digit: 7 })).toEqual(
+        boardReducer(noteMode, { type: "inputDigit", digit: 7, asNote: true }),
+      );
+    });
+  });
+
   it("確定値が入っているセルにはメモを置けない", () => {
     const filled = boardReducer(initial, { type: "inputDigit", digit: 4 });
     const toNoteMode = boardReducer(filled, { type: "toggleNoteMode" });

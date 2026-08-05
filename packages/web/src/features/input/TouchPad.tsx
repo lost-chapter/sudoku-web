@@ -3,6 +3,7 @@ import { BOARD_SIZE } from "@sudoku/core";
 import { Icon } from "../../ui/Icon";
 
 import type { PadProps } from "./padProps";
+import { useFlickUp } from "./useFlick";
 
 import classes from "./TouchPad.module.css";
 
@@ -27,6 +28,38 @@ export interface TouchPadProps extends PadProps {
 }
 
 const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
+
+/**
+ * 数字のキー。**タップで確定入力、上へはじくとメモ**(2026-08-06 の試作)。
+ *
+ * ⚠️ **部品に切り出したのはフリックのためである。**`map` の中では hook を呼べない。
+ *
+ * ⚠️ **読み上げの名前は「入力」のままにしてある。**
+ * **フリックは読み上げでは使えない操作**なので、名前に混ぜると、
+ * **その経路を持たない人へ届かない案内をすることになる。**
+ * メモを入れる手段は「メモ」キー(モード)のほうが正本である。
+ */
+function DigitKey({
+  digit,
+  noteMode,
+  disabled,
+  onDigit,
+}: { readonly digit: number } & Pick<PadProps, "noteMode" | "disabled" | "onDigit">) {
+  const flick = useFlickUp(() => onDigit(digit, true));
+
+  return (
+    <button
+      type="button"
+      className={classes.key}
+      disabled={disabled}
+      aria-label={noteMode ? `${digit} をメモする` : `${digit} を入力`}
+      onClick={() => onDigit(digit)}
+      {...flick}
+    >
+      {digit}
+    </button>
+  );
+}
 
 /**
  * 「消す」。**縦向きは数字の行、横向きは補助の行**と置き場所が変わるだけで中身は同じ。
@@ -62,16 +95,13 @@ export function TouchPad({
     <div className={classes.pad}>
       <div className={[classes.digits, landscape ? classes.digitsLandscape : ""].join(" ")}>
         {DIGITS.map((digit) => (
-          <button
+          <DigitKey
             key={digit}
-            type="button"
-            className={classes.key}
+            digit={digit}
+            noteMode={noteMode}
             disabled={disabled}
-            aria-label={noteMode ? `${digit} をメモする` : `${digit} を入力`}
-            onClick={() => onDigit(digit)}
-          >
-            {digit}
-          </button>
+            onDigit={onDigit}
+          />
         ))}
         {/*
           縦向きは 5 列なので、数字 9 個 + 消す でちょうど 2 行に収まる。
