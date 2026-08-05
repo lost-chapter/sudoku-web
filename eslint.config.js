@@ -6,7 +6,12 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "puzzles/**", "docs/**"],
+    // ⚠️ **`.claude/worktrees/` を外すこと。**
+    //    並列作業の worktree はリポジトリの複製なので、そこにも tsconfig.json がある。
+    //    外さないと typescript-eslint が「tsconfigRootDir の候補が複数ある」と言って
+    //    **1 つも lint できずに落ちる**(2026-08-06 に踏んだ)。
+    //    ⚠️ CI には worktree が無いので、**手元でだけ落ちる**種類の壊れ方である。
+    ignores: ["**/dist/**", "**/node_modules/**", "puzzles/**", "docs/**", ".claude/**"],
   },
   js.configs.recommended,
   tseslint.configs.recommended,
