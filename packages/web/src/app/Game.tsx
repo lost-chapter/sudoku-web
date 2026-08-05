@@ -123,7 +123,7 @@ export function Game({
     noteMode: state.noteMode,
     canUndo: canUndo(game),
     canRedo: canRedo(game),
-    onDigit: (digit: number) => play({ type: "inputDigit", digit }),
+    onDigit: (digit: number, asNote?: boolean) => play({ type: "inputDigit", digit, asNote }),
     onClear: () => play({ type: "clearCell" }),
     onToggleNoteMode: () => play({ type: "toggleNoteMode" }),
     onUndo: () => play({ type: "undo" }),
