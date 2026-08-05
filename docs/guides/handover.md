@@ -91,7 +91,7 @@ pnpm build
 | 項目 | 値 |
 |------|-----|
 <<<<<<< HEAD
-| テスト | **259 件**(core 96 / docs-html 19 / web 144。generator は 0 件) |
+| テスト | **300 件**(core 121 / generator 16 / docs-html 19 / web 144) |
 =======
 | テスト | **225 件**(core 121 / generator 16 / docs-html 19 / web 69) |
 >>>>>>> cc/agent-b
