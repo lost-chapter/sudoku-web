@@ -6,15 +6,18 @@
 
 ## 全体像
 
-```
-                 [ 作る側 / Node ]                     [ 遊ぶ側 / ブラウザ ]
-
-  packages/generator  ──生成──▶  puzzles/  ──fetch──▶  packages/web
-        │                       (問題パック)                  │
-        └────────┐                                      ┌─────┘
-                 ▼                                      ▼
-                        packages/core(盤面ロジック)
-                     生成・解法・検証・難易度評価を両側で共有
+```mermaid
+flowchart TB
+  subgraph make["作る側 / Node"]
+    gen["packages/generator"]
+  end
+  subgraph play["遊ぶ側 / ブラウザ"]
+    web["packages/web"]
+  end
+  gen -->|生成| packs["puzzles/(問題パック)"]
+  packs -->|fetch| web
+  gen --> core["packages/core(盤面ロジック)<br/>生成・解法・検証・難易度評価を両側で共有"]
+  web --> core
 ```
 
 **`packages/core` を両側から使うことが構成の要である。**
@@ -25,17 +28,15 @@
 
 pnpm workspaces のモノレポ([ADR 0001](../decisions/0001-project-structure.md))。
 
-```
-sudoku-web/
-├── packages/
-│   ├── core/          盤面ロジック。DOM も Node API も使わない
-│   ├── generator/     問題を大量生成する CLI(Node)
-│   └── web/           React + TypeScript のアプリ
-├── puzzles/           生成された問題パック(配信物)
-├── tools/
-│   └── docs-html/     Markdown → HTML(docs-markdown-to-html スキル)
-└── docs/
-```
+| 場所 | 中身 |
+|------|------|
+| `packages/core/` | 盤面ロジック。**DOM も Node API も使わない** |
+| `packages/generator/` | 問題を大量生成する CLI(Node) |
+| `packages/web/` | React + TypeScript のアプリ |
+| `puzzles/` | 生成された問題パック(配信物) |
+| `tools/docs-html/` | Markdown → HTML(`docs-markdown-to-html` スキル) |
+| `tools/docs-lint/` | 和文の強調の検査 |
+| `docs/` | ドキュメント |
 
 | パッケージ | 責務 | 依存してよいもの |
 |-----------|------|----------------|
@@ -59,8 +60,12 @@ sudoku-web/
 
 ### 1. 生成(オフライン・バッチ)
 
-```
-シード ──▶ 完成盤の生成 ──▶ 穴あけ(一意解を保つ) ──▶ 難易度評価 ──▶ パックへ追記
+```mermaid
+flowchart TB
+  seed["シード"] --> full["完成盤の生成"]
+  full --> dig["穴あけ(一意解を保つ)"]
+  dig --> rate["難易度評価"]
+  rate --> pack["パックへ追記"]
 ```
 
 `generator` が `worker_threads` で並列に回す。
@@ -75,31 +80,35 @@ sudoku-web/
 
 ### 3. 遊技
 
-```
-難易度を選ぶ ──▶ マニフェストを見る ──▶ 該当パックを fetch ──▶ 1 問取り出す
-      ──▶ 盤面の状態を reducer で進める ──▶ localStorage へ保存
+```mermaid
+flowchart TB
+  pick["難易度を選ぶ"] --> manifest["マニフェストを見る"]
+  manifest --> fetch["該当パックを fetch"]
+  fetch --> one["1 問取り出す"]
+  one --> reduce["盤面の状態を reducer で進める"]
+  reduce --> save["localStorage へ保存"]
 ```
 
 ## `web` の内部構成
 
-```
-packages/web/src/
-├── app/           画面(ルーティング・レイアウト)
-├── features/
-│   ├── board/     盤面の描画とセルの操作
-│   ├── input/     数字入力・メモ・取り消し
-│   ├── puzzle/    問題の取得(マニフェスト・パックの読み込み)
-│   └── progress/  進行の保存と復元
-├── state/         盤面の状態管理(core の reducer を React へつなぐ)
-└── ui/            UI ライブラリのラッパと共通部品
-```
+`packages/web/src/` の下は次のように分ける。
+
+| 場所 | 中身 |
+|------|------|
+| `app/` | 画面(ルーティング・レイアウト) |
+| `features/board/` | 盤面の描画とセルの操作 |
+| `features/input/` | 数字入力・メモ・取り消し |
+| `features/puzzle/` | 問題の取得(マニフェスト・パックの読み込み) |
+| `features/progress/` | 進行の保存と復元 |
+| `state/` | 盤面の状態管理(`core` の reducer を React へつなぐ) |
+| `ui/` | UI ライブラリのラッパと共通部品 |
 
 ### 状態管理は reducer に寄せる
 
 **盤面の状態遷移は純粋な reducer として書き、React には `useReducer` でつなぐだけにする。**
 
-```
-(state, action) => state      ← React を知らない純粋関数
+```ts
+(state: BoardState, action: BoardAction) => BoardState; // React を知らない純粋関数
 ```
 
 **置き場所は `packages/web/src/state/`**(2026-08-05 決定)。
