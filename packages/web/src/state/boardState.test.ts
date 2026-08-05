@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { candidateDigits, maskOfDigit } from "@sudoku/core";
+
 import { SAMPLE_PUZZLE } from "../features/puzzle/samplePuzzle";
 import {
   boardReducer,
   createBoardState,
-  matchesSolution,
   isGiven,
+  matchesSolution,
+  notesAt,
   valueAt,
   type BoardState,
 } from "./boardState";
@@ -127,6 +130,80 @@ describe("clearCell", () => {
 
   it("空のセルを消しても状態は変わらない", () => {
     expect(boardReducer(initial, { type: "clearCell" })).toBe(initial);
+  });
+});
+
+describe("メモ", () => {
+  const noteMode = boardReducer(initial, { type: "toggleNoteMode" });
+
+  it("メモモードは切り替わる", () => {
+    expect(initial.noteMode).toBe(false);
+    expect(noteMode.noteMode).toBe(true);
+    expect(boardReducer(noteMode, { type: "toggleNoteMode" }).noteMode).toBe(false);
+  });
+
+  it("メモモード中の数字は候補を立て、確定値は入らない", () => {
+    const noted = boardReducer(noteMode, { type: "inputDigit", digit: 7 });
+    expect(notesAt(noted, EMPTY_INDEX)).toBe(maskOfDigit(7));
+    expect(valueAt(noted, EMPTY_INDEX)).toBe(0);
+  });
+
+  it("同じ数字をもう一度でメモが落ちる(トグル)", () => {
+    const noted = boardReducer(noteMode, { type: "inputDigit", digit: 7 });
+    const removed = boardReducer(noted, { type: "inputDigit", digit: 7 });
+    expect(notesAt(removed, EMPTY_INDEX)).toBe(0);
+  });
+
+  it("複数の候補を立てられる", () => {
+    const noted = [1, 2, 7].reduce(
+      (state, digit) => boardReducer(state, { type: "inputDigit", digit }),
+      noteMode,
+    );
+    expect(candidateDigits(notesAt(noted, EMPTY_INDEX))).toEqual([1, 2, 7]);
+  });
+
+  it("手がかりのセルにはメモを置けない", () => {
+    const onGiven = boardReducer(noteMode, { type: "selectCell", index: GIVEN_INDEX });
+    expect(boardReducer(onGiven, { type: "inputDigit", digit: 7 })).toBe(onGiven);
+  });
+
+  it("確定値が入っているセルにはメモを置けない", () => {
+    const filled = boardReducer(initial, { type: "inputDigit", digit: 4 });
+    const toNoteMode = boardReducer(filled, { type: "toggleNoteMode" });
+    expect(boardReducer(toNoteMode, { type: "inputDigit", digit: 7 })).toBe(toNoteMode);
+  });
+
+  it("確定入力を入れるとそのセルのメモは消える", () => {
+    const noted = [1, 2].reduce(
+      (state, digit) => boardReducer(state, { type: "inputDigit", digit }),
+      noteMode,
+    );
+    const back = boardReducer(noted, { type: "toggleNoteMode" });
+    const filled = boardReducer(back, { type: "inputDigit", digit: 4 });
+
+    expect(valueAt(filled, EMPTY_INDEX)).toBe(4);
+    expect(filled.notes[EMPTY_INDEX]).toBe(0);
+  });
+
+  it("確定入力を消してもメモは戻らない", () => {
+    const noted = boardReducer(noteMode, { type: "inputDigit", digit: 1 });
+    const back = boardReducer(noted, { type: "toggleNoteMode" });
+    const filled = boardReducer(back, { type: "inputDigit", digit: 4 });
+    const cleared = boardReducer(filled, { type: "clearCell" });
+
+    expect(valueAt(cleared, EMPTY_INDEX)).toBe(0);
+    expect(notesAt(cleared, EMPTY_INDEX)).toBe(0);
+  });
+
+  it("確定値のトグル消しではメモを触らない", () => {
+    // 同じ数字をもう一度押して消す経路。メモはもともと空なので状態は増えない。
+    const filled = boardReducer(initial, { type: "inputDigit", digit: 4 });
+    const toggled = boardReducer(filled, { type: "inputDigit", digit: 4 });
+    expect(toggled.notes).toBe(initial.notes);
+  });
+
+  it("数字が見えているセルのメモは表示しない", () => {
+    expect(notesAt(initial, GIVEN_INDEX)).toBe(0);
   });
 });
 

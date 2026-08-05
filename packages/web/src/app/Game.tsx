@@ -45,6 +45,7 @@ export function Game({ puzzle, onNext }: GameProps) {
     ["0", () => play({ type: "clearCell" })],
     ["backspace", () => play({ type: "clearCell" })],
     ["delete", () => play({ type: "clearCell" })],
+    ["space", () => play({ type: "toggleNoteMode" })],
   ]);
 
   return (
@@ -53,9 +54,16 @@ export function Game({ puzzle, onNext }: GameProps) {
 
       <NumberPad
         disabled={completed || isGiven(state, state.selected)}
+        noteMode={state.noteMode}
         onDigit={(digit) => play({ type: "inputDigit", digit })}
         onClear={() => play({ type: "clearCell" })}
+        onToggleNoteMode={() => play({ type: "toggleNoteMode" })}
       />
+
+      {/* メモモードの切替はキーでも起きる。切り替わったことを読み上げへ伝える。 */}
+      <VisuallyHidden role="status" aria-live="polite">
+        {state.noteMode ? "メモモード 入" : "メモモード 切"}
+      </VisuallyHidden>
 
       {/*
         完成は目で見て分かるだけでは足りない。支援技術へも伝わるよう、

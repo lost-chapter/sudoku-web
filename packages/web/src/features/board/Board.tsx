@@ -1,8 +1,9 @@
-import { CELL_COUNT } from "@sudoku/core";
+import { BOARD_SIZE, CELL_COUNT, candidateDigits, maskOfDigit } from "@sudoku/core";
 
 import {
   columnOf,
   isGiven,
+  notesAt,
   rowOf,
   valueAt,
   type BoardState,
@@ -72,6 +73,7 @@ interface CellProps {
 function Cell({ index, state, selected, onSelect }: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
+  const notes = notesAt(state, index);
 
   const className = [
     classes.cell,
@@ -87,24 +89,43 @@ function Cell({ index, state, selected, onSelect }: CellProps) {
       role="gridcell"
       aria-selected={selected}
       aria-readonly={given || undefined}
-      aria-label={cellLabel(index, value, given)}
+      aria-label={cellLabel(index, value, given, notes)}
       className={className}
       onPointerDown={() => onSelect(index)}
     >
-      {value === 0 ? "" : value}
+      {value !== 0 && value}
+      {value === 0 && notes !== 0 && <Notes mask={notes} />}
     </div>
   );
 }
+
+/**
+ * メモ(候補)。**3×3 に並べ、数字の位置で何が立っているかが分かるようにする。**
+ * 詰めて並べると読み取りに数え直しが要る。
+ */
+function Notes({ mask }: { readonly mask: number }) {
+  return (
+    <span className={classes.notes} aria-hidden="true">
+      {DIGITS.map((digit) => (
+        <span key={digit}>{(mask & maskOfDigit(digit)) === 0 ? "" : digit}</span>
+      ))}
+    </span>
+  );
+}
+
+const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
 
 function cellId(index: CellIndex): string {
   return `sudoku-cell-${index}`;
 }
 
-/** 例: 「5 行 3 列、手がかり 7」「5 行 3 列、空」 */
-function cellLabel(index: CellIndex, value: number, given: boolean): string {
+/** 例: 「5 行 3 列、手がかり 7」「5 行 3 列、空」「5 行 3 列、候補 1 2 7」 */
+function cellLabel(index: CellIndex, value: number, given: boolean, notes: number): string {
   const position = `${rowOf(index) + 1} 行 ${columnOf(index) + 1} 列`;
   if (value === 0) {
-    return `${position}、空`;
+    return notes === 0
+      ? `${position}、空`
+      : `${position}、候補 ${candidateDigits(notes).join(" ")}`;
   }
   return given ? `${position}、手がかり ${value}` : `${position}、${value}`;
 }
