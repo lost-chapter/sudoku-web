@@ -1,0 +1,13 @@
+{
+  "name": "@sudoku/release-notes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "docs/release-notes/ の Markdown を web の配信物(JSON)へ決定的に変換する",
+  "bin": {
+    "release-notes": "./build.mjs"
+  },
+  "scripts": {
+    "test": "node --test build.test.mjs"
+  }
+}
