@@ -83,7 +83,13 @@
  */
 .entry {
   font-weight: 400;
-  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-4));
+  /*
+   * ⚠️ **いちばん明るい強調(同じ数字)の背景の上でも 4.5:1 を切らない濃さにする。**
+   * 地の上だけで測ると足りる色でも、強調が敷かれた上では割る。
+   * 実測(2026-08-05): ダークで blue-4 は同じ数字の背景の上で 4.06:1 だったので
+   * blue-3 まで上げた(5.11:1)。ライトの blue-9 は同じ条件で 4.67:1。
+   */
+  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3));
 }
 
 /*
@@ -98,10 +104,11 @@
   height: 100%;
   padding: 6%;
   /*
-   * `--mantine-color-dimmed` は地の上で 4.04:1 しかなく、本文の目安 4.5:1 を割る。
-   * メモは確定値と**大きさと位置**で区別が付くので、色は読める濃さまで上げてよい。
+   * 控えめな文字の色は app/theme.css で 1 か所に集めてある
+   * (Mantine の既定は 4.04:1 で本文の目安を割るため上書きしている)。
+   * メモは確定値と**大きさと位置**でも区別が付くので、色だけに頼っていない。
    */
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+  color: var(--mantine-color-dimmed);
   font-size: clamp(0.5rem, 2.6vmin, 0.75rem);
   font-weight: 400;
   line-height: 1;
