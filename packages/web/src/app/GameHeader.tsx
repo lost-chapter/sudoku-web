@@ -1,31 +1,29 @@
 import { Button, Group, Text } from "@mantine/core";
 
-import { formatElapsed } from "../features/progress/useElapsedTime";
 import type { Difficulty } from "../features/puzzle/types";
 
 /**
- * ゲーム画面のヘッダ。**難易度 / 経過時間 / 設定**
+ * ゲーム画面のヘッダ。**難易度 / パック名 / 設定**
  * (docs/ui/screens-and-interactions.md「ゲーム画面の構成」)。
  *
- * ⚠️ **経過時間は表示するが、急かす演出はしない。**
- * 数字を出すだけで、色を変える・点滅させる・音を出すはしない。
- *
- * 盤面を持つ {@link Game} の中で描く。経過時間を止める条件(完成したか)が
- * そちらにしか無いためである。
+ * ⚠️ **経過時間はここに置かない。**盤面のすぐ上・右寄せである(2026-08-05 決定)。
+ * 時計を止める条件(完成したか)を持つのが盤面側なので、
+ * 表示位置を揃えるためだけに状態を持ち上げない。
  */
 export interface GameHeaderProps {
   readonly difficulty: Difficulty;
-  readonly elapsedMs: number;
+  /** どのパックから取ったか。同梱の 1 問で遊んでいるときは空。 */
+  readonly packLabel: string;
   readonly onOpenSettings: () => void;
 }
 
-export function GameHeader({ difficulty, elapsedMs, onOpenSettings }: GameHeaderProps) {
+export function GameHeader({ difficulty, packLabel, onOpenSettings }: GameHeaderProps) {
   return (
     <Group justify="space-between" align="center" wrap="nowrap">
       <Text fw={500}>{DIFFICULTY_LABELS[difficulty]}</Text>
 
-      <Text size="sm" c="dimmed" aria-label={`経過時間 ${formatElapsed(elapsedMs)}`}>
-        {formatElapsed(elapsedMs)}
+      <Text size="xs" c="dimmed" truncate>
+        {packLabel}
       </Text>
 
       <Button variant="default" size="xs" onClick={onOpenSettings}>

@@ -3,7 +3,7 @@ import { Button, Card, Group, Stack, Text } from "@mantine/core";
 
 import { formatElapsed } from "../features/progress/useElapsedTime";
 import { readProgress, type StorageLike } from "../features/progress/progressStorage";
-import type { SavedProgress } from "../features/progress/progress";
+import { isStale, type SavedProgress } from "../features/progress/progress";
 import { availableDifficulties } from "../features/puzzle/manifest";
 import { loadManifest } from "../features/puzzle/loadPuzzle";
 import type { Difficulty } from "../features/puzzle/types";
@@ -28,21 +28,33 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
   const [difficulties, setDifficulties] = useState<readonly Difficulty[] | null>(null);
   const [saved] = useState<SavedProgress | null>(() => readProgress(storage));
 
+  const [stale, setStale] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     void loadManifest().then((manifest) => {
-      if (!cancelled) {
-        setDifficulties(manifest ? availableDifficulties(manifest) : []);
+      if (cancelled) {
+        return;
       }
+      setDifficulties(manifest ? availableDifficulties(manifest) : []);
+      // 版が変わった保存は開いても捨てられる。**出さないほうが正直である。**
+      setStale(
+        saved !== null &&
+          manifest !== null &&
+          isStale(saved, {
+            formatVersion: manifest.formatVersion,
+            generator: manifest.generator,
+          }),
+      );
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [saved]);
 
   return (
     <Stack gap="lg">
-      {saved && (
+      {saved && !stale && (
         <Card withBorder padding="md">
           <Stack gap="sm">
             <Text fw={500}>遊びかけがあります</Text>
