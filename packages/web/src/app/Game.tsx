@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { Button, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
+import { Button, Group, Modal, Stack, Text, VisuallyHidden } from "@mantine/core";
 import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 
 import { Board } from "../features/board/Board";
@@ -117,9 +117,19 @@ export function Game({
     <Stack gap="lg">
       <GameHeader
         difficulty={puzzle.difficulty}
-        elapsedMs={elapsedMs}
+        packLabel={source?.packPath ?? ""}
         onOpenSettings={onOpenSettings}
       />
+
+      {/*
+        経過時間は**盤面のすぐ上・右寄せ**(docs/ui/screens-and-interactions.md)。
+        **急かす演出はしない** —— 数字だけで、色も点滅も音も付けない。
+      */}
+      <Group justify="flex-end">
+        <Text size="sm" c="dimmed" aria-label={`経過時間 ${formatElapsed(elapsedMs)}`}>
+          {formatElapsed(elapsedMs)}
+        </Text>
+      </Group>
 
       <Board
         state={state}
