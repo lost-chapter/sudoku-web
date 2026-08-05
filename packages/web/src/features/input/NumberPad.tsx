@@ -13,8 +13,12 @@ export interface NumberPadProps {
   readonly onDigit: (digit: number) => void;
   readonly onClear: () => void;
   readonly onToggleNoteMode: () => void;
+  readonly onUndo: () => void;
+  readonly onRedo: () => void;
   /** メモモード中か。**押しっぱなしの状態なので `aria-pressed` で伝える。** */
   readonly noteMode: boolean;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
   /** 手がかりのセルを選んでいるときは押しても何も起きないので、落としておく。 */
   readonly disabled?: boolean;
 }
@@ -25,7 +29,11 @@ export function NumberPad({
   onDigit,
   onClear,
   onToggleNoteMode,
+  onUndo,
+  onRedo,
   noteMode,
+  canUndo,
+  canRedo,
   disabled,
 }: NumberPadProps) {
   return (
@@ -57,6 +65,20 @@ export function NumberPad({
           onClick={onToggleNoteMode}
         >
           メモ{noteMode ? " 入" : " 切"}
+        </Button>
+      </Group>
+
+      {/*
+        取り消し / やり直しは数字より使う頻度が低いので小さくする。
+        ただし `subtle` は文字色が primary(blue-6)になり、白地で 3.4:1 と
+        本文の目安を割るため使わない。
+      */}
+      <Group grow gap="xs">
+        <Button variant="default" size="sm" disabled={!canUndo} onClick={onUndo}>
+          取り消し
+        </Button>
+        <Button variant="default" size="sm" disabled={!canRedo} onClick={onRedo}>
+          やり直し
         </Button>
       </Group>
     </Stack>

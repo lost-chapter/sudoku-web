@@ -5,7 +5,14 @@ import { useHotkeys, type HotkeyItem } from "@mantine/hooks";
 import { Board } from "../features/board/Board";
 import { NumberPad } from "../features/input/NumberPad";
 import type { Puzzle } from "../features/puzzle/types";
-import { boardReducer, createBoardState, isGiven, matchesSolution } from "../state/boardState";
+import { isGiven, matchesSolution } from "../state/boardState";
+import {
+  canRedo,
+  canUndo,
+  createGameState,
+  gameReducer,
+  type GameAction,
+} from "../state/gameState";
 
 /**
  * 1 問を遊ぶところ。
@@ -23,11 +30,12 @@ export interface GameProps {
 }
 
 export function Game({ puzzle, onNext }: GameProps) {
-  const [state, dispatch] = useReducer(boardReducer, puzzle, createBoardState);
+  const [game, dispatch] = useReducer(gameReducer, puzzle, createGameState);
+  const state = game.present;
   const completed = matchesSolution(state);
 
   // 完成したら盤面を動かさない。完成の知らせが入力で消えてしまうのを防ぐ。
-  const play = (action: Parameters<typeof dispatch>[0]) => {
+  const play = (action: GameAction) => {
     if (!completed) {
       dispatch(action);
     }
@@ -46,6 +54,9 @@ export function Game({ puzzle, onNext }: GameProps) {
     ["backspace", () => play({ type: "clearCell" })],
     ["delete", () => play({ type: "clearCell" })],
     ["space", () => play({ type: "toggleNoteMode" })],
+    // mod は Ctrl と ⌘ の両方に当たる。shift 付きは別の hotkey として登録する。
+    ["mod+z", () => play({ type: "undo" })],
+    ["mod+shift+z", () => play({ type: "redo" })],
   ]);
 
   return (
@@ -55,9 +66,13 @@ export function Game({ puzzle, onNext }: GameProps) {
       <NumberPad
         disabled={completed || isGiven(state, state.selected)}
         noteMode={state.noteMode}
+        canUndo={!completed && canUndo(game)}
+        canRedo={!completed && canRedo(game)}
         onDigit={(digit) => play({ type: "inputDigit", digit })}
         onClear={() => play({ type: "clearCell" })}
         onToggleNoteMode={() => play({ type: "toggleNoteMode" })}
+        onUndo={() => play({ type: "undo" })}
+        onRedo={() => play({ type: "redo" })}
       />
 
       {/* メモモードの切替はキーでも起きる。切り替わったことを読み上げへ伝える。 */}
