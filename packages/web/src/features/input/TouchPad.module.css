@@ -1,0 +1,76 @@
+/*
+ * スマホ向けの入力パッド。
+ *
+ * ⚠️ **@layer mantine の外なので、import 順に関係なく Mantine より勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。!important は使わない。
+ *
+ * ⚠️ **キーの高さは 48px。**44px の下限を守りつつ、320px 級の端末でも
+ * 盤面のセルを 24px 以上に保てる最大の値である
+ * (app/layout.ts の MIN_ONE_SCREEN_HEIGHT の計算)。**安易に大きくしない。**
+ */
+
+.pad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad-gap);
+  /* 画面下端に固定する。**いちばん押す物をいちばん近くへ。** */
+  padding: var(--pad-gap) var(--pad-gap) max(var(--pad-gap), env(safe-area-inset-bottom));
+  background: var(--mantine-color-body);
+}
+
+.digits {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--pad-gap);
+}
+
+/* 横向きは幅に余裕があるので 3 列 × 3 行にして、親指の移動を短くする。 */
+.digitsLandscape {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.utility {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--pad-gap);
+}
+
+.key {
+  height: var(--pad-key-height);
+  padding: 0;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  /* ダブルタップの拡大を抑えて、連続入力を軽くする。 */
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* 文字の操作(消す・メモ・取り消し)は数字より小さくてよい。 */
+.utility .key {
+  font-size: 0.95rem;
+}
+
+.key:disabled {
+  /* ⚠️ 押せないことが見て分かる必要があるので、薄くしてよい(WCAG の対象外)。 */
+  color: var(--mantine-color-dimmed);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.key:focus-visible {
+  outline: 3px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* メモモードは押しっぱなしの状態。**色だけでなく文字でも「入 / 切」を出す。** */
+.pressed {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-white);
+}

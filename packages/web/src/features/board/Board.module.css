@@ -11,8 +11,13 @@
   display: grid;
   grid-template-rows: repeat(9, 1fr);
   aspect-ratio: 1;
-  width: 100%;
-  /* 盤面は常に正方形。画面の短辺に合わせて拡縮する(画面構成と操作仕様)。 */
+  /*
+   * 盤面は常に正方形。画面の短辺に合わせて拡縮する(画面構成と操作仕様)。
+   *
+   * ⚠️ **一辺は外から `--board-size` で渡せる。**スマホ版は高さが足りないので、
+   * 幅だけで決めると縦にはみ出す。既定は従来どおり幅に追従する。
+   */
+  width: var(--board-size, 100%);
   max-width: min(100%, 32rem);
   margin-inline: auto;
   border: 3px solid var(--mantine-color-text);
@@ -122,7 +127,7 @@
 
 /*
  * 補助表示。**書く順序がそのまま重なりの順序になる**(同じ詳細度なので後勝ち)。
- * 薄い敷き → 同じ数字 → 矛盾 → 誤り → 選択、の順に強くする。
+ * 薄い敷き → 同じ数字 → 選択、の順に強くする。
  */
 
 /* 選択中のセルが属する行・列・ブロック。**薄く敷くだけ。** */
@@ -133,6 +138,29 @@
 /* 選択中のセルと同じ数字。 */
 .sameDigit {
   background: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+/*
+ * あきらめたときに出した解。**遊技者が自分で入れた正解と見分けが付くこと。**
+ *
+ * ⚠️ **色だけに載せない。**細字(手がかりは太字)に加えて**右上の点**で示す。
+ * 読み上げのラベルにも「答え」を載せる。
+ */
+.revealed {
+  color: var(--sudoku-color-revealed);
+  font-weight: 400;
+  position: relative;
+}
+
+.revealed::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  right: 8%;
+  width: 0.28em;
+  height: 0.28em;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* 選択も色だけに頼らない。背景に加えて内側の枠でも分かるようにする。 */
