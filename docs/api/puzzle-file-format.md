@@ -11,15 +11,11 @@
 
 ## 全体構成
 
-```
-puzzles/
-├── manifest.json          収録内容の索引(これを最初に読む)
-├── packs/                 同梱パック(Git 管理下)
-│   ├── easy-000.txt
-│   ├── normal-000.txt
-│   └── ...
-└── generated/             大量生成した追加分(Git 管理外)
-```
+| 場所 | 中身 |
+|------|------|
+| `puzzles/manifest.json` | **収録内容の索引。これを最初に読む** |
+| `puzzles/packs/` | 同梱パック(Git 管理下)。`easy-000.txt` / `normal-000.txt` / … |
+| `puzzles/generated/` | 大量生成した追加分(Git 管理外) |
 
 **アプリはまず `manifest.json` を読み、必要なパックだけを `fetch` する。**
 全パックを最初に読み込まない。

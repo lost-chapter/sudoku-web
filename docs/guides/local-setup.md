@@ -38,12 +38,13 @@ PORT=5174 pnpm dev
 
 ## パッケージ構成
 
-```
-packages/core        盤面ロジック。DOM も Node API も使わない
-packages/generator   問題を大量生成する CLI
-packages/web         React + Mantine のアプリ
-tools/docs-html      Markdown → HTML(管理役が持つ)
-```
+| パッケージ | 中身 |
+|-----------|------|
+| `packages/core` | 盤面ロジック。**DOM も Node API も使わない** |
+| `packages/generator` | 問題を大量生成する CLI |
+| `packages/web` | React + Mantine のアプリ |
+| `tools/docs-html` | Markdown → HTML(管理役が持つ) |
+| `tools/docs-lint` | 和文の強調の検査 |
 
 **パッケージ間は TypeScript のソースを直接参照する**(`exports` が `./src/index.ts` を指す)。
 ビルド順を気にせず、`core` を直したら即座に `web` と `generator` へ反映される。

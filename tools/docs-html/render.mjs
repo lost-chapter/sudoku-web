@@ -25,7 +25,7 @@ import MarkdownIt from "markdown-it";
 
 import { applyCjkEmphasis } from "./cjk-emphasis.mjs";
 import { highlight } from "./highlight.mjs";
-import { renderFlowchart } from "./mermaid-flowchart.mjs";
+import { MERMAID_SCRIPT } from "./mermaid-cdn.mjs";
 import { buildNav, extractTitle, toHref } from "./nav.mjs";
 import { PAGE_SCRIPT } from "./script.mjs";
 import { PAGE_STYLE } from "./style.mjs";
@@ -252,25 +252,15 @@ export function renderPage({
   md.renderer.rules.table_open = () => '<div class="table-scroll">\n<table>\n';
   md.renderer.rules.table_close = () => "</table>\n</div>\n";
 
-  // コードの色付けと図の描画はここ(ビルド時)で終える。
-  // 出力に載るのは SVG とクラス名だけで、ブラウザは何も実行しない。
+  // コードの色付けはここ(ビルド時)で終える。出力に載るのはクラス名だけ。
+  // 図だけは閲覧時に CDN の mermaid が描く(理由は mermaid-cdn.mjs)。
   md.renderer.rules.fence = (tokens, index) => {
     const token = tokens[index];
     const language = token.info.trim().split(/\s+/)[0].toLowerCase();
 
     if (language === "mermaid") {
-      try {
-        // marker の id はページ内で重ならないように、トークンの位置から決める
-        return `<figure class="diagram-figure">${renderFlowchart(token.content, `d${index}`)}</figure>\n`;
-      } catch (error) {
-        // ⚠️ 図が描けなくても変換全体は落とさない。記法をそのまま見せる。
-        return [
-          '<div class="diagram-fallback">',
-          `<p>この図はまだ描けない(${escapeHtml(error.message)})。記法をそのまま載せる。</p>`,
-          `<pre><code>${escapeHtml(token.content)}</code></pre>`,
-          "</div>\n",
-        ].join("");
-      }
+      // ⚠️ 記法はエスケープして置く。mermaid が読むときに実体参照は戻る。
+      return `<figure class="diagram-figure"><pre class="mermaid">${escapeHtml(token.content.trim())}</pre></figure>\n`;
     }
 
     const colored = highlight(token.content, token.info);
@@ -281,6 +271,9 @@ export function renderPage({
   const tokens = md.parse(markdown, {});
   const headings = transform(tokens, dirIndex);
   const body = md.renderer.render(tokens, md.options, {});
+
+  // 🔴 図のあるページにだけ mermaid の読み込みを埋める。
+  const hasDiagram = body.includes('<pre class="mermaid">');
 
   return [
     "<!doctype html>",
@@ -305,6 +298,7 @@ export function renderPage({
     renderToc(headings),
     "</div>",
     `<script>${PAGE_SCRIPT}</script>`,
+    ...(hasDiagram ? [`<script>${MERMAID_SCRIPT}</script>`] : []),
     "</body>",
     "</html>",
     "",
