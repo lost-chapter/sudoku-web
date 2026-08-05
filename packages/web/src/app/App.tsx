@@ -51,6 +51,14 @@ export function App() {
  * ⚠️ **スマホ版のゲーム画面だけ、外枠(タイトル・余白)を外す。**
  * 1 画面に収めるのが要件で、**外枠のぶんだけ盤面が小さくなる**ため。
  * ホーム画面と PC 版は今までどおり。
+ *
+ * 🔴 **外枠は「有無」ではなく「太さ」で切り替える。**要素そのものを出し入れすると、
+ * `GameScreen` の置き場所が変わり、**React が同じ画面と見なせず作り直す。**
+ * 2026-08-06 に、**幅を広げただけで入力も保存も消え、別の問題が出る**欠陥を出した
+ * (`packages/web/e2e/layoutSwitch.e2e.ts` が見張っている)。
+ *
+ * ⚠️ **ここに `if` を足して早期 return したくなったら、それが再発である。**
+ * 遊技の状態は `Game` の `useReducer` にあり、**作り直した瞬間に消える。**
  */
 function Shell({
   screen,
@@ -60,40 +68,35 @@ function Shell({
   readonly setScreen: (screen: Screen) => void;
 }) {
   const phone = useLayout() !== "desktop";
-
-  if (screen.name === "game" && phone) {
-    return (
-      <GameScreen
-        difficulty={screen.playing.difficulty}
-        resume={screen.playing.resume}
-        onHome={() => setScreen({ name: "home" })}
-      />
-    );
-  }
+  /** 外枠を外すか。**スマホ版のゲーム画面だけ。** */
+  const bare = screen.name === "game" && phone;
 
   return (
-    <>
-      <Container size="sm" px="xs" py="md">
-        <Stack gap="md">
+    <Container size="sm" fluid={bare} px={bare ? 0 : "xs"} py={bare ? 0 : "md"}>
+      <Stack gap={bare ? 0 : "md"}>
+        {/*
+          ⚠️ **タイトルは「描かない」で消す。**囲みごと外すと下の画面の位置が動く。
+        */}
+        {bare ? null : (
           <Title order={1} size="h2">
             数独
           </Title>
+        )}
 
-          {screen.name === "home" ? (
-            <HomeScreen
-              onStart={(difficulty, resume) =>
-                setScreen({ name: "game", playing: { difficulty, resume } })
-              }
-            />
-          ) : (
-            <GameScreen
-              difficulty={screen.playing.difficulty}
-              resume={screen.playing.resume}
-              onHome={() => setScreen({ name: "home" })}
-            />
-          )}
-        </Stack>
-      </Container>
-    </>
+        {screen.name === "home" ? (
+          <HomeScreen
+            onStart={(difficulty, resume) =>
+              setScreen({ name: "game", playing: { difficulty, resume } })
+            }
+          />
+        ) : (
+          <GameScreen
+            difficulty={screen.playing.difficulty}
+            resume={screen.playing.resume}
+            onHome={() => setScreen({ name: "home" })}
+          />
+        )}
+      </Stack>
+    </Container>
   );
 }
