@@ -25,6 +25,7 @@ import MarkdownIt from "markdown-it";
 
 import { applyCjkEmphasis } from "./cjk-emphasis.mjs";
 import { highlight } from "./highlight.mjs";
+import { renderFlowchart } from "./mermaid-flowchart.mjs";
 import { buildNav, extractTitle, toHref } from "./nav.mjs";
 import { PAGE_SCRIPT } from "./script.mjs";
 import { PAGE_STYLE } from "./style.mjs";
@@ -251,9 +252,27 @@ export function renderPage({
   md.renderer.rules.table_open = () => '<div class="table-scroll">\n<table>\n';
   md.renderer.rules.table_close = () => "</table>\n</div>\n";
 
-  // コードの色付けはここ(ビルド時)で終える。出力に載るのはクラス名だけ。
+  // コードの色付けと図の描画はここ(ビルド時)で終える。
+  // 出力に載るのは SVG とクラス名だけで、ブラウザは何も実行しない。
   md.renderer.rules.fence = (tokens, index) => {
     const token = tokens[index];
+    const language = token.info.trim().split(/\s+/)[0].toLowerCase();
+
+    if (language === "mermaid") {
+      try {
+        // marker の id はページ内で重ならないように、トークンの位置から決める
+        return `<figure class="diagram-figure">${renderFlowchart(token.content, `d${index}`)}</figure>\n`;
+      } catch (error) {
+        // ⚠️ 図が描けなくても変換全体は落とさない。記法をそのまま見せる。
+        return [
+          '<div class="diagram-fallback">',
+          `<p>この図はまだ描けない(${escapeHtml(error.message)})。記法をそのまま載せる。</p>`,
+          `<pre><code>${escapeHtml(token.content)}</code></pre>`,
+          "</div>\n",
+        ].join("");
+      }
+    }
+
     const colored = highlight(token.content, token.info);
     const attrs = colored ? ' class="hljs"' : "";
     return `<pre><code${attrs}>${colored ?? escapeHtml(token.content)}</code></pre>\n`;
