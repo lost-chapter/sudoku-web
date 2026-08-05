@@ -164,6 +164,25 @@
     border-top-color: var(--amber);
     background: color-mix(in srgb, var(--amber) 10%, var(--field));
   }
+  /* 出したものは節目なので、色ではなく罫線の太さで区別する(盤面と同じ考え方)。 */
+  .phase.shipped {
+    border-top-color: var(--blue);
+    background: color-mix(in srgb, var(--blue) 12%, var(--field));
+  }
+  .phase.shipped .no {
+    color: var(--blue);
+    font-weight: 600;
+  }
+  .phase.shipped .state {
+    color: var(--blue);
+  }
+
+  .lead {
+    margin: 0 0 1.25rem;
+    max-width: 52em;
+    font-size: 0.92rem;
+    color: var(--ink-quiet);
+  }
   .phase .no {
     font-family: var(--mono);
     font-size: 0.7rem;
@@ -333,9 +352,10 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      <b>工程 0〜8 がすべて完了した。</b>サブパスで 1 問遊べることも、メモの状態が一目で分かることも
-      実測で確かめてある。<b>残っているのは <code>main</code> へ出すことだけ。</b>
-      0.1.0 が <code>ops-release</code> の最初の通し実行になる。
+      🎯 <b>0.1.0 を公開した。</b>
+      <a href="https://lost-chapter.github.io/sudoku-web/">lost-chapter.github.io/sudoku-web</a>
+      で遊べる（本番で 1 問入れて確認済み）。工程 0〜8 はすべて完了。
+      <b>次に決めることは、上フリックを残すかと、次に何を作るか。</b>
     </p>
     <dl class="figures">
       <div class="figure">
@@ -358,9 +378,9 @@
         <dt>スキル</dt>
         <dd>5<small>本</small></dd>
       </div>
-      <div class="figure alert">
-        <dt>未プッシュ</dt>
-        <dd>39<small>コミット</small></dd>
+      <div class="figure">
+        <dt>公開中の版</dt>
+        <dd>0.1.0</dd>
       </div>
     </dl>
   </header>
@@ -403,6 +423,57 @@
         <span class="no">8</span><span class="name">リリースの仕組み</span
         ><span class="state">6 / 6</span>
       </div>
+      <div class="phase shipped">
+        <span class="no">v0.1.0</span><span class="name">公開</span
+        ><span class="state">2026-08-06</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>初回のリリースで見つかった手順書の穴</h2>
+    <p class="lead">
+      <code>ops-release</code> を初めて通して 4 件出た。すべて書き戻してある。
+      <b>通していない手順書は仕様であって手順書ではない</b>——という記録でもある。
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>穴</th>
+            <th>なぜ抜けたか</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>最初のリリースは版を上げない</td>
+            <td>
+              ⚠️ <b>手順書は 2 回目以降の姿で書かれる。</b>初回だけの例外が、書く人の像に入っていない
+            </td>
+          </tr>
+          <tr>
+            <td>完了条件 <code>develop..main</code> が空にならない</td>
+            <td>
+              🔴 <code>--no-ff</code> マージした時点でマージコミットが <code>main</code> にだけ残る。
+              <b>構造的に満たせない条件だった</b>
+            </td>
+          </tr>
+          <tr>
+            <td>直した条件 <code>git diff</code> も脆かった</td>
+            <td>
+              ⚠️ <b>リリース直後しか成り立たない。</b><code>develop</code> が 1 コミット進むと差が出る。
+              同じ間違いを 2 度した
+            </td>
+          </tr>
+          <tr>
+            <td>Pages の許可ブランチが既定ブランチになる</td>
+            <td>
+              🔴 既定は <code>develop</code>、出すのは <code>main</code>。<b>決めごとと構造的に食い違う</b>。
+              ビルドは成功して配置だけ落ちるので、実装の問題に見える
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -605,12 +676,11 @@
     <div class="issues">
       <div class="issue critical">
         <span class="who"><span class="pill stop">次の一手</span></span>
-        <h3>0.1.0 を出す</h3>
+        <h3>次に何を作るか決まっていない</h3>
         <p>
-          <b>作るべきものは揃っている。</b>実装・検査・リリースノート・出す仕掛けのすべてが
-          <code>develop</code> に入っており、サブパスで遊べることも実測済みである。
-          <b>残るのは <code>ops-release</code> を通しで回すことだけ</b>——
-          ⚠️ <b>まだ 1 度も実行していない手順なので、詰まったら手順書へ書き戻す。</b>
+          <b>依頼された範囲は出し切った。</b>工程 9 以降は白紙である。
+          手元には「あってもいい」に留めた案（数字を押した行と列の強調）と、実機で確かめきれていない
+          3 点が残っている。<b>遊んでみて出てくる要望のほうが確かなので、まず触ってもらう。</b>
         </p>
       </div>
       <div class="issue">
