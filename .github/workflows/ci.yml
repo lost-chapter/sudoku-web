@@ -86,16 +86,39 @@ jobs:
       # ⚠️ ワーカー数を収録時(8)と変えて回す。
       #    「並列度を変えても中身が変わらない」ことも同時に見張れる。
       #
-      # 5 クラス全部は回さない。easy は最も安く基本の経路を通り、
-      # extreme は実装している手筋(レベル 1〜7)を全部通るので、この 2 つで足りる。
-      # 手元(3 ワーカー・load average 35)で 17 秒だった。
-      - name: 収録済みのパックを作り直して一致することを確認
+      # 5 クラス全部は回さない。easy が最も安く、extreme は実装している手筋
+      # (レベル 1〜7)を全部通るので、この 2 つで足りる。
+      - name: easy を作り直して 1 バイトも違わないことを確認
         run: |
           pnpm --filter @sudoku/generator generate \
-            --difficulty easy,extreme --count 1000 --workers 3 --out /tmp/puzzles-check
+            --difficulty easy --count 1000 --workers 3 --out /tmp/puzzles-check
           diff /tmp/puzzles-check/packs/easy-000.txt puzzles/packs/easy-000.txt
-          diff /tmp/puzzles-check/packs/extreme-000.txt puzzles/packs/extreme-000.txt
-          echo "収録済みのパックはシードから作り直せる"
+          echo "easy-000 はシードから 1 バイト違わず作り直せる"
+
+      # ⚠️ **少ない問数で作り直したものは「先頭が一致」しない。**
+      #    パックは難易度クラスとスコアの昇順で書くので(採用した順ではない)、
+      #    200 問版は 1,000 問版の先頭ではなく、全体に散らばる。
+      #    実測でも先頭 200 行のうち 169 行が違った。
+      #
+      #    **代わりに「部分集合か」を見る。** 採用は試行番号の昇順で決まるので、
+      #    200 問版は「1,000 問版が採用した先頭 200 個」と必ず同じ集合になる。
+      #    ⇒ 200 問版の全行が 1,000 問版に含まれていればよい。
+      #
+      #    ここを 1,000 問にすると時間が 6 倍になる(手元で 2.3 秒 → 13.1 秒)。
+      #    extreme は採用率が 5.5% しかないためである。
+      - name: extreme を 200 問だけ作り直して収録済みに含まれることを確認
+        run: |
+          pnpm --filter @sudoku/generator generate \
+            --difficulty extreme --count 200 --workers 3 --out /tmp/puzzles-sample
+          comm -23 \
+            <(sort /tmp/puzzles-sample/packs/extreme-000.txt) \
+            <(sort puzzles/packs/extreme-000.txt) > /tmp/missing.txt
+          if [ -s /tmp/missing.txt ]; then
+            echo "収録済みに無い問題が出た(生成が変わっている):"
+            head -3 /tmp/missing.txt
+            exit 1
+          fi
+          echo "extreme-000 の先頭 200 問は収録済みと同じ問題である"
 
       # 収録済みのパックを書き換えていないこと(--out を付け忘れると上書きされる)。
       - name: 収録済みのパックが変わっていないことを確認
