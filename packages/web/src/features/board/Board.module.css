@@ -113,6 +113,37 @@
   justify-content: center;
 }
 
+/*
+ * 補助表示。**書く順序がそのまま重なりの順序になる**(同じ詳細度なので後勝ち)。
+ * 薄い敷き → 同じ数字 → 矛盾 → 誤り → 選択、の順に強くする。
+ */
+
+/* 選択中のセルが属する行・列・ブロック。**薄く敷くだけ。** */
+.unit {
+  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+}
+
+/* 選択中のセルと同じ数字。 */
+.sameDigit {
+  background: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+/*
+ * 矛盾(規則の重複)と誤り(解と違う)は**別物**なので、印も分ける。
+ * どちらも色だけに情報を載せない —— 矛盾は波線、誤りは破線の枠で示す。
+ */
+.conflict {
+  color: light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
+  text-decoration: underline wavy;
+  text-underline-offset: 0.15em;
+}
+
+.mistake {
+  color: light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
+  outline: 2px dashed light-dark(var(--mantine-color-red-9), var(--mantine-color-red-4));
+  outline-offset: -4px;
+}
+
 /* 選択も色だけに頼らない。背景に加えて内側の枠でも分かるようにする。 */
 .selected {
   background: var(--mantine-primary-color-light);
