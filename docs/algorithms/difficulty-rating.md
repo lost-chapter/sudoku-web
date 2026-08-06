@@ -91,7 +91,7 @@ Forcing Chains = 7.1〜7.5、Dynamic Forcing Chains = 8.8 以上、と付いて�
 
 | 表示名(UI) | ファイル上の値 | 解くのに要る最難レベル | 想定 |
 |-------------|--------------|---------------------|------|
-| やさしい | `easy` | 1 | Single だけで解ける |
+| やさしい | `easy` | 1 | Single だけで解ける。収録パックは Naked Single のみ |
 | ふつう | `normal` | 2 | Locked Candidates まで |
 | むずかしい | `hard` | 3〜4 | Pair / Triple が要る |
 | 難問 | `expert` | 5〜6 | X-Wing / XY-Wing が要る |
@@ -121,6 +121,11 @@ Forcing Chains = 7.1〜7.5、Dynamic Forcing Chains = 8.8 以上、と付いて�
 🎯 **レベル 5〜7 を足しても、やさしい・ふつう・むずかしいの問数は 1 問も動かなかった。**
 簡単な手筋から順に試すので、**低いレベルで解ける問題の評価は手筋を足しても変わらない**
 ([検証](../reports/2026-08-05-difficulty-distribution.md))。
+
+なお、**難易度クラスとしての `easy` はレベル 1 (Naked / Hidden Single) のまま**である。
+「候補メモを使わなくても解ける」という要望に対して、収録する easy パックだけは
+生成時に手がかりを 40 個以上残し、`Naked Single` だけで解ける問題へ絞っている
+([盤面の生成](board-generation.md#やさしいパックだけの追加条件))。
 
 **残る 30.1% は Forcing Chain などが要る問題**で、いまは捨てている。
 

@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { decodePack, encodePack, isSolvedBoard, rateDifficulty } from "@sudoku/core";
 
-import { attemptSeed, runAttempt, runAttemptRange, takeInAttemptOrder } from "./generate-pack.ts";
+import {
+  attemptSeed,
+  EASY_MINIMUM_CLUES,
+  runAttempt,
+  runAttemptRange,
+  takeInAttemptOrder,
+} from "./generate-pack.ts";
 import { generatePackLines } from "./pool.ts";
 
 describe("試行", () => {
@@ -24,6 +30,22 @@ describe("試行", () => {
       if (attempt === null) continue;
       expect(attempt.puzzle.difficulty).toBe("easy");
     }
+  });
+
+  it("easy は Naked Single だけで解ける問題を採用する", () => {
+    let accepted = 0;
+    for (let index = 0; index < 40; index += 1) {
+      const attempt = runAttempt("easy-without-notes", index, "easy");
+      if (attempt === null) continue;
+      accepted += 1;
+      const rating = rateDifficulty(attempt.puzzle.givens);
+      expect(rating.difficulty).toBe("easy");
+      expect(rating.steps.every((step) => step.technique === "naked-single")).toBe(true);
+      expect(
+        [...attempt.puzzle.givens].filter((digit) => digit !== 0).length,
+      ).toBeGreaterThanOrEqual(EASY_MINIMUM_CLUES);
+    }
+    expect(accepted).toBeGreaterThan(0);
   });
 
   it("採用した問題は評価どおりの難易度である", () => {
