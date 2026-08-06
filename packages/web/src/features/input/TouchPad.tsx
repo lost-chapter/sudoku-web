@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BOARD_SIZE } from "@sudoku/core";
 
 import { Icon } from "../../ui/Icon";
@@ -58,10 +59,14 @@ function DigitKey({
   PadProps,
   "noteMode" | "disabled" | "onDigit"
 >) {
+  const [flicking, setFlicking] = useState(false);
+
   // ⚠️ **指のときは `click` を使わない**(`useTouchInput` が `preventDefault` する)。
   // **マウスとキーボードは `onClick` のまま** —— そちらに `touchend` は来ない。
   const touch = useTouchInput({
     onFlickUp: () => onDigit(digit, true),
+    onFlickStart: () => setFlicking(true),
+    onFlickEnd: () => setFlicking(false),
     onTap: () => onDigit(digit),
     flickEnabled: flickToNote,
   });
@@ -76,6 +81,16 @@ function DigitKey({
       {...touch}
     >
       {digit}
+      {flicking && (
+        <span
+          className={classes.flickGuide}
+          data-flick-guide="true"
+          data-active-digit={digit}
+          aria-hidden="true"
+        >
+          <span className={classes.flickGuideDigit}>{digit}</span>
+        </span>
+      )}
     </button>
   );
 }

@@ -87,7 +87,7 @@
  */
 .screen:not(.landscape) .boardArea {
   align-items: flex-end;
-  padding: 0 12px 8px;
+  padding: 0 16px 8px;
 }
 
 /* 高さが足りない端末でも、盤面を縮めてスクロールを発生させない。 */
@@ -114,7 +114,7 @@
  */
 .landscape .boardArea {
   align-items: center;
-  padding: 4px;
+  padding: 8px;
 }
 
 /*

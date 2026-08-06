@@ -85,6 +85,28 @@ test("上へどれだけ滑らせても、必ず入力かメモのどちらか�
   }
 });
 
+test("上フリックでメモを追加すると数字ガイドを表示する", async ({ page, context }) => {
+  const cell = await pinEmptyCell(page);
+  const key = page.getByRole("button", { name: /^1 を入力$/ });
+  const box = await key.boundingBox();
+  expect(box).not.toBeNull();
+  const x = box!.x + box!.width / 2;
+  const y = box!.y + box!.height / 2;
+  const cdp = await context.newCDPSession(page);
+
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x, y: y - 30 }],
+  });
+
+  await expect(page.locator('[data-flick-guide="true"]')).toHaveAttribute("data-active-digit", "1");
+
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(page.locator('[data-flick-guide="true"]')).toHaveCount(0);
+  await expect.poll(() => stateOf(page, cell)).toBe("候補 1");
+});
+
 test("キーの外で離したら何も起きない", async ({ page, context }) => {
   // **指を外へ滑らせて取り消す**のは、ボタンの標準的な振る舞いである。
   const cell = await pinEmptyCell(page);
