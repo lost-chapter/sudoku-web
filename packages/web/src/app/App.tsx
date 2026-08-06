@@ -84,7 +84,13 @@ function Shell({
       fluid={bare}
       px={bare ? 0 : "xs"}
       py={bare ? 0 : "md"}
-      className={screen.name === "game" ? classes.gameFrame : undefined}
+      /*
+        🔴 **PC 版だけに当てる**(2026-08-06)。
+        **スマホ版にも当ててしまい、横向き(568×320)で器が 512px に絞られて
+        盤面が 304 → 274px へ縮んでいた**(実測)。
+        ⚠️ **スマホ版は画面いっぱいを使う。**絞る理由が無い。
+      */
+      className={screen.name === "game" && !phone ? classes.gameFrame : undefined}
     >
       <Stack gap={bare ? 0 : "md"}>
         {/*
