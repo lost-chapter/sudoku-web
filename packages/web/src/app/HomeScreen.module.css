@@ -15,13 +15,15 @@
 /*
  * 塗ったマスの色。
  *
+ * 🔴 **`light-dark()` は使わない。**本番の CSS 圧縮が壊す(理由は app/theme.css)。
+ *
  * 🔴 **暗い側では primary が地に沈む。**実測で**塗ったマスと空マスの差が 2.00**しか無く、
  * **「塗られた数を数えれば段階が分かる」という設計そのものが効かなくなっていた。**
  * ⚠️ **数で伝えるようにしても、その数が読めなければ意味が無い**
  * (メモのスイッチのつまみと同じ形で 2 度目)。
  */
 .screen {
-  --sudoku-color-mark: light-dark(var(--mantine-primary-color-filled), var(--mantine-color-blue-4));
+  --sudoku-color-mark: var(--mantine-primary-color-filled);
 
   display: flex;
   flex-direction: column;
@@ -231,4 +233,8 @@
   .card:active {
     transform: none;
   }
+}
+
+[data-mantine-color-scheme="dark"] .screen {
+  --sudoku-color-mark: var(--mantine-color-blue-4);
 }

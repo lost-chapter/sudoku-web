@@ -94,7 +94,7 @@
    * 実測(2026-08-05): ダークで blue-4 は同じ数字の背景の上で 4.06:1 だったので
    * blue-3 まで上げた(5.11:1)。ライトの blue-9 は同じ条件で 4.67:1。
    */
-  color: light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3));
+  color: var(--mantine-color-blue-9);
 }
 
 /*
@@ -132,12 +132,12 @@
 
 /* 選択中のセルが属する行・列・ブロック。**薄く敷くだけ。** */
 .unit {
-  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  background: var(--mantine-color-gray-1);
 }
 
 /* 選択中のセルと同じ数字。 */
 .sameDigit {
-  background: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  background: var(--mantine-color-gray-3);
 }
 
 /*
@@ -172,4 +172,20 @@
 .cell:focus {
   /* フォーカスは盤面が 1 つで持つ(81 個を Tab で辿らせない)。 */
   outline: none;
+}
+
+/*
+ * 🔴 **暗い側は別のセレクタで上書きする。`light-dark()` は使わない**(2026-08-06)。
+ * **本番の CSS 圧縮が `light-dark()` を壊す**(理由は app/theme.css に書いてある)。
+ */
+[data-mantine-color-scheme="dark"] .entry {
+  color: var(--mantine-color-blue-3);
+}
+
+[data-mantine-color-scheme="dark"] .unit {
+  background: var(--mantine-color-dark-6);
+}
+
+[data-mantine-color-scheme="dark"] .sameDigit {
+  background: var(--mantine-color-dark-4);
 }
