@@ -74,13 +74,8 @@ test("上へどれだけ滑らせても、必ず入力かメモのどちらか�
       .poll(() => stateOf(page, cell), { message: `上へ ${distance}px` })
       .toBe(memo ? "候補 1" : "1");
 
-    // ⚠️ **「消す」は候補を消さない**(確定入力だけを消す仕様)。
-    // **候補はもう一度同じフリックで落とす**(トグル)。
-    if (memo) {
-      await slideUp(distance);
-    } else {
-      await clear.click();
-    }
+    // **「消す」は確定値と候補メモをまとめて消す。**
+    await clear.click();
     await expect.poll(() => stateOf(page, cell)).toBe("空");
   }
 });

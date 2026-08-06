@@ -155,6 +155,30 @@ describe("clearCell", () => {
     expect(valueAt(cleared, EMPTY_INDEX)).toBe(0);
   });
 
+  it("候補メモだけのセルも消す", () => {
+    const noted = [1, 2].reduce(
+      (state, digit) => boardReducer(state, { type: "inputDigit", digit }),
+      boardReducer(initial, { type: "toggleNoteMode" }),
+    );
+    const cleared = boardReducer(noted, { type: "clearCell" });
+
+    expect(valueAt(cleared, EMPTY_INDEX)).toBe(0);
+    expect(notesAt(cleared, EMPTY_INDEX)).toBe(0);
+  });
+
+  it("確定値と候補メモが両方ある状態では両方を消す", () => {
+    const entries = [...initial.entries];
+    entries[EMPTY_INDEX] = 4;
+    const notes = [...initial.notes];
+    notes[EMPTY_INDEX] = maskOfDigit(1);
+    const restored = createBoardState(SAMPLE_PUZZLE, { entries, notes });
+
+    const cleared = boardReducer(restored, { type: "clearCell" });
+
+    expect(cleared.entries[EMPTY_INDEX]).toBe(0);
+    expect(cleared.notes[EMPTY_INDEX]).toBe(0);
+  });
+
   it("手がかりのセルには何も起きない", () => {
     const onGiven = select(initial, GIVEN_INDEX);
     expect(boardReducer(onGiven, { type: "clearCell" })).toBe(onGiven);
