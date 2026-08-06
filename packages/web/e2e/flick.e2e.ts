@@ -85,6 +85,28 @@ test("上へどれだけ滑らせても、必ず入力かメモのどちらか�
   }
 });
 
+test("上フリックでメモを追加すると数字ガイドを表示する", async ({ page, context }) => {
+  const cell = await pinEmptyCell(page);
+  const key = page.getByRole("button", { name: /^1 を入力$/ });
+  const box = await key.boundingBox();
+  expect(box).not.toBeNull();
+  const x = box!.x + box!.width / 2;
+  const y = box!.y + box!.height / 2;
+  const cdp = await context.newCDPSession(page);
+
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x, y: y - 30 }],
+  });
+
+  await expect(page.locator('[data-flick-guide="true"]')).toHaveAttribute("data-active-digit", "1");
+
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(page.locator('[data-flick-guide="true"]')).toHaveCount(0);
+  await expect.poll(() => stateOf(page, cell)).toBe("候補 1");
+});
+
 test("キーの外で離したら何も起きない", async ({ page, context }) => {
   // **指を外へ滑らせて取り消す**のは、ボタンの標準的な振る舞いである。
   const cell = await pinEmptyCell(page);
@@ -101,6 +123,59 @@ test("キーの外で離したら何も起きない", async ({ page, context }) 
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 
   await expect.poll(() => stateOf(page, cell)).toBe("空");
+});
+
+test("盤面からスワイプすると数字ガイドを表示して入力する", async ({ page, context }) => {
+  const cell = await pinEmptyCell(page);
+  const target = page.locator(`[role="gridcell"][aria-label="${cell.label}"]`);
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+
+  // セルの端から触っても、ガイドの基準はタップ位置ではなくセルの中心に固定する。
+  const centerX = box!.x + box!.width / 2;
+  const centerY = box!.y + box!.height / 2;
+  const x = box!.x + box!.width * 0.75;
+  const y = box!.y + box!.height * 0.75;
+  const cdp = await context.newCDPSession(page);
+
+  const map = page.locator('[data-swipe-map="true"]');
+  const guide = page.locator('[data-swipe-guide="true"]');
+
+  // 短いタップではガイドを出さず、タイマーも解除する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await expect(map).toHaveCount(0);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(map).toHaveCount(0);
+
+  // 少し押し続けると、タップしたセルの中心に地図を表示する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  // 開始直後はまだ地図を出さない。
+  await expect(map).toHaveCount(0);
+  await expect(map).toHaveText("123456789");
+  const mapBox = await map.boundingBox();
+  expect(mapBox).not.toBeNull();
+  expect(mapBox!.x + mapBox!.width / 2).toBeCloseTo(centerX, 0);
+  expect(mapBox!.y + mapBox!.height / 2).toBeCloseTo(centerY, 0);
+  await expect(map).toHaveAttribute("data-active-digit", "5");
+  await expect(guide).toHaveAttribute("data-active-digit", "5");
+
+  // 斜め方向へ少し動かしても、角度ではなく地図の中央エリア(5)に留まる。
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: centerX + 14, y: centerY + 14 }],
+  });
+  await expect(map).toHaveAttribute("data-active-digit", "5");
+
+  // 表示された右エリアへ指を移すと、数字ガイドも中央右(6)へ切り替わる。
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: centerX + 32, y: centerY }],
+  });
+  await expect(map).toHaveAttribute("data-active-digit", "6");
+  await expect(guide).toHaveAttribute("data-active-digit", "6");
+
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect.poll(() => stateOf(page, cell)).toBe("6");
 });
 
 test("設定で切ると、上へはじいてもメモにならない", async ({ page, context }) => {

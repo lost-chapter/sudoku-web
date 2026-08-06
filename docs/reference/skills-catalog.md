@@ -1,6 +1,7 @@
 # スキル一覧
 
-このプロジェクトで利用できるスキル(`.claude/skills/` 配下)の一覧。
+このプロジェクトで利用できるスキルの一覧。
+正本は `.claude/skills/` 配下に置き、Codex の探索入口 `.agents/skills` から同じファイルを参照する。
 スキルを追加・改名・削除したときは、この表を必ず更新する。
 命名の規則は [スキル命名規則](../guides/skill-naming-guidelines.md) を参照。
 
@@ -31,9 +32,19 @@ sudoku-web の実態に合わせて書き直した。残る 3 つは sudoku-web 
 **構成を変えたらスキルも書き直す。** 実測値を含むので、放置すると次の担当が
 存在しないコマンドを叩くことになる。
 
+## 配置と同期
+
+スキルの正本は `.claude/skills/<skill-name>/SKILL.md` である。
+`.agents/skills` は `.claude/skills` への相対シンボリックリンクであり、
+Claude Code と Codex が同じスキルを読むための入口になっている。
+**`.agents/skills` に実体を複製しない。** 追加・変更は正本側へ行う。
+
+詳しい確認・復旧手順は [エージェント向けカスタマイズの配置](../guides/agent-customization.md) を参照する。
+
 ## ユーザーのグローバルスキルとの関係
 
-`~/.claude/skills/` にあるスキルはこのプロジェクトでも使える。
+`~/.claude/skills/`(Claude Code) や `~/.agents/skills/`(Codex) にあるグローバルスキルは、
+このプロジェクトでも使える。
 **同じことをするプロジェクトスキルを作らない**(どちらが最新か分からなくなる)。
 
 | グローバルスキル | 関係 |
@@ -45,5 +56,5 @@ sudoku-web の実態に合わせて書き直した。残る 3 つは sudoku-web 
 
 1. [スキル命名規則](../guides/skill-naming-guidelines.md) に従って名前を決める
 2. **グローバルスキルと責務が重複しないか確認する**(上記)
-3. `.claude/skills/<skill-name>/SKILL.md` を作成する
+3. `.claude/skills/<skill-name>/SKILL.md` を作成する(`.agents/skills` へは複製しない)
 4. この一覧表へ 1 行追加する(スキル名・開発領域・目的・配置)

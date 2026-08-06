@@ -96,6 +96,17 @@ lsof -nP -iTCP:5173 -sTCP:LISTEN    # 誰が使っているか確認する
 PORT=5174 pnpm dev                  # ポートを変えて起動する
 ```
 
+iPhoneなど同じLAN上の端末から確認するときは、**LAN向けの起動コマンドを使う。**
+通常の `pnpm dev` は `localhost` 専用のままである。
+
+```bash
+PORT=5181 pnpm dev:lan              # 0.0.0.0 で待ち受ける
+```
+
+MacのIPアドレス(`ipconfig getifaddr en0`、必要なら `en1`)を確認し、端末から
+`http://<MacのIPアドレス>:5181/` を開く。公共Wi‑Fiの端末間通信やmacOSの
+ファイアウォールで接続できない場合があるため、同じ自宅LANやインターネット共有で確認する。
+
 `vite.config.ts` が `PORT` を読む。`.claude/launch.json` は `autoPort` が有効なので、
 Claude Code のプレビューから起動すると空きポートが自動で割り当てられる。
 

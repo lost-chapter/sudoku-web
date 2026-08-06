@@ -15,6 +15,11 @@
   flex-direction: column;
   height: 100svh;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 
   --pad-gap: 8px;
   /* ⚠️ **押せる下限。**`app/layout.ts` の `TOUCH_TARGET` と同じ値である。 */
@@ -31,6 +36,13 @@
    * ⚠️ **下限は 48px。**狭い端末では、盤面のセル 24px を守れる最大がこれである。
    */
   --pad-key-height: clamp(48px, 11svh, 88px);
+}
+
+/* 子要素側の既定スタイルに負けず、画面全体で文字選択を起こさない。 */
+.screen * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .header {
@@ -75,21 +87,13 @@
  */
 .screen:not(.landscape) .boardArea {
   align-items: flex-end;
-  padding: 0 12px 8px;
+  padding: 0 16px 8px;
 }
 
-/*
- * ⚠️ **高さが足りない端末では 1 画面を諦める**(app/layout.ts の
- * MIN_ONE_SCREEN_HEIGHT)。「スクロールしない」と「1 セル 24px 以上」は
- * 両立しないので、**盤面が読めるほうを守る**。
- *
- * **そのときもパッドは下に固定したまま、盤面の領域だけをスクロールさせる。**
- * 全部を一緒に流すと、数字を入れるたびにパッドを探すことになる。
- */
+/* 高さが足りない端末でも、盤面を縮めてスクロールを発生させない。 */
 @media (max-height: 441px) {
   .boardArea {
-    overflow: auto;
-    align-items: flex-start;
+    overflow: hidden;
   }
 }
 
@@ -110,7 +114,7 @@
  */
 .landscape .boardArea {
   align-items: center;
-  padding: 4px;
+  padding: 8px;
 }
 
 /*

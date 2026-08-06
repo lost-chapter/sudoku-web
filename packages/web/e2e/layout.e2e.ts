@@ -12,8 +12,8 @@ import { expect, test, type Page } from "@playwright/test";
  * **あちらは PC 版にも要る**のに、ここに置いたせいで一緒に落ちていた。
  *
  * ⚠️ **実装のしきい値を持ち込まない。**「この端末でどう見えてほしいか」を直接書く。
- * `MIN_ONE_SCREEN_HEIGHT` を読んで条件分岐すると、しきい値を変えたときテストも
- * 一緒に動いてしまい、**壊れても落ちない**。
+ * CSS の高さ条件を読んで条件分岐すると、実装を変えたときテストも一緒に動いてしまい、
+ * **壊れても落ちない**。
  */
 
 /** ページ全体が縦に流れていないか。**モーダルの中のスクロールは見ない。** */
@@ -71,5 +71,20 @@ test.describe("ゲーム画面", () => {
 
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(24);
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);
+  });
+
+  test("盤面の領域も縦スクロールしない", async ({ page }) => {
+    const metrics = await page.getByRole("grid").evaluate((grid) => {
+      const area = grid.parentElement;
+      return {
+        scrollHeight: area?.scrollHeight ?? 0,
+        clientHeight: area?.clientHeight ?? 0,
+        overflowY: area ? getComputedStyle(area).overflowY : "",
+      };
+    });
+
+    expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 1);
+    expect(metrics.overflowY).not.toBe("auto");
+    expect(metrics.overflowY).not.toBe("scroll");
   });
 });
