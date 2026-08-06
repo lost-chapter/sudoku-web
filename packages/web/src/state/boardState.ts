@@ -63,6 +63,7 @@ export type BoardAction =
       readonly asNote?: boolean;
     }
   | { readonly type: "clearCell" }
+  | { readonly type: "clearNotes" }
   | { readonly type: "toggleNoteMode" }
   | { readonly type: "giveUp" };
 
@@ -166,8 +167,16 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
       if (isGiven(state, state.selected)) {
         return state;
       }
-      // **確定入力を消してもメモは戻らない。**
-      return withEntry(state, state.selected, 0);
+      // **確定値と選択中セルのメモをまとめて消す。**
+      return withNotes(withEntry(state, state.selected, 0), state.selected, 0);
+    }
+
+    case "clearNotes": {
+      if (isGiven(state, state.selected)) {
+        return state;
+      }
+      // **確定入力は触らず、選択中セルのメモだけを消す。**
+      return withNotes(state, state.selected, 0);
     }
 
     case "toggleNoteMode": {
@@ -217,6 +226,11 @@ export function isRevealed(state: BoardState, index: CellIndex): boolean {
  */
 export function notesAt(state: BoardState, index: CellIndex): number {
   return valueAt(state, index) === 0 ? state.notes[index] : 0;
+}
+
+/** 盤面の全セルに数字が見えているか。**正誤とは別の判定である。** */
+export function isFilled(state: BoardState): boolean {
+  return state.solution.every((_, index) => valueAt(state, index) !== 0);
 }
 
 /**

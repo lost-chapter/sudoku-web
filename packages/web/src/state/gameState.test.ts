@@ -156,6 +156,21 @@ describe("取り消しとやり直し", () => {
     expect(candidateDigits(notesAt(undone.present, CELL))).toEqual([1, 2]);
   });
 
+  it("セル内クリアで消したメモは取り消しで戻る", () => {
+    const noted = run(
+      initial,
+      { type: "toggleNoteMode" },
+      { type: "inputDigit", digit: 1 },
+      { type: "inputDigit", digit: 2 },
+      { type: "clearNotes" },
+    );
+
+    expect(notesAt(noted.present, CELL)).toBe(0);
+
+    const undone = run(noted, { type: "undo" });
+    expect(candidateDigits(notesAt(undone.present, CELL))).toEqual([1, 2]);
+  });
+
   it("遊びかけから始めたときは前回の手を取り消せない", () => {
     const entries = new Array<number>(81).fill(0);
     entries[CELL] = 4;

@@ -14,6 +14,8 @@ export interface PadProps {
    */
   readonly onDigit: (digit: number, asNote?: boolean) => void;
   readonly onClear: () => void;
+  /** 選択中セルのメモだけを消す。確定入力は変えない。 */
+  readonly onClearNotes: () => void;
   readonly onToggleNoteMode: () => void;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
@@ -23,4 +25,9 @@ export interface PadProps {
   readonly canRedo: boolean;
   /** 手がかりのセルを選んでいるときは押しても何も起きないので、落としておく。 */
   readonly disabled?: boolean;
+  /** メモが無いセル・手がかり・終了後は押しても何も起きないので、落としておく。 */
+  readonly clearNotesDisabled?: boolean;
 }
+
+/** セル内クリアの説明を、PC 版とスマホ版で同じ読み上げにする。 */
+export const CELL_NOTES_CLEAR_DESCRIPTION_ID = "cell-notes-clear-description";

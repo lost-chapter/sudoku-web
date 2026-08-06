@@ -16,7 +16,14 @@ import type { LoadedPuzzle } from "../features/puzzle/loadPuzzle";
 import { recordSolvedResult } from "../features/results/resultsStorage";
 import type { Puzzle } from "@sudoku/core";
 import type { Settings } from "../features/settings/settings";
-import { isGiven, isSolvedByPlayer, type RestoredBoard } from "../state/boardState";
+import {
+  isFilled,
+  isGiven,
+  isSolvedByPlayer,
+  matchesSolution,
+  notesAt,
+  type RestoredBoard,
+} from "../state/boardState";
 import {
   canRedo,
   canUndo,
@@ -73,6 +80,8 @@ export function Game({
   // ⚠️ **あきらめて解が出た状態を「完成」と呼ばない。**
   // 盤面は解と一致するが、解いたのは遊技者ではない。
   const completed = isSolvedByPlayer(state);
+  // **全埋めでも誤答なら盤面を編集できるままにする。**明示だけを出す。
+  const incorrect = isFilled(state) && !state.gaveUp && !matchesSolution(state);
   // ⚠️ **完成もあきらめも「終わった状態」。**どちらでも盤面は動かさない。
   const finished = completed || state.gaveUp;
   const highlights = computeHighlights(state, settings);
@@ -149,22 +158,43 @@ export function Game({
     noteMode: state.noteMode,
     canUndo: canUndo(game),
     canRedo: canRedo(game),
+    clearNotesDisabled:
+      finished || isGiven(state, state.selected) || notesAt(state, state.selected) === 0,
     onDigit: (digit: number, asNote?: boolean) => play({ type: "inputDigit", digit, asNote }),
     onClear: () => play({ type: "clearCell" }),
+    onClearNotes: () => play({ type: "clearNotes" }),
     onToggleNoteMode: () => play({ type: "toggleNoteMode" }),
     onUndo: () => play({ type: "undo" }),
     onRedo: () => play({ type: "redo" }),
   };
 
   const header = (
-    <GameHeader
-      difficulty={puzzle.difficulty}
-      onOpenSettings={onOpenSettings}
-      onGiveUp={() => setConfirmingGiveUp(true)}
-      canGiveUp={!finished}
-      onHome={onHome}
-      compact={layout === "phone-landscape"}
-    />
+    <Stack gap={incorrect || state.gaveUp ? "xs" : 0}>
+      <GameHeader
+        difficulty={puzzle.difficulty}
+        onOpenSettings={onOpenSettings}
+        onGiveUp={() => setConfirmingGiveUp(true)}
+        canGiveUp={!finished}
+        onHome={onHome}
+        compact={layout === "phone-landscape"}
+      />
+      {incorrect && (
+        <Text fw={700} role="status" aria-live="polite">
+          不正解。数字を直してください。
+        </Text>
+      )}
+      {state.gaveUp && (
+        <Stack gap="xs">
+          <Text component="h2" size="lg" fw={700} aria-live="polite">
+            答えを表示しました
+          </Text>
+          <Text size="sm">盤面に正解を表示しています。自分で入れた数字はそのままです。</Text>
+          <Button onClick={onNext} autoFocus>
+            次の問題へ
+          </Button>
+        </Stack>
+      )}
+    </Stack>
   );
 
   const board = (
@@ -218,7 +248,7 @@ export function Game({
         aria-live は中身が入れ替わったときに読まれるので、常に置いておく必要がある。
       */}
       <VisuallyHidden role="status" aria-live="polite">
-        {completed ? "完成しました" : state.gaveUp ? "答えを表示しました" : ""}
+        {completed ? "正解。完成しました" : ""}
       </VisuallyHidden>
 
       {/*
@@ -235,28 +265,10 @@ export function Game({
         closeOnClickOutside={false}
       >
         <Stack gap="md">
+          <Text fw={700} size="lg">
+            正解
+          </Text>
           <Text>すべてのマスが解と一致しました。</Text>
-          <Button onClick={onNext} autoFocus>
-            次の問題へ
-          </Button>
-        </Stack>
-      </Modal>
-
-      {/*
-        あきらめたあと。**完成と同じく、閉じる手段は「次の問題へ」だけ。**
-        ⚠️ 赤や警告の見た目にはしない。**あきらめるのは救済であって失敗ではない。**
-      */}
-      <Modal
-        opened={state.gaveUp}
-        onClose={onNext}
-        title="答えを表示しました"
-        centered
-        withCloseButton={false}
-        closeOnEscape={false}
-        closeOnClickOutside={false}
-      >
-        <Stack gap="md">
-          <Text>盤面に正解が入っています。自分で入れた数字はそのままです。</Text>
           <Button onClick={onNext} autoFocus>
             次の問題へ
           </Button>

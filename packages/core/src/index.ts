@@ -51,7 +51,7 @@ export { countSolutions, findSolutions, hasUniqueSolution, solveBoard } from "./
 export type { Random } from "./random";
 export { createRandom, randomInt, shuffled } from "./random";
 
-export type { GeneratedPuzzle } from "./generate";
+export type { DigHolesOptions, GeneratePuzzleOptions, GeneratedPuzzle } from "./generate";
 export { digHoles, generatePuzzle, generateSolvedBoard } from "./generate";
 
 export type {

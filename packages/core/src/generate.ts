@@ -169,13 +169,25 @@ for (let index = 0; index < CELL_COUNT; index += 1) {
  * ⚠️ **手がかりを減らしても難しくはならない。**
  * 手がかり数と人間の体感難易度の相関は 0.25〜0.27 しかない。
  */
-export function digHoles(solution: Board, random: Random): Board {
+export type DigHolesOptions = {
+  /** 指定した数を下回らないところで穴あけを止める。省略時は極小まで消す。 */
+  readonly minimumClues?: number;
+};
+
+export function digHoles(solution: Board, random: Random, options: DigHolesOptions = {}): Board {
   const puzzle = cloneBoard(solution);
+  const minimumClues = Math.max(0, Math.min(CELL_COUNT, options.minimumClues ?? 0));
+  let clues = CELL_COUNT;
   for (const index of shuffled(random, ALL_CELLS)) {
+    if (clues <= minimumClues) break;
     const digit = puzzle[index];
     if (digit === 0) continue;
     puzzle[index] = 0;
-    if (countSolutions(puzzle, 2) !== 1) puzzle[index] = digit;
+    if (countSolutions(puzzle, 2) !== 1) {
+      puzzle[index] = digit;
+    } else {
+      clues -= 1;
+    }
   }
   return puzzle;
 }
@@ -188,12 +200,17 @@ export type GeneratedPuzzle = {
   readonly solution: Board;
 };
 
+export type GeneratePuzzleOptions = DigHolesOptions;
+
 /**
  * 完成盤を作り、一意解を保ったまま穴をあける。
  *
  * **同じ乱数からは同じ問題ができる**(docs/verification/testing-policy.md の性質 3)。
  */
-export function generatePuzzle(random: Random): GeneratedPuzzle {
+export function generatePuzzle(
+  random: Random,
+  options: GeneratePuzzleOptions = {},
+): GeneratedPuzzle {
   const solution = generateSolvedBoard(random);
-  return { puzzle: digHoles(solution, random), solution };
+  return { puzzle: digHoles(solution, random, options), solution };
 }
