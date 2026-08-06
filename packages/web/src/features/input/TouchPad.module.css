@@ -35,27 +35,30 @@
 
 /*
  * ⚠️ **メモのスイッチだけ広く取る。**等分だと「メモ」の 2 文字が縦に折り返す(実測)。
- * 取り消しとやり直しは記号だけなので、狭くしても読めなくならない。
+ * セル内クリア・取り消し・やり直しは記号だけなので、狭くしても読めなくならない。
  */
 .utility {
   display: grid;
   grid-template-columns:
     minmax(var(--pad-key-min-width), 1.5fr) minmax(var(--pad-key-min-width), 1fr)
+    minmax(var(--pad-key-min-width), 1fr)
     minmax(var(--pad-key-min-width), 1fr);
   gap: var(--pad-gap);
 }
 
 /*
- * 横向きは「消す」もここへ来るので 4 つ。
+ * 横向きは「消す」「セル内クリア」もここへ来るので 5 つ。
  * ⚠️ **等分にしない。**メモのスイッチだけ中身が広く、等分だと**そこが列を押し広げて
  * 隣が 44px を割る**(実測 43.2px)。**先に取り分を決めておく。**
  */
 .utilityLandscape {
   display: grid;
   grid-template-columns:
-    minmax(var(--pad-key-min-width), 1fr) minmax(var(--pad-key-min-width), 1.6fr)
+    minmax(var(--pad-key-min-width), 1fr) minmax(var(--pad-key-min-width), 1fr)
+    minmax(var(--pad-key-min-width), 1.6fr)
     minmax(var(--pad-key-min-width), 1fr) minmax(var(--pad-key-min-width), 1fr);
-  gap: var(--pad-gap);
+  /* 5 個を横一列に保ちつつ、各キーの 44px 下限を守る。 */
+  gap: 4px;
 }
 
 .key {
@@ -128,7 +131,7 @@
   font-size: 0.95rem;
 }
 
-/* 横向きは 4 列に詰めるので、折り返さない大きさまで落とす。 */
+/* 横向きは 5 列に詰めるので、折り返さない大きさまで落とす。 */
 .utilityLandscape .key {
   font-size: 0.8rem;
 }
