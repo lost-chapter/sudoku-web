@@ -57,6 +57,7 @@ Claude Code と Codex の入口の同期方法は [エージェント向けカ�
 - [検証: 問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md) — 1 問 1.56 ms・毎秒 640 問。**手がかり数は 24〜25 に山**
 - [検証: 難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md) — **5 クラスすべてを収録できるようになった**。しきい値は確定
 - [検討: フリック操作](reports/2026-08-06-flick-input-survey.md) —— **4 案のうち 1 案だけ試作した**。盤面は画面の端から 4px しかない
+- [検証: 盤面スワイプ入力](reports/2026-08-06-board-swipe-input.md) —— **セルの近くに 3×3 の数字パレットを出し、指を離して 1 手で入力する**
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
 - [エージェント向けカスタマイズの配置](guides/agent-customization.md) — `AGENTS.md` と Claude Code / Codex のスキル入口
@@ -64,7 +65,7 @@ Claude Code と Codex の入口の同期方法は [エージェント向けカ�
 
 > **工程 0〜6 が完了している**。同梱パックは 5 クラス 5,000 問。
 > **配信は GitHub Pages に決まった**(2026-08-06。当初は「やらない」としていた)。
-> **いまは工程 7(UI の作り込み)と工程 8(リリースの仕組み)を並行して進めている。**
+> **いまは工程 10(画面デザイン)と工程 11(スマホのスワイプ入力)を進めている。**
 
 ## 初めて参加する開発者が読む順序
 
@@ -96,6 +97,7 @@ Claude Code と Codex の入口の同期方法は [エージェント向けカ�
   - [問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md)
   - [難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md)
   - [フリック操作の検討](reports/2026-08-06-flick-input-survey.md)
+  - [盤面スワイプ入力](reports/2026-08-06-board-swipe-input.md)
 
 ## ドキュメントを追加・変更するとき
 
