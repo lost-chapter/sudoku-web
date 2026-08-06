@@ -21,6 +21,7 @@ worktree や別端末で足りないものを揃える手順は `ops-dev-environ
 | コマンド | 中身 |
 |---------|------|
 | `pnpm dev` | 開発サーバ(`@sudoku/web`)。既定は <http://localhost:5173> |
+| `pnpm dev:lan` | **同じ Wi‑Fi のスマートフォンから確認できる開発サーバ**。`0.0.0.0` で待ち受ける |
 | `pnpm build` | 本番ビルド。出力は `packages/web/dist/` |
 | `pnpm test` | 全パッケージのテスト(Vitest) |
 | `pnpm test:e2e` | **ブラウザでのキーボード操作(Playwright)**。開発サーバは自前で立つ。⚠️ **初回だけ `pnpm --filter @sudoku/web exec playwright install chromium` が要る**(196 MB・14 秒) |
@@ -35,6 +36,34 @@ worktree や別端末で足りないものを揃える手順は `ops-dev-environ
 ```bash
 PORT=5174 pnpm dev
 ```
+
+## iPhoneから実機確認する
+
+MacとiPhoneを同じWi‑Fiへ接続し、LAN向けの開発サーバを起動する。
+
+```bash
+PORT=5181 pnpm dev:lan
+```
+
+MacのIPアドレスを確認する。
+
+```bash
+ipconfig getifaddr en0
+```
+
+`en0` で表示されない場合は `en1` を試す。iPhoneのSafariで、次のように開く。
+
+```text
+http://<MacのIPアドレス>:5181/
+```
+
+例: `http://192.168.1.20:5181/`
+
+アクセスできない場合は、macOSのファイアウォールでNode.jsの受信を許可する。
+公共Wi‑Fiでは端末間通信が禁止されている場合があるため、その場合は自宅のWi‑Fiや
+Macのインターネット共有など、端末同士が通信できるネットワークを使う。
+
+通常の `pnpm dev` は `localhost` 専用のままなので、LANへ公開したくないときはこちらを使う。
 
 ## パッケージ構成
 

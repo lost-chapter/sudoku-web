@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm sync:assets && vite",
+    "dev:lan": "pnpm sync:assets && vite --host 0.0.0.0",
     "build": "pnpm sync:assets && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
