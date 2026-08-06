@@ -352,20 +352,20 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      🎯 <b>0.1.0 を公開した。</b>
+      🎯 <b>0.2.0 を公開した。</b>
       <a href="https://lost-chapter.github.io/sudoku-web/">lost-chapter.github.io/sudoku-web</a>
-      で遊べる（本番で 1 問入れて確認済み）。
-      <b>触った発注者から FB が届き、工程 9 に入った</b>——ホーム画面の作り込みと、
-      フリック入力の設定化。<b>上フリックは「残す」で決着した。</b>
+      で遊べる（本番で確認済み）。ホーム画面を作り直し、フリックを設定で切れるようにし、
+      <b>0.1.0 に入っていた「入れた数字が見分けられない」不具合を直した。</b>
+      <b>次に何を作るかは白紙。</b>
     </p>
     <dl class="figures">
       <div class="figure">
         <dt>テスト</dt>
-        <dd>337<small>件</small></dd>
+        <dd>339<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>E2E</dt>
-        <dd>49<small>件</small></dd>
+        <dd>56<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>CI ジョブ</dt>
@@ -381,7 +381,7 @@
       </div>
       <div class="figure">
         <dt>公開中の版</dt>
-        <dd>0.1.0</dd>
+        <dd>0.2.0</dd>
       </div>
     </dl>
   </header>
@@ -428,15 +428,19 @@
         <span class="no">v0.1.0</span><span class="name">公開</span
         ><span class="state">2026-08-06</span>
       </div>
-      <div class="phase active">
+      <div class="phase">
         <span class="no">9</span><span class="name">公開後の FB への対応</span
-        ><span class="state">0 / 2</span>
+        ><span class="state">3 / 3</span>
+      </div>
+      <div class="phase shipped">
+        <span class="no">v0.2.0</span><span class="name">公開</span
+        ><span class="state">2026-08-06</span>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>工程 9 の内訳（いまここ）</h2>
+    <h2>工程 9 の内訳（完了）</h2>
     <p class="lead">
       🎯 ここからは<b>遊んでみて出てくるもの</b>なので、先回りで作らない。
     </p>
@@ -454,20 +458,28 @@
           <tr>
             <td>ホーム画面のレイアウトを作り込む</td>
             <td>agent-c</td>
-            <td><span class="pill work">作業中</span></td>
+            <td><span class="pill done">完了</span></td>
             <td>
-              <b>「レベルが低く見える」の原因を実測で 6 点に特定して渡した。</b>
-              いちばん効いているのは、ボタンの幅が文字数で決まって 3 + 2 に折り返すことと、
-              5 段階に見た目の差が無いこと
+              幅を揃えて縦に積み、<b>3×3 のマスを段階の数だけ塗って順序を形にした</b>。
+              ⚠️ 途中でスクロールの制約が変わり、横向きは 3 列へ畳んだ
             </td>
           </tr>
           <tr>
             <td>フリック入力を設定でオンオフできるようにする</td>
             <td>agent-c</td>
-            <td><span class="pill work">作業中</span></td>
+            <td><span class="pill done">完了</span></td>
             <td>
-              <b>上フリックは「残す」で決着。</b>ただし切れるようにする。
-              ⚠️ 既定は「入」——既定で切ると、入れたものが誰にも届かない
+              既定は「入」。⚠️ <b>切っても指の振り分けは自前のまま残した</b>——
+              <code>click</code> 任せに戻すと tap slop の穴が復活する
+            </td>
+          </tr>
+          <tr>
+            <td>本番の CSS 圧縮が <code>light-dark()</code> を壊していた</td>
+            <td>agent-c</td>
+            <td><span class="pill done">完了</span></td>
+            <td>
+              🔴 <b>0.1.0 に入っていた不具合。</b>開発サーバは圧縮しないので手元では効き、
+              本番だけ壊れる。<b>盤面の数字が 1 色になり、自分がどこに入れたか分からなかった</b>
             </td>
           </tr>
         </tbody>
@@ -720,13 +732,13 @@
     <h2>未解決</h2>
     <div class="issues">
       <div class="issue critical">
-        <span class="who"><span class="pill stop">作業中</span></span>
-        <h3>最初の画面が「レベルが低く見える」</h3>
+        <span class="who"><span class="pill stop">次の一手</span></span>
+        <h3>次に何を作るか決まっていない</h3>
         <p>
-          発注者の FB。<b>原因を実測で 6 点に特定した。</b>いちばん効いているのは
-          <b>難易度ボタンの幅が文字数で決まって 3 + 2 に折り返すこと</b>（94 / 79 / 108 / 66 / 80px）と、
-          <b>5 段階に見た目の差が無いこと</b>。順序のある情報が形に出ていない。
-          画面の 2/3 が空白で、各クラス 1,000 問という持っている情報も出していない。
+          <b>依頼された範囲はすべて出し切った。</b>工程 10 以降は白紙である。
+          手元に残っているのは「あってもいい」に留めた案（数字を押した行と列の強調）と、
+          実機でしか確かめられないものだけ。
+          <b>遊んでみて出てくる要望のほうが確かなので、まず触ってもらう。</b>
         </p>
       </div>
       <div class="issue">

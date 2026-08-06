@@ -133,7 +133,6 @@ export function Game({
   const header = (
     <GameHeader
       difficulty={puzzle.difficulty}
-      packLabel={source?.packPath ?? ""}
       onOpenSettings={onOpenSettings}
       onGiveUp={() => setConfirmingGiveUp(true)}
       canGiveUp={!finished}

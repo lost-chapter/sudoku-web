@@ -26,6 +26,13 @@
   --sudoku-color-mark: var(--mantine-primary-color-filled);
 
   display: flex;
+  /*
+   * 🔴 **画面の高さを使い切る**(2026-08-06)。
+   * **スクロールさせない以上、余りは必ず画面の下に溜まる。**
+   * ⚠️ **実測で下に 300px 空いていた**(375×812)。
+   * **⇒ カードが余りを分け合う。** 32px は器の上下の余白ぶん。
+   */
+  min-height: calc(100svh - 32px);
   flex-direction: column;
   gap: 12px;
 }
@@ -77,6 +84,7 @@
  */
 .list {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 8px;
 }
@@ -86,8 +94,14 @@
   align-items: center;
   gap: 14px;
   width: 100%;
-  /* ⚠️ **押せる下限(44px)を上回る。**主役なので小さくしすぎない。 */
+  /*
+   * ⚠️ **押せる下限(44px)を上回る。**主役なので小さくしすぎない。
+   * **余りがあれば伸びる。**⚠️ **上限を置く** —— 無いと縦長の短冊になる
+   * (入力パッドのキーで実際に見た)。
+   */
+  flex: 1 1 auto;
   min-height: 60px;
+  max-height: 104px;
   padding: 8px 14px;
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
@@ -210,7 +224,9 @@
   }
 
   .card {
+    flex: 0 0 auto;
     min-height: 52px;
+    max-height: none;
     padding: 6px 12px;
   }
 

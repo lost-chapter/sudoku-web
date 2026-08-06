@@ -21,8 +21,6 @@ const ICON_ONLY_PADDING = 14;
  */
 export interface GameHeaderProps {
   readonly difficulty: Difficulty;
-  /** どのパックから取ったか。同梱の 1 問で遊んでいるときは空。 */
-  readonly packLabel: string;
   readonly onOpenSettings: () => void;
   readonly onGiveUp: () => void;
   /** 終わったあとは押せない。 */
@@ -45,7 +43,6 @@ export interface GameHeaderProps {
 
 export function GameHeader({
   difficulty,
-  packLabel,
   onOpenSettings,
   onGiveUp,
   canGiveUp,
@@ -78,12 +75,6 @@ export function GameHeader({
         )}
         {!compact && <Text fw={500}>{DIFFICULTY_LABELS[difficulty]}</Text>}
       </Group>
-
-      {!onHome && (
-        <Text size="xs" c="dimmed" truncate>
-          {packLabel}
-        </Text>
-      )}
 
       <Group gap="xs" wrap="nowrap">
         {/*

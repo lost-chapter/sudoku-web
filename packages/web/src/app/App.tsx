@@ -4,6 +4,8 @@ import { Container, MantineProvider, Stack, Title, type MantineThemeOverride } f
 import type { Difficulty } from "@sudoku/core";
 
 import { GameScreen } from "./GameScreen";
+
+import classes from "./App.module.css";
 import { HomeScreen } from "./HomeScreen";
 import { useLayout } from "./layout";
 
@@ -72,7 +74,24 @@ function Shell({
   const bare = screen.name === "game" && phone;
 
   return (
-    <Container size="sm" fluid={bare} px={bare ? 0 : "xs"} py={bare ? 0 : "md"}>
+    /*
+      🔴 **ゲーム画面では器を盤面の幅へ絞る**(2026-08-06)。
+      **表題とホームへの導線が器の幅(720px)、盤面とパッドが 32rem** だったので、
+      **左端が 2 本になっていた**(290 と 384。実測)。
+    */
+    <Container
+      size="sm"
+      fluid={bare}
+      px={bare ? 0 : "xs"}
+      py={bare ? 0 : "md"}
+      /*
+        🔴 **PC 版だけに当てる**(2026-08-06)。
+        **スマホ版にも当ててしまい、横向き(568×320)で器が 512px に絞られて
+        盤面が 304 → 274px へ縮んでいた**(実測)。
+        ⚠️ **スマホ版は画面いっぱいを使う。**絞る理由が無い。
+      */
+      className={screen.name === "game" && !phone ? classes.gameFrame : undefined}
+    >
       <Stack gap={bare ? 0 : "md"}>
         {/*
           ⚠️ **タイトルは「描かない」で消す。**囲みごと外すと下の画面の位置が動く。
