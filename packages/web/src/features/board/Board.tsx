@@ -1,3 +1,4 @@
+import { useImperativeHandle, useRef, useState, type PointerEvent } from "react";
 import { BOARD_SIZE, CELL_COUNT, candidateDigits, maskOfDigit } from "@sudoku/core";
 
 import {
@@ -31,6 +32,8 @@ export interface BoardProps {
   readonly state: BoardState;
   readonly highlights: BoardHighlights;
   readonly onSelect: (index: CellIndex) => void;
+  /** スマホでセルからスワイプ入力する。デスクトップでは渡さない。 */
+  readonly onSwipeDigit?: (index: CellIndex, digit: number) => void;
   /** 盤面自身がキーを拾う。ホットキーの登録は呼び出し側にまとめてある。 */
   readonly boardRef?: React.Ref<HTMLDivElement>;
 }
@@ -39,15 +42,170 @@ const CELL_INDEXES = Array.from({ length: CELL_COUNT }, (_, index) => index);
 
 const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, row * 9 + 9));
 
-export function Board({ state, highlights, onSelect, boardRef }: BoardProps) {
+/** iPhone のキーガイド相当の吹き出し幅は約 64px。盤面の外へはみ出さないよう少し余裕を取る。 */
+const GUIDE_HALF_SIZE = 32;
+/** iPhone のキーガイドに近づけるため、タップ直後ではなく少し押してから表示する。 */
+const SWIPE_GUIDE_DELAY = 180;
+/** 指を開始位置からこの距離以上動かしたら、タップではなくエリア選択とみなす。 */
+const SWIPE_MOVE_DISTANCE = 8;
+/** 3×3 エリアガイドの 1 エリアの一辺。判定領域と表示を同じ寸法にする。 */
+const MAP_AREA_SIZE = 48;
+/** 3×3 エリアガイドの内側の余白。 */
+const MAP_PADDING = 6;
+/** 開始位置を中心に表示するエリアガイドの半分の幅。 */
+const MAP_HALF_SIZE = MAP_PADDING + (MAP_AREA_SIZE * 3) / 2;
+const MAP_INNER_SIZE = MAP_AREA_SIZE * 3;
+
+interface ActiveSwipe {
+  readonly originX: number;
+  readonly originY: number;
+  x: number;
+  y: number;
+  digit: number | null;
+  below: boolean;
+}
+
+interface SwipeGesture extends ActiveSwipe {
+  readonly index: CellIndex;
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startY: number;
+  guideVisible: boolean;
+  moved: boolean;
+}
+
+export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: BoardProps) {
+  const boardNode = useRef<HTMLDivElement>(null);
+  const gesture = useRef<SwipeGesture | null>(null);
+  const guideTimer = useRef<number | null>(null);
+  const [activeSwipe, setActiveSwipe] = useState<ActiveSwipe | null>(null);
+
+  useImperativeHandle(boardRef, () => boardNode.current as HTMLDivElement, []);
+
+  const clearGuideTimer = () => {
+    if (guideTimer.current !== null) {
+      window.clearTimeout(guideTimer.current);
+      guideTimer.current = null;
+    }
+  };
+
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>, index: CellIndex) => {
+    onSelect(index);
+    if (event.pointerType !== "touch" || !onSwipeDigit || isGiven(state, index)) {
+      return;
+    }
+
+    const board = boardNode.current;
+    if (!board) {
+      return;
+    }
+
+    const box = board.getBoundingClientRect();
+    const boardLeft = box.left + board.clientLeft;
+    const boardTop = box.top + board.clientTop;
+    const boardWidth = board.clientWidth;
+    const cellBox = event.currentTarget.getBoundingClientRect();
+    const localX = event.clientX - boardLeft;
+    const localY = event.clientY - boardTop;
+    const nextGesture: SwipeGesture = {
+      index,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      // 指の位置ではなく、タップしたセルの中心を常に中央エリア(5)の基準にする。
+      originX: cellBox.left + cellBox.width / 2 - boardLeft,
+      originY: cellBox.top + cellBox.height / 2 - boardTop,
+      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), boardWidth - GUIDE_HALF_SIZE),
+      y: localY,
+      // 開始時は中央エリア(5)を選択状態にする。純粋なタップでは確定しない。
+      digit: 5,
+      below: localY < 120,
+      guideVisible: false,
+      moved: false,
+    };
+    clearGuideTimer();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gesture.current = nextGesture;
+    guideTimer.current = window.setTimeout(() => {
+      const current = gesture.current;
+      if (!current || current.pointerId !== event.pointerId) {
+        return;
+      }
+      current.guideVisible = true;
+      guideTimer.current = null;
+      setActiveSwipe({ ...current });
+    }, SWIPE_GUIDE_DELAY);
+    event.preventDefault();
+  };
+
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const board = boardNode.current;
+    if (!board) {
+      return;
+    }
+
+    const box = board.getBoundingClientRect();
+    const localX = event.clientX - box.left - board.clientLeft;
+    const localY = event.clientY - box.top - board.clientTop;
+    current.moved ||=
+      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >=
+      SWIPE_MOVE_DISTANCE;
+    // 方向ベクトルではなく、開始時に表示した 3×3 エリアそのものに対して判定する。
+    current.digit = digitAtPoint(localX, localY, current.originX, current.originY);
+    current.x = Math.min(Math.max(localX, GUIDE_HALF_SIZE), board.clientWidth - GUIDE_HALF_SIZE);
+    current.y = localY;
+    // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
+    current.below = localY < 120;
+    if (current.guideVisible) {
+      setActiveSwipe({ ...current });
+    }
+    // phone layout の touch-action:none と合わせて、OS のスクロールを確実に止める。
+    event.preventDefault();
+  };
+
+  const finishPointer = (event: PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
+
+    clearGuideTimer();
+    if (current.moved && current.digit !== null) {
+      onSwipeDigit?.(current.index, current.digit);
+    }
+    event.preventDefault();
+    gesture.current = null;
+    setActiveSwipe(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const cancelPointer = (event: PointerEvent<HTMLDivElement>) => {
+    if (gesture.current?.pointerId !== event.pointerId) {
+      return;
+    }
+    clearGuideTimer();
+    gesture.current = null;
+    setActiveSwipe(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   return (
     <div
-      ref={boardRef}
+      ref={boardNode}
       role="grid"
       aria-label="数独の盤面"
       aria-activedescendant={cellId(state.selected)}
       tabIndex={0}
-      className={classes.board}
+      className={[classes.board, onSwipeDigit ? classes.swipeable : ""].filter(Boolean).join(" ")}
     >
       {ROWS.map((indexes, row) => (
         <div key={row} role="row" className={classes.row}>
@@ -58,11 +216,20 @@ export function Board({ state, highlights, onSelect, boardRef }: BoardProps) {
               state={state}
               highlights={highlights}
               selected={index === state.selected}
-              onSelect={onSelect}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={finishPointer}
+              onPointerCancel={cancelPointer}
             />
           ))}
         </div>
       ))}
+      {activeSwipe && (
+        <>
+          <SwipeAreaMap {...activeSwipe} />
+          <SwipeGuide {...activeSwipe} />
+        </>
+      )}
     </div>
   );
 }
@@ -72,10 +239,22 @@ interface CellProps {
   readonly state: BoardState;
   readonly highlights: BoardHighlights;
   readonly selected: boolean;
-  readonly onSelect: (index: CellIndex) => void;
+  readonly onPointerDown: (event: PointerEvent<HTMLDivElement>, index: CellIndex) => void;
+  readonly onPointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  readonly onPointerUp: (event: PointerEvent<HTMLDivElement>) => void;
+  readonly onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void;
 }
 
-function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
+function Cell({
+  index,
+  state,
+  highlights,
+  selected,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+}: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
   const notes = notesAt(state, index);
@@ -99,12 +278,75 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
       aria-readonly={given || undefined}
       aria-label={cellLabel(index, value, given, notes, revealed)}
       className={className}
-      onPointerDown={() => onSelect(index)}
+      onPointerDown={(event) => onPointerDown(event, index)}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {value !== 0 && value}
       {value === 0 && notes !== 0 && <Notes mask={notes} />}
     </div>
   );
+}
+
+function SwipeGuide({ x, y, digit, below }: ActiveSwipe) {
+  if (digit === null) {
+    return null;
+  }
+
+  return (
+    <div
+      className={[classes.swipeGuide, below ? classes.swipeGuideBelow : ""]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ left: x, top: y }}
+      data-swipe-guide="true"
+      data-active-digit={digit}
+      aria-hidden="true"
+    >
+      <span className={classes.swipeGuideDigit}>{digit}</span>
+    </div>
+  );
+}
+
+function SwipeAreaMap({ originX, originY, digit }: ActiveSwipe) {
+  return (
+    <div
+      className={classes.swipeAreaMap}
+      style={{ left: originX, top: originY }}
+      data-swipe-map="true"
+      data-active-digit={digit ?? ""}
+      aria-hidden="true"
+    >
+      {DIGITS.map((candidate) => (
+        <span
+          key={candidate}
+          className={candidate === digit ? classes.swipeAreaActive : classes.swipeAreaDigit}
+        >
+          {candidate}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function digitAtPoint(x: number, y: number, originX: number, originY: number): number | null {
+  const left = originX - MAP_HALF_SIZE + MAP_PADDING;
+  const top = originY - MAP_HALF_SIZE + MAP_PADDING;
+  const relativeX = x - left;
+  const relativeY = y - top;
+  if (
+    relativeX < 0 ||
+    relativeX >= MAP_INNER_SIZE ||
+    relativeY < 0 ||
+    relativeY >= MAP_INNER_SIZE
+  ) {
+    return null;
+  }
+
+  const column = Math.min(2, Math.floor(relativeX / MAP_AREA_SIZE));
+  const row = Math.min(2, Math.floor(relativeY / MAP_AREA_SIZE));
+  return row * 3 + column + 1;
 }
 
 /**

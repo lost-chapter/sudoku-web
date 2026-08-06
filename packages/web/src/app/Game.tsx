@@ -146,6 +146,15 @@ export function Game({
       state={state}
       highlights={highlights}
       onSelect={(index) => play({ type: "selectCell", index })}
+      onSwipeDigit={
+        layout === "desktop" || finished
+          ? undefined
+          : (index, digit) => {
+              // セル選択と入力を同じポインター操作に積む。reducer は順番どおり処理する。
+              play({ type: "selectCell", index });
+              play({ type: "inputDigit", digit });
+            }
+      }
     />
   );
 

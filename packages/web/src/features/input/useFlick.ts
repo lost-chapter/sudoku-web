@@ -34,6 +34,7 @@ const FLICK_DISTANCE = 24;
 
 export interface FlickHandlers {
   readonly onTouchStart: (event: TouchEvent<HTMLElement>) => void;
+  readonly onTouchMove: (event: TouchEvent<HTMLElement>) => void;
   readonly onTouchEnd: (event: TouchEvent<HTMLElement>) => void;
   readonly onTouchCancel: () => void;
 }
@@ -41,6 +42,10 @@ export interface FlickHandlers {
 export interface TouchInput {
   /** 上へはじかれた。 */
   readonly onFlickUp: () => void;
+  /** 上フリックのガイドを表示し始める。 */
+  readonly onFlickStart?: () => void;
+  /** 上フリックが終わり、ガイドを隠す。 */
+  readonly onFlickEnd?: () => void;
   /** そのまま離した(キーの中で)。 */
   readonly onTap: () => void;
   /**
@@ -56,22 +61,49 @@ export interface TouchInput {
 
 export function useTouchInput({
   onFlickUp,
+  onFlickStart,
+  onFlickEnd,
   onTap,
   flickEnabled = true,
 }: TouchInput): FlickHandlers {
   const start = useRef<{ x: number; y: number } | null>(null);
+  const flicking = useRef(false);
 
   return {
     onTouchStart: (event) => {
       const touch = event.touches[0];
       start.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+      flicking.current = false;
+    },
+    onTouchMove: (event) => {
+      const from = start.current;
+      const touch = event.touches[0];
+      if (!from || !touch || flicking.current) {
+        return;
+      }
+
+      const up = from.y - touch.clientY;
+      const sideways = Math.abs(touch.clientX - from.x);
+      if (flickEnabled && up >= FLICK_DISTANCE && up > sideways) {
+        flicking.current = true;
+        onFlickStart?.();
+      }
     },
     onTouchCancel: () => {
       start.current = null;
+      if (flicking.current) {
+        flicking.current = false;
+        onFlickEnd?.();
+      }
     },
     onTouchEnd: (event) => {
       const from = start.current;
       start.current = null;
+      const wasFlicking = flicking.current;
+      flicking.current = false;
+      if (wasFlicking) {
+        onFlickEnd?.();
+      }
       const touch = event.changedTouches[0];
       if (!from || !touch) {
         return;

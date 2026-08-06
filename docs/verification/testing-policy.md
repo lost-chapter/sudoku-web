@@ -160,7 +160,7 @@ pnpm docs:lint > /dev/null; echo "docs:lint=$?"
 
 ### 実例 3: 実装のしきい値を検査へ持ち込まない
 
-**「スクロールしない」の E2E に、実装のしきい値(442)を書かない**
+**「スクロールしない」の E2E に、実装のしきい値を書かない**
 ([ADR 0005](../decisions/0005-mobile-dedicated-layout.md))。
 
 ```js

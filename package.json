@@ -1,6 +1,6 @@
 {
   "name": "sudoku-web",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.18.0",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @sudoku/web dev",
+    "dev:lan": "pnpm --filter @sudoku/web dev:lan",
     "build": "pnpm --filter @sudoku/web build",
     "build:pages": "BASE_PATH=/sudoku-web/ pnpm --filter @sudoku/web build",
     "preview:subpath": "node tools/subpath-preview/serve.mjs",

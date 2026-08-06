@@ -77,8 +77,11 @@
 | 置き場所 | 中身 |
 |---------|------|
 | `state/boardState.ts` | `inputDigit` に `asNote?: boolean` を足した。**その 1 回だけメモにする。モードは動かさない** |
-| `features/input/useFlick.ts` | 上フリックの判定(**新規・60 行**) |
-| `features/input/TouchPad.tsx` | 数字キーを `DigitKey` に切り出し(`map` の中では hook を呼べないため) |
+| `features/input/useFlick.ts` | 上フリックの判定と、判定中のガイド表示タイミング |
+| `features/input/TouchPad.tsx` | 数字キーを `DigitKey` に切り出し(`map` の中では hook を呼べないため)、キー上の数字ガイドを表示 |
+
+上へ 24px 以上動いた時点でキー上の iPhone 風ガイドを表示し、指を離すと同じ数字を候補として追加する。
+通常のタップではガイドを表示せず、確定入力のままにする。
 
 ### 決めた閾値と、その理由
 
