@@ -13,7 +13,7 @@
    *
    * 実測(2026-08-05): ライト 8.18:1 / ダーク 7.48:1。
    */
-  --mantine-color-dimmed: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+  --mantine-color-dimmed: var(--mantine-color-gray-7);
 
   /*
    * あきらめたときに出す解の色。**遊技者が自分で入れた正解と見分けが付くこと。**
@@ -28,5 +28,26 @@
    * 実測(2026-08-06・幅 375px): 地 7.35 / 6.54、同じ数字の強調の上 6.28 / 4.84、
    * 選択の上 6.62 / 6.30(ライト / ダーク)。
    */
-  --sudoku-color-revealed: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+  --sudoku-color-revealed: var(--mantine-color-gray-7);
+}
+
+/*
+ * 🔴 **暗い側は別のセレクタで上書きする。`light-dark()` は使わない**(2026-08-06)。
+ *
+ * **Vite の CSS 圧縮(Lightning CSS)が `light-dark()` を独自の変数へ書き換え、
+ * その変数の定義を出力しないため、本番だけ色が透明へ落ちる。**
+ *
+ * ```
+ * light-dark(var(--a), var(--b))
+ * → var(--lightningcss-light, var(--a)) var(--lightningcss-dark, var(--b))   ← 定義が無い
+ * ```
+ *
+ * ⚠️ **開発サーバは圧縮しないので効いてしまい、本番だけ壊れる。**
+ * **2026-08-06 に、ホーム画面の印が 1 マスも塗られない形で管理役が見つけた。**
+ * ⚠️ **同時に、ここの 2 つと盤面の 3 か所も壊れていた** ——
+ * **つまりコントラストの手当てが本番では効いていなかった。**
+ */
+[data-mantine-color-scheme="dark"] {
+  --mantine-color-dimmed: var(--mantine-color-gray-5);
+  --sudoku-color-revealed: var(--mantine-color-gray-5);
 }
