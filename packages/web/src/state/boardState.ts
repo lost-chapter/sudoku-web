@@ -167,8 +167,8 @@ export function boardReducer(state: BoardState, action: BoardAction): BoardState
       if (isGiven(state, state.selected)) {
         return state;
       }
-      // **確定入力を消してもメモは戻らない。**
-      return withEntry(state, state.selected, 0);
+      // **確定値と選択中セルのメモをまとめて消す。**
+      return withNotes(withEntry(state, state.selected, 0), state.selected, 0);
     }
 
     case "clearNotes": {
