@@ -352,11 +352,11 @@
       <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      🎯 <b>0.2.0 を公開した。</b>
+      🎯 <b>0.3.0 を公開した。</b>
       <a href="https://lost-chapter.github.io/sudoku-web/">lost-chapter.github.io/sudoku-web</a>
-      で遊べる（本番で確認済み）。ホーム画面を作り直し、フリックを設定で切れるようにし、
-      <b>0.1.0 に入っていた「入れた数字が見分けられない」不具合を直した。</b>
-      <b>次に何を作るかは白紙。</b>
+      で遊べる（本番で確認済み）。<b>両画面の詰めを直した</b>——盤面の上の空き、
+      画面端との距離、PC の軸。
+      ⚠️ <b>工程 10 は「完了」にしていない</b>——ブラッシュアップは発注者が見て決めるもの。
     </p>
     <dl class="figures">
       <div class="figure">
@@ -381,7 +381,7 @@
       </div>
       <div class="figure">
         <dt>公開中の版</dt>
-        <dd>0.2.0</dd>
+        <dd>0.3.0</dd>
       </div>
     </dl>
   </header>
@@ -436,7 +436,68 @@
         <span class="no">v0.2.0</span><span class="name">公開</span
         ><span class="state">2026-08-06</span>
       </div>
+      <div class="phase active">
+        <span class="no">10</span><span class="name">画面デザインの作り込み</span
+        ><span class="state">開いたまま</span>
+      </div>
+      <div class="phase shipped">
+        <span class="no">v0.3.0</span><span class="name">公開</span
+        ><span class="state">2026-08-06</span>
+      </div>
     </div>
+  </section>
+
+  <section>
+    <h2>工程 10 の内訳（いまここ）</h2>
+    <p class="lead">
+      ⚠️ <b>「完了」にしていない。</b>ブラッシュアップは、こちらが下限を満たしたかどうかで
+      終わるものではない。<b>発注者が見て足りると言うまで開いたままにする。</b>
+      下は 0.3.0 の時点で解消したもの（すべて本番ビルドで実測）。
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>何</th>
+            <th>前</th>
+            <th>後</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>パッドの列が中身に押されうる</td>
+            <td>—</td>
+            <td>最小値を押せる下限（44px）にした</td>
+          </tr>
+          <tr>
+            <td>内部のファイル名が出ている（PC）</td>
+            <td><code>packs/hard-000.txt</code></td>
+            <td><b>0 件</b></td>
+          </tr>
+          <tr>
+            <td>盤面の上の空き（スマホ縦）</td>
+            <td>213px</td>
+            <td><b>110px</b>（キーの高さを画面の高さから決めて吸わせた）</td>
+          </tr>
+          <tr>
+            <td>盤面と画面端の距離</td>
+            <td>4px</td>
+            <td>
+              <b>12px</b>（縦）。⚠️ 横向きは 4px のまま——<b>盤面の取り分がいちばん厳しい</b>
+            </td>
+          </tr>
+          <tr>
+            <td>PC の軸</td>
+            <td>2 本（290 / 384）</td>
+            <td><b>1 本（394）</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead">
+      🔴 <b>1 つ目は管理役の誤診だった。</b>変更前から比のとおりで、中身では決まっていなかった。
+      <b>「3 種類ある」という観察から原因を推測して、確かめずに渡していた。</b>
+    </p>
   </section>
 
   <section>
