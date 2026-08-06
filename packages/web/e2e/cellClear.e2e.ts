@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
 });
 
-test("セル内クリアはメモだけを消し、確定数字を消さない", async ({ page }) => {
+test("消すは確定値とメモを消し、セル内クリアはメモだけを消す", async ({ page }) => {
   const initialCell = page.locator('[role="gridcell"][aria-label$="、空"]').first();
   const cellId = await initialCell.getAttribute("id");
   expect(cellId).not.toBeNull();
@@ -24,10 +24,14 @@ test("セル内クリアはメモだけを消し、確定数字を消さない",
   await expect(cell).toHaveAttribute("aria-label", /、候補 1$/);
   await expect(clearNotes).toBeEnabled();
 
-  // 「消す」は確定数字専用なので、メモは残る。
+  // 「消す」は確定値と候補メモをまとめて消す。
   await page.getByRole("button", { name: "消す" }).click();
-  await expect(cell).toHaveAttribute("aria-label", /、候補 1$/);
+  await expect(cell).toHaveAttribute("aria-label", /、空$/);
+  await expect(clearNotes).toBeDisabled();
 
+  // セル内クリアは、メモだけを消す別操作として機能する。
+  await page.getByRole("button", { name: "1 をメモする" }).click();
+  await expect(cell).toHaveAttribute("aria-label", /、候補 1$/);
   await clearNotes.click();
   await expect(cell).toHaveAttribute("aria-label", /、空$/);
   await expect(clearNotes).toBeDisabled();
@@ -36,6 +40,8 @@ test("セル内クリアはメモだけを消し、確定数字を消さない",
   await page.getByRole("button", { name: "1 を入力" }).click();
   await expect(cell).toHaveAttribute("aria-label", /、1$/);
   await expect(clearNotes).toBeDisabled();
+  await page.getByRole("button", { name: "消す" }).click();
+  await expect(cell).toHaveAttribute("aria-label", /、空$/);
 });
 
 test("手がかりセルではセル内クリアを押せない", async ({ page }) => {

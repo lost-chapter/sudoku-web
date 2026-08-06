@@ -74,13 +74,8 @@ test("上へどれだけ滑らせても、必ず入力かメモのどちらか�
       .poll(() => stateOf(page, cell), { message: `上へ ${distance}px` })
       .toBe(memo ? "候補 1" : "1");
 
-    // ⚠️ **「消す」は候補を消さない**(確定入力だけを消す仕様)。
-    // **候補はもう一度同じフリックで落とす**(トグル)。
-    if (memo) {
-      await slideUp(distance);
-    } else {
-      await clear.click();
-    }
+    // **「消す」は確定値と候補メモをまとめて消す。**
+    await clear.click();
     await expect.poll(() => stateOf(page, cell)).toBe("空");
   }
 });
@@ -146,6 +141,7 @@ test("盤面からスワイプすると数字ガイドを表示して入力す�
   await expect(map).toHaveCount(0);
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect(map).toHaveCount(0);
+  await expect.poll(() => stateOf(page, cell)).toBe("空");
 
   // 少し押し続けると、タップしたセルの中心に地図を表示する。
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
@@ -158,6 +154,17 @@ test("盤面からスワイプすると数字ガイドを表示して入力す�
   expect(mapBox!.y + mapBox!.height / 2).toBeCloseTo(centerY, 0);
   await expect(map).toHaveAttribute("data-active-digit", "5");
   await expect(guide).toHaveAttribute("data-active-digit", "5");
+
+  // セルフリック入力モード中にその場で離すと、中央エリアの 5 を入力する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(map).toHaveCount(0);
+  await expect.poll(() => stateOf(page, cell)).toBe("5");
+  await page.getByRole("button", { name: "消す" }).click();
+  await expect.poll(() => stateOf(page, cell)).toBe("空");
+
+  // もう一度セルフリック入力モードへ入り、エリア移動後の確定も確認する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await expect(map).toHaveAttribute("data-active-digit", "5");
 
   // 斜め方向へ少し動かしても、角度ではなく地図の中央エリア(5)に留まる。
   await cdp.send("Input.dispatchTouchEvent", {

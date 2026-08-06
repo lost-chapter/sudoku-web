@@ -46,8 +46,6 @@ const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, r
 const GUIDE_HALF_SIZE = 32;
 /** iPhone のキーガイドに近づけるため、タップ直後ではなく少し押してから表示する。 */
 const SWIPE_GUIDE_DELAY = 180;
-/** 指を開始位置からこの距離以上動かしたら、タップではなくエリア選択とみなす。 */
-const SWIPE_MOVE_DISTANCE = 8;
 /** 3×3 エリアガイドの 1 エリアの一辺。判定領域と表示を同じ寸法にする。 */
 const MAP_AREA_SIZE = 48;
 /** 3×3 エリアガイドの内側の余白。 */
@@ -71,7 +69,6 @@ interface SwipeGesture extends ActiveSwipe {
   readonly startX: number;
   readonly startY: number;
   guideVisible: boolean;
-  moved: boolean;
 }
 
 export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: BoardProps) {
@@ -121,7 +118,6 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       digit: 5,
       below: localY < 120,
       guideVisible: false,
-      moved: false,
     };
     clearGuideTimer();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -152,9 +148,6 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     const box = board.getBoundingClientRect();
     const localX = event.clientX - box.left - board.clientLeft;
     const localY = event.clientY - box.top - board.clientTop;
-    current.moved ||=
-      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >=
-      SWIPE_MOVE_DISTANCE;
     // 方向ベクトルではなく、開始時に表示した 3×3 エリアそのものに対して判定する。
     current.digit = digitAtPoint(localX, localY, current.originX, current.originY);
     current.x = Math.min(Math.max(localX, GUIDE_HALF_SIZE), board.clientWidth - GUIDE_HALF_SIZE);
@@ -175,7 +168,9 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     }
 
     clearGuideTimer();
-    if (current.moved && current.digit !== null) {
+    // セルフリック入力モードへ入ったあと、その場で離せば中央の 5 を確定する。
+    // モードに入る前の短いタップでは何も入力しない。
+    if (current.guideVisible && current.digit !== null) {
       onSwipeDigit?.(current.index, current.digit);
     }
     event.preventDefault();
