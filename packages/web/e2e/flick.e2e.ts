@@ -114,14 +114,27 @@ test("盤面からスワイプすると数字ガイドを表示して入力す�
   const cdp = await context.newCDPSession(page);
 
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  const map = page.locator('[data-swipe-map="true"]');
+  const guide = page.locator('[data-swipe-guide="true"]');
+  // タップ開始直後から地図を表示し、中央エリア(5)を選択状態にする。
+  await expect(map).toHaveText("123456789");
+  await expect(map).toHaveAttribute("data-active-digit", "5");
+  await expect(guide).toHaveAttribute("data-active-digit", "5");
+
+  // 斜め方向へ少し動かしても、角度ではなく地図の中央エリア(5)に留まる。
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: x + 14, y: y + 14 }],
+  });
+  await expect(map).toHaveAttribute("data-active-digit", "5");
+
+  // 表示された右エリアへ指を移すと、数字ガイドも中央右(6)へ切り替わる。
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchMove",
     touchPoints: [{ x: x + 32, y }],
   });
-
-  // 右へ滑らせたので、数字ガイドには中央右(6)が表示される。
-  await expect(page.locator('[data-swipe-map="true"]')).toHaveText("123456789");
-  await expect(page.locator('[data-swipe-guide="true"]')).toHaveAttribute("data-active-digit", "6");
+  await expect(map).toHaveAttribute("data-active-digit", "6");
+  await expect(guide).toHaveAttribute("data-active-digit", "6");
 
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect.poll(() => stateOf(page, cell)).toBe("6");

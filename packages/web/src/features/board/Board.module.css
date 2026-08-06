@@ -114,37 +114,42 @@
   line-height: 1;
 }
 
-/* スワイプの方向と数字の対応を示す小さな地図。開始セルを中心に固定する。 */
-.swipeDirectionMap {
+/* スワイプの選択エリアと数字の対応を示す地図。開始位置を中心に固定する。 */
+.swipeAreaMap {
   position: absolute;
+  box-sizing: border-box;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(3, 28px);
-  gap: 2px;
+  grid-template-columns: repeat(3, 32px);
+  width: 108px;
+  height: 108px;
   padding: 6px;
-  border: 1px solid var(--mantine-color-default-border);
   border-radius: 14px;
   background: var(--mantine-color-body);
-  box-shadow: var(--mantine-shadow-sm);
+  box-shadow:
+    0 0 0 1px var(--mantine-color-default-border),
+    var(--mantine-shadow-sm);
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
 
-.swipeDirectionDigit,
-.swipeDirectionActive {
+.swipeAreaDigit,
+.swipeAreaActive {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
+  border: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
   color: var(--mantine-color-text);
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.swipeDirectionActive {
+.swipeAreaActive {
   background: var(--mantine-primary-color-filled);
   color: var(--mantine-color-white);
 }

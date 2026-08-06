@@ -42,31 +42,33 @@ const CELL_INDEXES = Array.from({ length: CELL_COUNT }, (_, index) => index);
 
 const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, row * 9 + 9));
 
-/** 指がセルから出たと判断する距離。キーのフリックと同じく 24px を使う。 */
-const SWIPE_DISTANCE = 24;
-/** スワイプの方向ごとに数字を切り替える距離。 */
-const SWIPE_DIRECTION_DISTANCE = 12;
 /** iPhone のキーガイド相当の吹き出し幅は約 64px。盤面の外へはみ出さないよう少し余裕を取る。 */
 const GUIDE_HALF_SIZE = 32;
-/** 開始セルを中心に表示する方向ガイドの横幅は約 104px。 */
-const MAP_HALF_SIZE = 52;
-
-interface SwipeGesture {
-  readonly index: CellIndex;
-  readonly pointerId: number;
-  readonly startX: number;
-  readonly startY: number;
-  swiping: boolean;
-  digit: number | null;
-}
+/** 指を開始位置からこの距離以上動かしたら、タップではなくエリア選択とみなす。 */
+const SWIPE_MOVE_DISTANCE = 8;
+/** 3×3 エリアガイドの 1 エリアの一辺。判定領域と表示を同じ寸法にする。 */
+const MAP_AREA_SIZE = 32;
+/** 3×3 エリアガイドの内側の余白。 */
+const MAP_PADDING = 6;
+/** 開始位置を中心に表示するエリアガイドの半分の幅。 */
+const MAP_HALF_SIZE = MAP_PADDING + (MAP_AREA_SIZE * 3) / 2;
+const MAP_INNER_SIZE = MAP_AREA_SIZE * 3;
 
 interface ActiveSwipe {
   readonly originX: number;
   readonly originY: number;
-  readonly x: number;
-  readonly y: number;
-  readonly digit: number;
-  readonly below: boolean;
+  x: number;
+  y: number;
+  digit: number | null;
+  below: boolean;
+}
+
+interface SwipeGesture extends ActiveSwipe {
+  readonly index: CellIndex;
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startY: number;
+  moved: boolean;
 }
 
 export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: BoardProps) {
@@ -89,15 +91,34 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       return;
     }
 
-    event.currentTarget.setPointerCapture(event.pointerId);
-    gesture.current = {
+    const board = boardNode.current;
+    if (!board) {
+      return;
+    }
+
+    const box = board.getBoundingClientRect();
+    const localX = event.clientX - box.left;
+    const localY = event.clientY - box.top;
+    const nextGesture: SwipeGesture = {
       index,
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      swiping: false,
-      digit: null,
+      // ガイドを盤面内へ無理に収めない。開始位置そのものを中央エリア(5)にするため、
+      // 画面端ではガイドが盤面からはみ出すことを許容する。
+      originX: localX,
+      originY: localY,
+      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE),
+      y: localY,
+      // 開始時は中央エリア(5)を選択状態にする。純粋なタップでは確定しない。
+      digit: 5,
+      below: localY < 120,
+      moved: false,
     };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gesture.current = nextGesture;
+    setActiveSwipe(nextGesture);
+    event.preventDefault();
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -106,37 +127,24 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       return;
     }
 
-    const x = event.clientX - current.startX;
-    const y = event.clientY - current.startY;
-    if (!current.swiping && Math.hypot(x, y) < SWIPE_DISTANCE) {
-      return;
-    }
-
-    current.swiping = true;
-    current.digit = digitForSwipe(x, y);
     const board = boardNode.current;
-    if (!board || current.digit === null) {
+    if (!board) {
       return;
     }
 
     const box = board.getBoundingClientRect();
     const localX = event.clientX - box.left;
     const localY = event.clientY - box.top;
-    setActiveSwipe({
-      originX: Math.min(
-        Math.max(current.startX - box.left, MAP_HALF_SIZE),
-        box.width - MAP_HALF_SIZE,
-      ),
-      originY: Math.min(
-        Math.max(current.startY - box.top, MAP_HALF_SIZE),
-        box.height - MAP_HALF_SIZE,
-      ),
-      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE),
-      y: localY,
-      digit: current.digit,
-      // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
-      below: localY < 120,
-    });
+    current.moved ||=
+      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >=
+      SWIPE_MOVE_DISTANCE;
+    // 方向ベクトルではなく、開始時に表示した 3×3 エリアそのものに対して判定する。
+    current.digit = digitAtPoint(localX, localY, current.originX, current.originY);
+    current.x = Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE);
+    current.y = localY;
+    // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
+    current.below = localY < 120;
+    setActiveSwipe({ ...current });
     // phone layout の touch-action:none と合わせて、OS のスクロールを確実に止める。
     event.preventDefault();
   };
@@ -147,10 +155,10 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       return;
     }
 
-    if (current.swiping && current.digit !== null) {
+    if (current.moved && current.digit !== null) {
       onSwipeDigit?.(current.index, current.digit);
-      event.preventDefault();
     }
+    event.preventDefault();
     gesture.current = null;
     setActiveSwipe(null);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -197,7 +205,7 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       ))}
       {activeSwipe && (
         <>
-          <SwipeDirectionMap {...activeSwipe} />
+          <SwipeAreaMap {...activeSwipe} />
           <SwipeGuide {...activeSwipe} />
         </>
       )}
@@ -261,6 +269,10 @@ function Cell({
 }
 
 function SwipeGuide({ x, y, digit, below }: ActiveSwipe) {
+  if (digit === null) {
+    return null;
+  }
+
   return (
     <div
       className={[classes.swipeGuide, below ? classes.swipeGuideBelow : ""]
@@ -276,20 +288,19 @@ function SwipeGuide({ x, y, digit, below }: ActiveSwipe) {
   );
 }
 
-function SwipeDirectionMap({ originX, originY, digit }: ActiveSwipe) {
+function SwipeAreaMap({ originX, originY, digit }: ActiveSwipe) {
   return (
     <div
-      className={classes.swipeDirectionMap}
+      className={classes.swipeAreaMap}
       style={{ left: originX, top: originY }}
       data-swipe-map="true"
+      data-active-digit={digit ?? ""}
       aria-hidden="true"
     >
       {DIGITS.map((candidate) => (
         <span
           key={candidate}
-          className={
-            candidate === digit ? classes.swipeDirectionActive : classes.swipeDirectionDigit
-          }
+          className={candidate === digit ? classes.swipeAreaActive : classes.swipeAreaDigit}
         >
           {candidate}
         </span>
@@ -298,9 +309,22 @@ function SwipeDirectionMap({ originX, originY, digit }: ActiveSwipe) {
   );
 }
 
-function digitForSwipe(x: number, y: number): number {
-  const column = x < -SWIPE_DIRECTION_DISTANCE ? 0 : x > SWIPE_DIRECTION_DISTANCE ? 2 : 1;
-  const row = y < -SWIPE_DIRECTION_DISTANCE ? 0 : y > SWIPE_DIRECTION_DISTANCE ? 2 : 1;
+function digitAtPoint(x: number, y: number, originX: number, originY: number): number | null {
+  const left = originX - MAP_HALF_SIZE + MAP_PADDING;
+  const top = originY - MAP_HALF_SIZE + MAP_PADDING;
+  const relativeX = x - left;
+  const relativeY = y - top;
+  if (
+    relativeX < 0 ||
+    relativeX >= MAP_INNER_SIZE ||
+    relativeY < 0 ||
+    relativeY >= MAP_INNER_SIZE
+  ) {
+    return null;
+  }
+
+  const column = Math.min(2, Math.floor(relativeX / MAP_AREA_SIZE));
+  const row = Math.min(2, Math.floor(relativeY / MAP_AREA_SIZE));
   return row * 3 + column + 1;
 }
 
