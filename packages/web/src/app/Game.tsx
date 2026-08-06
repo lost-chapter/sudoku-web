@@ -169,7 +169,7 @@ export function Game({
   };
 
   const header = (
-    <Stack gap={incorrect ? "xs" : 0}>
+    <Stack gap={incorrect || state.gaveUp ? "xs" : 0}>
       <GameHeader
         difficulty={puzzle.difficulty}
         onOpenSettings={onOpenSettings}
@@ -182,6 +182,17 @@ export function Game({
         <Text fw={700} role="status" aria-live="polite">
           不正解。数字を直してください。
         </Text>
+      )}
+      {state.gaveUp && (
+        <Stack gap="xs">
+          <Text component="h2" size="lg" fw={700} aria-live="polite">
+            答えを表示しました
+          </Text>
+          <Text size="sm">盤面に正解を表示しています。自分で入れた数字はそのままです。</Text>
+          <Button onClick={onNext} autoFocus>
+            次の問題へ
+          </Button>
+        </Stack>
       )}
     </Stack>
   );
@@ -237,7 +248,7 @@ export function Game({
         aria-live は中身が入れ替わったときに読まれるので、常に置いておく必要がある。
       */}
       <VisuallyHidden role="status" aria-live="polite">
-        {completed ? "正解。完成しました" : state.gaveUp ? "答えを表示しました" : ""}
+        {completed ? "正解。完成しました" : ""}
       </VisuallyHidden>
 
       {/*
@@ -258,27 +269,6 @@ export function Game({
             正解
           </Text>
           <Text>すべてのマスが解と一致しました。</Text>
-          <Button onClick={onNext} autoFocus>
-            次の問題へ
-          </Button>
-        </Stack>
-      </Modal>
-
-      {/*
-        あきらめたあと。**完成と同じく、閉じる手段は「次の問題へ」だけ。**
-        ⚠️ 赤や警告の見た目にはしない。**あきらめるのは救済であって失敗ではない。**
-      */}
-      <Modal
-        opened={state.gaveUp}
-        onClose={onNext}
-        title="答えを表示しました"
-        centered
-        withCloseButton={false}
-        closeOnEscape={false}
-        closeOnClickOutside={false}
-      >
-        <Stack gap="md">
-          <Text>盤面に正解が入っています。自分で入れた数字はそのままです。</Text>
           <Button onClick={onNext} autoFocus>
             次の問題へ
           </Button>

@@ -48,6 +48,9 @@ test("あきらめると解が出るが、「完成」の知らせは出ない",
   await page.getByRole("dialog").getByRole("button", { name: "あきらめる" }).click();
 
   await expect(page.getByRole("heading", { name: "答えを表示しました" })).toBeVisible();
+  // 結果の案内をモーダルで覆わず、解答盤面を見られるようにする。
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("gridcell", { name: /答え/ }).first()).toBeVisible();
 
   // 🔴 ここが本体。盤面は解と一致するが、解いたのは遊技者ではない。
   await expect(page.getByRole("heading", { name: "完成!" })).toBeHidden();
