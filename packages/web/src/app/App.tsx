@@ -76,8 +76,11 @@ function Shell({
       <Stack gap={bare ? 0 : "md"}>
         {/*
           ⚠️ **タイトルは「描かない」で消す。**囲みごと外すと下の画面の位置が動く。
+
+          🔴 **ホーム画面では出さない。**あちらは自前で大きな表題を持っている
+          (2026-08-06)。**両方出すと `h1` が 2 つ並ぶ。**
         */}
-        {bare ? null : (
+        {bare || screen.name === "home" ? null : (
           <Title order={1} size="h2">
             数独
           </Title>

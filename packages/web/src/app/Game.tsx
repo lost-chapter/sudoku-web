@@ -163,7 +163,13 @@ export function Game({
           landscape={layout === "phone-landscape"}
           header={header}
           board={board}
-          pad={<TouchPad {...padProps} landscape={layout === "phone-landscape"} />}
+          pad={
+            <TouchPad
+              {...padProps}
+              landscape={layout === "phone-landscape"}
+              flickToNote={settings.flickToNote}
+            />
+          }
         />
       )}
 

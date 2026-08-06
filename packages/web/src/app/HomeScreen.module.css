@@ -1,0 +1,240 @@
+/*
+ * ホーム画面。
+ *
+ * ⚠️ **`@layer mantine` の外なので、import 順に関係なく Mantine より勝つ**
+ * (docs/decisions/0002-ui-library-selection.md)。!important は使わない。
+ *
+ * 🔴 **スマホでは縦スクロールさせない**(2026-08-06・発注者の要望)。
+ * ゲーム画面と同じ扱いである。**⇒ リッチさを「縦に足す」ことでは作れない。**
+ * **1 画面の中の密度と構成で作る。**
+ *
+ * 🎯 **数独の盤面の作りを借りる。**3×3 の区切りが太く、マスの区切りが細い ——
+ * **罫線の太さで階層を表す**という考え方を、そのまま画面に使う。
+ */
+
+/*
+ * 塗ったマスの色。
+ *
+ * 🔴 **`light-dark()` は使わない。**本番の CSS 圧縮が壊す(理由は app/theme.css)。
+ *
+ * 🔴 **暗い側では primary が地に沈む。**実測で**塗ったマスと空マスの差が 2.00**しか無く、
+ * **「塗られた数を数えれば段階が分かる」という設計そのものが効かなくなっていた。**
+ * ⚠️ **数で伝えるようにしても、その数が読めなければ意味が無い**
+ * (メモのスイッチのつまみと同じ形で 2 度目)。
+ */
+.screen {
+  --sudoku-color-mark: var(--mantine-primary-color-filled);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 表題。**アプリの顔なので、盤面と同じ 3×3 の割り付けで囲む。** */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 2px;
+}
+
+.mark {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 44px;
+  height: 44px;
+  /* 外枠は太く、中は細く。**盤面と同じ見え方にする。** */
+  padding: 3px;
+  gap: 2px;
+  border: 3px solid var(--mantine-color-text);
+  border-radius: 6px;
+}
+
+.mark > span {
+  border-radius: 1px;
+  background: var(--mantine-color-default-border);
+}
+
+.mark > span[data-on="true"] {
+  background: var(--sudoku-color-mark);
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+/*
+ * 難易度。**縦に積む。**
+ *
+ * 🔴 **横に流して折り返させない。**文字数で幅が決まるので、
+ * **3 + 2 に折り返して「並べただけ」に見える**(実測: 94 / 79 / 108 / 66 / 80px)。
+ * **縦に積めば幅が揃い、順序が上から下へ読める。**
+ */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  /* ⚠️ **押せる下限(44px)を上回る。**主役なので小さくしすぎない。 */
+  min-height: 60px;
+  padding: 8px 14px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  font-family: inherit;
+  text-align: left;
+  touch-action: manipulation;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.card:hover {
+  border-color: var(--sudoku-color-mark);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.card:active {
+  transform: scale(0.99);
+}
+
+/*
+ * 遊びかけ。**難易度と同じ形のカードにする。**
+ * ⚠️ **専用の囲みを別に置かない** —— **1 画面に収める余地が無い**。
+ * ⚠️ **枠の色だけで区別しない。**「続きから」という文字が主である。
+ */
+.resume {
+  border-color: var(--sudoku-color-mark);
+}
+
+.resumeMark {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--sudoku-color-mark);
+  color: var(--mantine-color-white);
+}
+
+/*
+ * 🔴 **難易度の段階を「塗られたマスの数」で表す。**
+ * ⚠️ **色だけに載せない**(仕様の約束)。**数えれば分かる**ようにしてある。
+ */
+.meter {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 36px;
+  height: 36px;
+  gap: 3px;
+}
+
+.meter > span {
+  border-radius: 1px;
+  background: var(--mantine-color-default-border);
+}
+
+.meter > span[data-on="true"] {
+  background: var(--sudoku-color-mark);
+}
+
+.cardBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cardName {
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cardMeta {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+/* 進む向きの合図。**装飾なので読み上げない。** */
+.go {
+  flex: 0 0 auto;
+  color: var(--mantine-color-dimmed);
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+}
+
+/*
+ * 🔴 **横向きは縦が足りない。**縦に 5 枚積むと 320px にはまったく入らない
+ * (実測: 積んだままだと 635px 要る)。**3 列に畳んで行数を減らす。**
+ *
+ * ⚠️ **折り返しではなく、意図した 3 列である。**幅は grid が揃えるので、
+ * 「文字数で幅が決まって折り返した」形にはならない。
+ */
+@media (orientation: landscape) and (max-height: 500px) {
+  .list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .mark {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+
+  .card {
+    min-height: 52px;
+    padding: 6px 12px;
+  }
+
+  .meter {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* ⚠️ **横向きでは進む合図を落とす。**幅が足りず、名前が折り返す。 */
+  .go {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:active {
+    transform: none;
+  }
+}
+
+[data-mantine-color-scheme="dark"] .screen {
+  --sudoku-color-mark: var(--mantine-color-blue-4);
+}
