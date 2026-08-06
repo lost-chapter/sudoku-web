@@ -7,8 +7,13 @@ import { computeHighlights } from "../features/board/highlights";
 import { NumberPad } from "../features/input/NumberPad";
 import { TouchPad } from "../features/input/TouchPad";
 import { isEmpty } from "../features/progress/progress";
-import { clearProgress, writeProgress } from "../features/progress/progressStorage";
+import {
+  clearProgress,
+  writeProgress,
+  type StorageLike,
+} from "../features/progress/progressStorage";
 import type { LoadedPuzzle } from "../features/puzzle/loadPuzzle";
+import { recordSolvedResult } from "../features/results/resultsStorage";
 import type { Puzzle } from "@sudoku/core";
 import type { Settings } from "../features/settings/settings";
 import { isGiven, isSolvedByPlayer, type RestoredBoard } from "../state/boardState";
@@ -36,8 +41,10 @@ import { useLayout } from "./layout";
 export interface GameProps {
   readonly puzzle: Puzzle;
   readonly settings: Settings;
-  /** どのパックの何行目か。**同梱の 1 問で遊んでいるときは `null`(保存しない)。** */
+  /** どのパックの何行目か。**同梱の 1 問で遊んでいるときは `null`(結果を保存しない)。** */
   readonly source: LoadedPuzzle | null;
+  /** テストから差し替えるための口。省略時はブラウザの `localStorage` を使う。 */
+  readonly storage?: StorageLike;
   /** 遊びかけから戻す入力とメモ。 */
   readonly restored: RestoredBoard | null;
   /** 完成したあと次の問題へ進む。 */
@@ -51,6 +58,7 @@ export function Game({
   puzzle,
   settings,
   source,
+  storage,
   restored,
   onNext,
   onOpenSettings,
@@ -92,6 +100,24 @@ export function Game({
       generator: source.generator,
     });
   }, [finished, puzzle.difficulty, source, state]);
+
+  useEffect(() => {
+    // 正解して終わった問題だけを記録する。あきらめた問題は数えない。
+    // 同梱の退避問題にはパック内の ID が無いので記録しない。
+    if (!completed || !source) {
+      return;
+    }
+    recordSolvedResult(
+      {
+        packPath: source.packPath,
+        line: source.line,
+        difficulty: puzzle.difficulty,
+        formatVersion: source.formatVersion,
+        generator: source.generator,
+      },
+      storage,
+    );
+  }, [completed, puzzle.difficulty, source, storage]);
 
   // 終わったら盤面を動かさない。知らせが次の入力で消えてしまうのを防ぐ。
   const play = (action: GameAction) => {

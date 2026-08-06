@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.getByRole("button", { name: "やさしい" }).click();
+  await page.getByRole("button", { name: /^やさしい/ }).click();
   await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
 });
 
@@ -61,6 +61,11 @@ test("あきらめると解が出るが、「完成」の知らせは出ない",
   );
   expect(announced).not.toContain("完成しました");
   expect(announced).toContain("答えを表示しました");
+
+  // あきらめた問題は正解数へ記録しない。
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("sudoku-web:results")))
+    .toBeNull();
 });
 
 test("あきらめたあとは入力できない", async ({ page }) => {
