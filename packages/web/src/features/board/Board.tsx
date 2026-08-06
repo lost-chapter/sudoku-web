@@ -44,10 +44,12 @@ const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, r
 
 /** 指がセルから出たと判断する距離。キーのフリックと同じく 24px を使う。 */
 const SWIPE_DISTANCE = 24;
-/** 3×3 パレットのどの方向へ入ったかを分ける距離。 */
+/** スワイプの方向ごとに数字を切り替える距離。 */
 const SWIPE_DIRECTION_DISTANCE = 12;
-/** パレットの横幅は約 100px。盤面の外へはみ出さないよう少し余裕を取る。 */
-const PICKER_HALF_SIZE = 56;
+/** iPhone のキーガイド相当の吹き出し幅は約 64px。盤面の外へはみ出さないよう少し余裕を取る。 */
+const GUIDE_HALF_SIZE = 32;
+/** 開始セルを中心に表示する方向ガイドの横幅は約 104px。 */
+const MAP_HALF_SIZE = 52;
 
 interface SwipeGesture {
   readonly index: CellIndex;
@@ -59,6 +61,8 @@ interface SwipeGesture {
 }
 
 interface ActiveSwipe {
+  readonly originX: number;
+  readonly originY: number;
   readonly x: number;
   readonly y: number;
   readonly digit: number;
@@ -119,7 +123,15 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     const localX = event.clientX - box.left;
     const localY = event.clientY - box.top;
     setActiveSwipe({
-      x: Math.min(Math.max(localX, PICKER_HALF_SIZE), box.width - PICKER_HALF_SIZE),
+      originX: Math.min(
+        Math.max(current.startX - box.left, MAP_HALF_SIZE),
+        box.width - MAP_HALF_SIZE,
+      ),
+      originY: Math.min(
+        Math.max(current.startY - box.top, MAP_HALF_SIZE),
+        box.height - MAP_HALF_SIZE,
+      ),
+      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE),
       y: localY,
       digit: current.digit,
       // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
@@ -183,7 +195,12 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
           ))}
         </div>
       ))}
-      {activeSwipe && <SwipePicker {...activeSwipe} />}
+      {activeSwipe && (
+        <>
+          <SwipeDirectionMap {...activeSwipe} />
+          <SwipeGuide {...activeSwipe} />
+        </>
+      )}
     </div>
   );
 }
@@ -243,21 +260,36 @@ function Cell({
   );
 }
 
-function SwipePicker({ x, y, digit, below }: ActiveSwipe) {
+function SwipeGuide({ x, y, digit, below }: ActiveSwipe) {
   return (
     <div
-      className={[classes.swipePicker, below ? classes.swipePickerBelow : ""]
+      className={[classes.swipeGuide, below ? classes.swipeGuideBelow : ""]
         .filter(Boolean)
         .join(" ")}
       style={{ left: x, top: y }}
-      data-swipe-picker="true"
+      data-swipe-guide="true"
       data-active-digit={digit}
+      aria-hidden="true"
+    >
+      <span className={classes.swipeGuideDigit}>{digit}</span>
+    </div>
+  );
+}
+
+function SwipeDirectionMap({ originX, originY, digit }: ActiveSwipe) {
+  return (
+    <div
+      className={classes.swipeDirectionMap}
+      style={{ left: originX, top: originY }}
+      data-swipe-map="true"
       aria-hidden="true"
     >
       {DIGITS.map((candidate) => (
         <span
           key={candidate}
-          className={candidate === digit ? classes.swipeDigitActive : classes.swipeDigit}
+          className={
+            candidate === digit ? classes.swipeDirectionActive : classes.swipeDirectionDigit
+          }
         >
           {candidate}
         </span>

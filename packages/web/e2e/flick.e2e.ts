@@ -103,7 +103,7 @@ test("キーの外で離したら何も起きない", async ({ page, context }) 
   await expect.poll(() => stateOf(page, cell)).toBe("空");
 });
 
-test("盤面からスワイプすると数字パレットを表示して入力する", async ({ page, context }) => {
+test("盤面からスワイプすると数字ガイドを表示して入力する", async ({ page, context }) => {
   const cell = await pinEmptyCell(page);
   const target = page.locator(`[role="gridcell"][aria-label="${cell.label}"]`);
   const box = await target.boundingBox();
@@ -119,11 +119,9 @@ test("盤面からスワイプすると数字パレットを表示して入力�
     touchPoints: [{ x: x + 32, y }],
   });
 
-  // 右へ滑らせたので、3×3 パレットの中央右(6)が選ばれている。
-  await expect(page.locator('[data-swipe-picker="true"]')).toHaveAttribute(
-    "data-active-digit",
-    "6",
-  );
+  // 右へ滑らせたので、数字ガイドには中央右(6)が表示される。
+  await expect(page.locator('[data-swipe-map="true"]')).toHaveText("123456789");
+  await expect(page.locator('[data-swipe-guide="true"]')).toHaveAttribute("data-active-digit", "6");
 
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect.poll(() => stateOf(page, cell)).toBe("6");
