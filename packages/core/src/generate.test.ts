@@ -77,6 +77,16 @@ describe("穴あけ", () => {
     }
   });
 
+  it("最低手がかり数を指定しても一意解を保つ", () => {
+    for (let seed = 0; seed < 10; seed += 1) {
+      const { puzzle } = generatePuzzle(createRandom(`minimum-clues-${String(seed)}`), {
+        minimumClues: 40,
+      });
+      expect(countClues(puzzle)).toBeGreaterThanOrEqual(40);
+      expect(countSolutions(puzzle)).toBe(1);
+    }
+  });
+
   it("手がかりを 1 つでも消すと一意解でなくなる(性質 2・極小性)", () => {
     const { puzzle } = generatePuzzle(createRandom("minimal"));
     for (let index = 0; index < CELL_COUNT; index += 1) {

@@ -50,7 +50,7 @@ flowchart TB
 
 | レベル | 手筋 | 目安 |
 |--------|------|------|
-| 1 | Naked Single / Hidden Single | 候補メモ無しで解ける |
+| 1 | Naked Single / Hidden Single | **候補メモを維持しなくても解ける** |
 | 2 | Locked Candidates(Pointing / Claiming) | 候補メモがあると楽 |
 | 3 | Naked / Hidden Pair | 候補メモが要る |
 | 4 | Naked / Hidden Triple・Quad | |
@@ -84,6 +84,22 @@ Forcing Chains = 7.1〜7.5、Dynamic Forcing Chains = 8.8 以上、と付いて�
 (`easy` の最大 90 が `normal` の中央 84 を超える。
 [検証](../reports/2026-08-05-difficulty-distribution.md))。
 
+### やさしい問題の追加目標(2026-08-06)
+
+`easy` のクラス境界は**最難レベル 1**のまま変えない。
+そのうえで、やさしい問題は「解ける」だけでなく、**候補メモを使わなくても解きやすい**
+水準にする。
+
+今回の `easy` パックは、次の条件で採用した。
+
+- 解法手順が `Naked Single` だけで最後まで進む
+- 候補メモを作って維持しなくても、盤面から次の一手を追える
+- 生成時に手がかりを 40 個以上残し、解法手数を抑える
+
+全 1,000 問を評価した結果、`Naked Single` のみが **1,000 問(100%)**、
+手がかり数は 40 個、解法手数は 41 手だった([検証](../reports/2026-08-06-easy-without-notes.md))。
+これは `rateDifficulty` のクラス判定を変えず、`easy` の問題を生成・採用するときだけ条件を追加した結果である。
+
 ## 難易度クラス
 
 **5 段階とする。** 呼び名は UI にそのまま出す
@@ -91,7 +107,7 @@ Forcing Chains = 7.1〜7.5、Dynamic Forcing Chains = 8.8 以上、と付いて�
 
 | 表示名(UI) | ファイル上の値 | 解くのに要る最難レベル | 想定 |
 |-------------|--------------|---------------------|------|
-| やさしい | `easy` | 1 | Single だけで解ける |
+| やさしい | `easy` | 1 | Single だけで解ける。**候補メモを維持しなくても追いやすい問題を収録** |
 | ふつう | `normal` | 2 | Locked Candidates まで |
 | むずかしい | `hard` | 3〜4 | Pair / Triple が要る |
 | 難問 | `expert` | 5〜6 | X-Wing / XY-Wing が要る |
@@ -121,6 +137,11 @@ Forcing Chains = 7.1〜7.5、Dynamic Forcing Chains = 8.8 以上、と付いて�
 🎯 **レベル 5〜7 を足しても、やさしい・ふつう・むずかしいの問数は 1 問も動かなかった。**
 簡単な手筋から順に試すので、**低いレベルで解ける問題の評価は手筋を足しても変わらない**
 ([検証](../reports/2026-08-05-difficulty-distribution.md))。
+
+なお、**難易度クラスとしての `easy` はレベル 1 (Naked / Hidden Single) のまま**である。
+「候補メモを使わなくても解ける」という要望に対して、収録する easy パックだけは
+生成時に手がかりを 40 個以上残し、`Naked Single` だけで解ける問題へ絞っている
+([盤面の生成](board-generation.md#やさしいパックだけの追加条件))。
 
 **残る 30.1% は Forcing Chain などが要る問題**で、いまは捨てている。
 

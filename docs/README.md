@@ -56,6 +56,7 @@ Claude Code と Codex の入口の同期方法は [エージェント向けカ�
 - [検証: 探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md) — TypeScript の実測。**一意解の判定は生成の律速にならない**
 - [検証: 問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md) — 1 問 1.56 ms・毎秒 640 問。**手がかり数は 24〜25 に山**
 - [検証: 難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md) — **5 クラスすべてを収録できるようになった**。しきい値は確定
+- [検証: やさしいパックを候補メモなし向けに絞る](reports/2026-08-06-easy-without-notes.md) — **Naked Single のみ・手がかり 40 個**へ絞った
 - [検討: フリック操作](reports/2026-08-06-flick-input-survey.md) —— **4 案のうち 1 案だけ試作した**。盤面は画面の端から 4px しかない
 - [検証: 盤面スワイプ入力](reports/2026-08-06-board-swipe-input.md) —— **セル中心の大きなエリアガイドから、指を離した数字を 1 手で入力する**
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
@@ -96,6 +97,7 @@ Claude Code と Codex の入口の同期方法は [エージェント向けカ�
   - [探索ソルバの所要時間](reports/2026-08-05-search-solver-benchmark.md)
   - [問題の生成の所要時間と手がかり数の分布](reports/2026-08-05-puzzle-generation-benchmark.md)
   - [難易度クラスの分布](reports/2026-08-05-difficulty-distribution.md)
+  - [やさしいパックを候補メモなし向けに絞る](reports/2026-08-06-easy-without-notes.md)
   - [フリック操作の検討](reports/2026-08-06-flick-input-survey.md)
   - [盤面スワイプ入力](reports/2026-08-06-board-swipe-input.md)
 

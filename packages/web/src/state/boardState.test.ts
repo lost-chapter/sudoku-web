@@ -7,6 +7,7 @@ import {
   boardReducer,
   createBoardState,
   isGiven,
+  isFilled,
   isRevealed,
   isSolvedByPlayer,
   matchesSolution,
@@ -164,6 +165,37 @@ describe("clearCell", () => {
   });
 });
 
+describe("clearNotes", () => {
+  it("選択中セルのメモだけを消す", () => {
+    const noted = [1, 2].reduce(
+      (state, digit) => boardReducer(state, { type: "inputDigit", digit }),
+      boardReducer(initial, { type: "toggleNoteMode" }),
+    );
+
+    const cleared = boardReducer(noted, { type: "clearNotes" });
+
+    expect(valueAt(cleared, EMPTY_INDEX)).toBe(0);
+    expect(notesAt(cleared, EMPTY_INDEX)).toBe(0);
+  });
+
+  it("メモが無ければ状態は変わらない", () => {
+    expect(boardReducer(initial, { type: "clearNotes" })).toBe(initial);
+  });
+
+  it("確定数字は消さない", () => {
+    const filled = boardReducer(initial, { type: "inputDigit", digit: 4 });
+    const cleared = boardReducer(filled, { type: "clearNotes" });
+
+    expect(cleared).toBe(filled);
+    expect(valueAt(cleared, EMPTY_INDEX)).toBe(4);
+  });
+
+  it("手がかりのセルには何も起きない", () => {
+    const onGiven = select(initial, GIVEN_INDEX);
+    expect(boardReducer(onGiven, { type: "clearNotes" })).toBe(onGiven);
+  });
+});
+
 describe("メモ", () => {
   const noteMode = boardReducer(initial, { type: "toggleNoteMode" });
 
@@ -298,6 +330,7 @@ describe("あきらめる", () => {
   it("あきらめたあとは入力もメモも効かない", () => {
     expect(boardReducer(gaveUp, { type: "inputDigit", digit: 4 })).toBe(gaveUp);
     expect(boardReducer(gaveUp, { type: "clearCell" })).toBe(gaveUp);
+    expect(boardReducer(gaveUp, { type: "clearNotes" })).toBe(gaveUp);
     expect(boardReducer(gaveUp, { type: "toggleNoteMode" })).toBe(gaveUp);
   });
 
@@ -349,6 +382,25 @@ describe("matchesSolution", () => {
   it("1 マスでも違えば完成しない", () => {
     const state = boardReducer(initial, { type: "inputDigit", digit: wrongDigitAt(EMPTY_INDEX) });
     expect(matchesSolution(state)).toBe(false);
+  });
+});
+
+describe("isFilled", () => {
+  it("始めた直後は全埋めではない", () => {
+    expect(isFilled(initial)).toBe(false);
+  });
+
+  it("誤答でも全セルに数字があれば全埋めになる", () => {
+    const filled = SAMPLE_PUZZLE.solution.reduce<BoardState>((state, digit, index) => {
+      if (isGiven(state, index)) {
+        return state;
+      }
+      const value = index === EMPTY_INDEX ? wrongDigitAt(index) : digit;
+      return boardReducer(select(state, index), { type: "inputDigit", digit: value });
+    }, initial);
+
+    expect(isFilled(filled)).toBe(true);
+    expect(matchesSolution(filled)).toBe(false);
   });
 });
 

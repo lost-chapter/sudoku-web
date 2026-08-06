@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { VisuallyHidden } from "@mantine/core";
 import { BOARD_SIZE } from "@sudoku/core";
 
 import { Icon } from "../../ui/Icon";
 
 import { NoteSwitch } from "./NoteSwitch";
-import type { PadProps } from "./padProps";
+import { CELL_NOTES_CLEAR_DESCRIPTION_ID, type PadProps } from "./padProps";
 import { useTouchInput } from "./useFlick";
 
 import classes from "./TouchPad.module.css";
@@ -113,9 +114,28 @@ function ClearKey({ disabled, onClear }: Pick<PadProps, "disabled" | "onClear">)
   );
 }
 
+function ClearNotesKey({
+  clearNotesDisabled,
+  onClearNotes,
+}: Pick<PadProps, "clearNotesDisabled" | "onClearNotes">) {
+  return (
+    <button
+      type="button"
+      className={classes.key}
+      aria-label="セル内クリア"
+      aria-describedby={CELL_NOTES_CLEAR_DESCRIPTION_ID}
+      disabled={clearNotesDisabled}
+      onClick={onClearNotes}
+    >
+      <Icon name="eraser" />
+    </button>
+  );
+}
+
 export function TouchPad({
   onDigit,
   onClear,
+  onClearNotes,
   onToggleNoteMode,
   onUndo,
   onRedo,
@@ -123,6 +143,7 @@ export function TouchPad({
   canUndo,
   canRedo,
   disabled,
+  clearNotesDisabled,
   landscape,
   flickToNote,
 }: TouchPadProps) {
@@ -149,6 +170,7 @@ export function TouchPad({
 
       <div className={landscape ? classes.utilityLandscape : classes.utility}>
         {landscape && <ClearKey disabled={disabled} onClear={onClear} />}
+        <ClearNotesKey clearNotesDisabled={clearNotesDisabled} onClearNotes={onClearNotes} />
         {/*
           🔴 **メモはスイッチにする**(2026-08-06・発注者の要望)。
           **「メモ 切」は状態にも命令にも読めた。**状態を持つものは状態を表す形にする。
@@ -174,6 +196,9 @@ export function TouchPad({
           <Icon name="redo" />
         </button>
       </div>
+      <VisuallyHidden id={CELL_NOTES_CLEAR_DESCRIPTION_ID}>
+        選択中セルのメモだけを消します。確定した数字は消しません。
+      </VisuallyHidden>
     </div>
   );
 }
