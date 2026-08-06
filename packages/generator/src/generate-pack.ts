@@ -23,6 +23,9 @@
 import { createRandom, generatePuzzle, rateDifficulty } from "@sudoku/core";
 import type { Difficulty, Puzzle } from "@sudoku/core";
 
+/** easy は候補メモなしで解けることを狙い、手がかりをここまで残す。 */
+export const EASY_MINIMUM_CLUES = 40;
+
 /** 1 回の試行の結果。目標クラスに合わなければ採用しない。 */
 export type Attempt = {
   /** 試行の通し番号。並べ替えに使う。 */
@@ -46,13 +49,22 @@ export function runAttempt(
   targetDifficulty?: Difficulty,
 ): Attempt | null {
   const random = createRandom(attemptSeed(seed, index));
-  const { puzzle, solution } = generatePuzzle(random);
+  const { puzzle, solution } = generatePuzzle(
+    random,
+    targetDifficulty === "easy" ? { minimumClues: EASY_MINIMUM_CLUES } : undefined,
+  );
   const rating = rateDifficulty(puzzle);
 
   // ⚠️ 難易度が付かなかった問題は捨てる。
   // 「解けなかったから最難関」は「難しい」ではなく「評価できていない」である。
   if (rating.difficulty === null) return null;
   if (targetDifficulty !== undefined && rating.difficulty !== targetDifficulty) return null;
+  if (
+    targetDifficulty === "easy" &&
+    !rating.steps.every((step) => step.technique === "naked-single")
+  ) {
+    return null;
+  }
 
   return {
     index,
