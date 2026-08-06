@@ -1,9 +1,10 @@
-import { Button, Group, SimpleGrid, Stack } from "@mantine/core";
+import { Button, Group, SimpleGrid, Stack, VisuallyHidden } from "@mantine/core";
 import { BOARD_SIZE } from "@sudoku/core";
 
 import { Icon } from "../../ui/Icon";
 
 import { NoteSwitch } from "./NoteSwitch";
+import { CELL_NOTES_CLEAR_DESCRIPTION_ID } from "./padProps";
 
 /**
  * 画面の入力パッド。
@@ -16,6 +17,7 @@ import { NoteSwitch } from "./NoteSwitch";
 export interface NumberPadProps {
   readonly onDigit: (digit: number) => void;
   readonly onClear: () => void;
+  readonly onClearNotes: () => void;
   readonly onToggleNoteMode: () => void;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
@@ -25,6 +27,8 @@ export interface NumberPadProps {
   readonly canRedo: boolean;
   /** 手がかりのセルを選んでいるときは押しても何も起きないので、落としておく。 */
   readonly disabled?: boolean;
+  /** メモが無いセルでは操作が無いため押せない。 */
+  readonly clearNotesDisabled?: boolean;
 }
 
 const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
@@ -32,6 +36,7 @@ const DIGITS = Array.from({ length: BOARD_SIZE }, (_, index) => index + 1);
 export function NumberPad({
   onDigit,
   onClear,
+  onClearNotes,
   onToggleNoteMode,
   onUndo,
   onRedo,
@@ -39,6 +44,7 @@ export function NumberPad({
   canUndo,
   canRedo,
   disabled,
+  clearNotesDisabled,
 }: NumberPadProps) {
   return (
     <Stack gap="xs">
@@ -83,6 +89,17 @@ export function NumberPad({
         >
           消す
         </Button>
+        <Button
+          variant="default"
+          size="lg"
+          leftSection={<Icon name="eraser" />}
+          aria-label="セル内クリア"
+          aria-describedby={CELL_NOTES_CLEAR_DESCRIPTION_ID}
+          disabled={clearNotesDisabled}
+          onClick={onClearNotes}
+        >
+          セル内クリア
+        </Button>
         {/*
           🔴 **メモはスイッチにする**(2026-08-06・発注者の要望)。
           ⚠️ **PC 版とスマホ版で同じ部品を使う。**同じ迷いが両方で起きるので、
@@ -90,6 +107,9 @@ export function NumberPad({
         */}
         <NoteSwitch checked={noteMode} onChange={onToggleNoteMode} />
       </Group>
+      <VisuallyHidden id={CELL_NOTES_CLEAR_DESCRIPTION_ID}>
+        選択中セルのメモだけを消します。確定した数字は消しません。
+      </VisuallyHidden>
 
       {/*
         取り消し / やり直しは数字より使う頻度が低いので小さくする。
