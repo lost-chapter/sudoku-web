@@ -17,6 +17,8 @@
   overflow: hidden;
 
   --pad-gap: 8px;
+  /* ⚠️ **押せる下限。**`app/layout.ts` の `TOUCH_TARGET` と同じ値である。 */
+  --pad-key-min-width: 44px;
   /*
    * 🔴 **キーの高さは画面の高さから決める**(2026-08-06)。
    *
