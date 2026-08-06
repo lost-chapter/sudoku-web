@@ -349,13 +349,12 @@
   <header>
     <div>
       <h1>sudoku-web の現在地</h1>
-      <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
+    <p class="stamp">2026-08-06 更新 / 管理役 agent-a</p>
     </div>
     <p class="now">
-      🎯 <b>0.3.0 を公開した。</b>
+      🎯 <b>0.4.0 を公開した。</b>
       <a href="https://lost-chapter.github.io/sudoku-web/">lost-chapter.github.io/sudoku-web</a>
-      で遊べる（本番で確認済み）。<b>両画面の詰めを直した</b>——盤面の上の空き、
-      画面端との距離、PC の軸。
+      で遊べる（サブパスで確認済み）。<b>スマートフォンのセルスワイプ入力と数字ガイドを追加した</b>。
       ⚠️ <b>工程 10 は「完了」にしていない</b>——ブラッシュアップは発注者が見て決めるもの。
     </p>
     <dl class="figures">
@@ -365,7 +364,7 @@
       </div>
       <div class="figure">
         <dt>E2E</dt>
-        <dd>56<small>件</small></dd>
+        <dd>61<small>件</small></dd>
       </div>
       <div class="figure">
         <dt>CI ジョブ</dt>
@@ -381,7 +380,7 @@
       </div>
       <div class="figure">
         <dt>公開中の版</dt>
-        <dd>0.3.0</dd>
+        <dd>0.4.0</dd>
       </div>
     </dl>
   </header>
@@ -444,6 +443,10 @@
         <span class="no">v0.3.0</span><span class="name">公開</span
         ><span class="state">2026-08-06</span>
       </div>
+      <div class="phase shipped">
+        <span class="no">v0.4.0</span><span class="name">公開</span
+        ><span class="state">2026-08-06</span>
+      </div>
     </div>
   </section>
 
@@ -452,7 +455,7 @@
     <p class="lead">
       ⚠️ <b>「完了」にしていない。</b>ブラッシュアップは、こちらが下限を満たしたかどうかで
       終わるものではない。<b>発注者が見て足りると言うまで開いたままにする。</b>
-      下は 0.3.0 の時点で解消したもの（すべて本番ビルドで実測）。
+      下は 0.4.0 の時点で解消したもの（すべて本番ビルドで実測）。
     </p>
     <div class="scroll">
       <table>
@@ -483,7 +486,7 @@
             <td>盤面と画面端の距離</td>
             <td>4px</td>
             <td>
-              <b>12px</b>（縦）。⚠️ 横向きは 4px のまま——<b>盤面の取り分がいちばん厳しい</b>
+              <b>16px</b>（縦）/ <b>8px</b>（横）
             </td>
           </tr>
           <tr>
