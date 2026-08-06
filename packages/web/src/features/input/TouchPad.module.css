@@ -7,6 +7,11 @@
  * ⚠️ **キーの高さは 48px。**44px の下限を守りつつ、320px 級の端末でも
  * 盤面のセルを 24px 以上に保てる最大の値である
  * (app/layout.ts の MIN_ONE_SCREEN_HEIGHT の計算)。**安易に大きくしない。**
+ *
+ * 🔴 **列の最小値は 0 にしない**(2026-08-06)。
+ * **`minmax(0, 1fr)` にしたら、横向きの「消す」が 44px を割った。**
+ * ⚠️ **中身に押されないようにした結果、押せる下限まで無くなった。**
+ * **⇒ 最小値は押せる下限そのものにする**(`app/layout.ts` の `TOUCH_TARGET` と同じ値)。
  */
 
 .pad {
@@ -20,13 +25,13 @@
 
 .digits {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(var(--pad-key-min-width), 1fr));
   gap: var(--pad-gap);
 }
 
 /* 横向きは幅に余裕があるので 3 列 × 3 行にして、親指の移動を短くする。 */
 .digitsLandscape {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(var(--pad-key-min-width), 1fr));
 }
 
 /*
@@ -35,7 +40,9 @@
  */
 .utility {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(var(--pad-key-min-width), 1.5fr) minmax(var(--pad-key-min-width), 1fr)
+    minmax(var(--pad-key-min-width), 1fr);
   gap: var(--pad-gap);
 }
 
@@ -46,7 +53,9 @@
  */
 .utilityLandscape {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(var(--pad-key-min-width), 1fr) minmax(var(--pad-key-min-width), 1.6fr)
+    minmax(var(--pad-key-min-width), 1fr) minmax(var(--pad-key-min-width), 1fr);
   gap: var(--pad-gap);
 }
 
