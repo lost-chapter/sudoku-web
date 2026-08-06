@@ -28,18 +28,6 @@ export const PHONE_QUERY = "(pointer: coarse) and ((max-width: 767px) or (max-he
 export const LANDSCAPE_QUERY = "(orientation: landscape)";
 
 /**
- * **1 画面に収めることを諦める高さ。**
- *
- * これを下回ると「スクロールしない」と「1 セル 24px 以上」が両立しない
- * (docs/ui/screens-and-interactions.md の「押せる大きさ」)。
- * **盤面が読めなければ遊べない**ので、24px を守ってスクロールを許す。
- *
- * 442 の根拠(計算): 盤面以外が 220px(ヘッダ 44 + 数字 2 行 96 + 隙間 8 +
- * 補助 1 行 48 + 余白 24)。1 セル 24px には盤面 222px が要る。
- */
-export const MIN_ONE_SCREEN_HEIGHT = 442;
-
-/**
  * **押せるものの下限**(WCAG 2.2 のターゲットサイズ 最小の推奨値)。
  *
  * ⚠️ **盤面のセルだけが例外である。**9 列あるので幅 375px では原理的に届かない

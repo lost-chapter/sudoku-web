@@ -37,6 +37,18 @@
   gap: 12px;
 }
 
+/* スマホではカード上のスワイプを文字選択や画面スクロールにしない。 */
+@media (pointer: coarse) and ((max-width: 767px) or (max-height: 500px)) {
+  .screen {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
 /* 表題。**アプリの顔なので、盤面と同じ 3×3 の割り付けで囲む。** */
 .hero {
   display: flex;

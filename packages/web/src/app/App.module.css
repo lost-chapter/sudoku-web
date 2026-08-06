@@ -10,3 +10,12 @@
 .gameFrame {
   max-width: var(--sudoku-board-max);
 }
+
+/* スマホの画面全体を固定する。モーダルを含め、指の操作をページスクロールにしない。 */
+@media (pointer: coarse) and ((max-width: 767px) or (max-height: 500px)) {
+  :global(html),
+  :global(body) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}

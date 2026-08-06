@@ -1,3 +1,4 @@
+import { useRef, useState, type PointerEvent } from "react";
 import { BOARD_SIZE, CELL_COUNT, candidateDigits, maskOfDigit } from "@sudoku/core";
 
 import {
@@ -31,6 +32,8 @@ export interface BoardProps {
   readonly state: BoardState;
   readonly highlights: BoardHighlights;
   readonly onSelect: (index: CellIndex) => void;
+  /** スマホでセルからスワイプ入力する。デスクトップでは渡さない。 */
+  readonly onSwipeDigit?: (index: CellIndex, digit: number) => void;
   /** 盤面自身がキーを拾う。ホットキーの登録は呼び出し側にまとめてある。 */
   readonly boardRef?: React.Ref<HTMLDivElement>;
 }
@@ -39,15 +42,129 @@ const CELL_INDEXES = Array.from({ length: CELL_COUNT }, (_, index) => index);
 
 const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, row * 9 + 9));
 
-export function Board({ state, highlights, onSelect, boardRef }: BoardProps) {
+/** 指がセルから出たと判断する距離。キーのフリックと同じく 24px を使う。 */
+const SWIPE_DISTANCE = 24;
+/** 3×3 パレットのどの方向へ入ったかを分ける距離。 */
+const SWIPE_DIRECTION_DISTANCE = 12;
+/** パレットの横幅は約 100px。盤面の外へはみ出さないよう少し余裕を取る。 */
+const PICKER_HALF_SIZE = 56;
+
+interface SwipeGesture {
+  readonly index: CellIndex;
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startY: number;
+  swiping: boolean;
+  digit: number | null;
+}
+
+interface ActiveSwipe {
+  readonly x: number;
+  readonly y: number;
+  readonly digit: number;
+  readonly below: boolean;
+}
+
+export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: BoardProps) {
+  const boardNode = useRef<HTMLDivElement>(null);
+  const gesture = useRef<SwipeGesture | null>(null);
+  const [activeSwipe, setActiveSwipe] = useState<ActiveSwipe | null>(null);
+
+  const setBoardRef = (node: HTMLDivElement | null) => {
+    boardNode.current = node;
+    if (typeof boardRef === "function") {
+      boardRef(node);
+    } else if (boardRef) {
+      boardRef.current = node;
+    }
+  };
+
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>, index: CellIndex) => {
+    onSelect(index);
+    if (event.pointerType !== "touch" || !onSwipeDigit || isGiven(state, index)) {
+      return;
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gesture.current = {
+      index,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      swiping: false,
+      digit: null,
+    };
+  };
+
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const x = event.clientX - current.startX;
+    const y = event.clientY - current.startY;
+    if (!current.swiping && Math.hypot(x, y) < SWIPE_DISTANCE) {
+      return;
+    }
+
+    current.swiping = true;
+    current.digit = digitForSwipe(x, y);
+    const board = boardNode.current;
+    if (!board || current.digit === null) {
+      return;
+    }
+
+    const box = board.getBoundingClientRect();
+    const localX = event.clientX - box.left;
+    const localY = event.clientY - box.top;
+    setActiveSwipe({
+      x: Math.min(Math.max(localX, PICKER_HALF_SIZE), box.width - PICKER_HALF_SIZE),
+      y: localY,
+      digit: current.digit,
+      // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
+      below: localY < 120,
+    });
+    // phone layout の touch-action:none と合わせて、OS のスクロールを確実に止める。
+    event.preventDefault();
+  };
+
+  const finishPointer = (event: PointerEvent<HTMLDivElement>) => {
+    const current = gesture.current;
+    if (!current || current.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (current.swiping && current.digit !== null) {
+      onSwipeDigit?.(current.index, current.digit);
+      event.preventDefault();
+    }
+    gesture.current = null;
+    setActiveSwipe(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const cancelPointer = (event: PointerEvent<HTMLDivElement>) => {
+    if (gesture.current?.pointerId !== event.pointerId) {
+      return;
+    }
+    gesture.current = null;
+    setActiveSwipe(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   return (
     <div
-      ref={boardRef}
+      ref={setBoardRef}
       role="grid"
       aria-label="数独の盤面"
       aria-activedescendant={cellId(state.selected)}
       tabIndex={0}
-      className={classes.board}
+      className={[classes.board, onSwipeDigit ? classes.swipeable : ""].filter(Boolean).join(" ")}
     >
       {ROWS.map((indexes, row) => (
         <div key={row} role="row" className={classes.row}>
@@ -58,11 +175,15 @@ export function Board({ state, highlights, onSelect, boardRef }: BoardProps) {
               state={state}
               highlights={highlights}
               selected={index === state.selected}
-              onSelect={onSelect}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={finishPointer}
+              onPointerCancel={cancelPointer}
             />
           ))}
         </div>
       ))}
+      {activeSwipe && <SwipePicker {...activeSwipe} />}
     </div>
   );
 }
@@ -72,10 +193,22 @@ interface CellProps {
   readonly state: BoardState;
   readonly highlights: BoardHighlights;
   readonly selected: boolean;
-  readonly onSelect: (index: CellIndex) => void;
+  readonly onPointerDown: (event: PointerEvent<HTMLDivElement>, index: CellIndex) => void;
+  readonly onPointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  readonly onPointerUp: (event: PointerEvent<HTMLDivElement>) => void;
+  readonly onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void;
 }
 
-function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
+function Cell({
+  index,
+  state,
+  highlights,
+  selected,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+}: CellProps) {
   const value = valueAt(state, index);
   const given = isGiven(state, index);
   const notes = notesAt(state, index);
@@ -99,12 +232,44 @@ function Cell({ index, state, highlights, selected, onSelect }: CellProps) {
       aria-readonly={given || undefined}
       aria-label={cellLabel(index, value, given, notes, revealed)}
       className={className}
-      onPointerDown={() => onSelect(index)}
+      onPointerDown={(event) => onPointerDown(event, index)}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {value !== 0 && value}
       {value === 0 && notes !== 0 && <Notes mask={notes} />}
     </div>
   );
+}
+
+function SwipePicker({ x, y, digit, below }: ActiveSwipe) {
+  return (
+    <div
+      className={[classes.swipePicker, below ? classes.swipePickerBelow : ""]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ left: x, top: y }}
+      data-swipe-picker="true"
+      data-active-digit={digit}
+      aria-hidden="true"
+    >
+      {DIGITS.map((candidate) => (
+        <span
+          key={candidate}
+          className={candidate === digit ? classes.swipeDigitActive : classes.swipeDigit}
+        >
+          {candidate}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function digitForSwipe(x: number, y: number): number {
+  const column = x < -SWIPE_DIRECTION_DISTANCE ? 0 : x > SWIPE_DIRECTION_DISTANCE ? 2 : 1;
+  const row = y < -SWIPE_DIRECTION_DISTANCE ? 0 : y > SWIPE_DIRECTION_DISTANCE ? 2 : 1;
+  return row * 3 + column + 1;
 }
 
 /**
