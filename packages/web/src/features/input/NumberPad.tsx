@@ -52,6 +52,12 @@ export function NumberPad({
             key={digit}
             variant="default"
             size="lg"
+            /*
+              ⚠️ **左右の余白を持たせない。**9 列に詰めると 1 列 54px で、
+              `size="lg"` の余白(22px × 2)だけで幅を食い尽くし、
+              **数字が 0 幅に潰れて消える**(2026-08-06 に実測)。
+            */
+            px={0}
             disabled={disabled}
             aria-label={`${digit} を${noteMode ? "メモする" : "入力"}`}
             onClick={() => onDigit(digit)}

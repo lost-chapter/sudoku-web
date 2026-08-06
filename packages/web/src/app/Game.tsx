@@ -21,6 +21,8 @@ import {
 } from "../state/gameState";
 
 import { GameHeader } from "./GameHeader";
+
+import classes from "./Game.module.css";
 import { PhoneLayout } from "./PhoneLayout";
 import { useLayout } from "./layout";
 
@@ -133,7 +135,6 @@ export function Game({
   const header = (
     <GameHeader
       difficulty={puzzle.difficulty}
-      packLabel={source?.packPath ?? ""}
       onOpenSettings={onOpenSettings}
       onGiveUp={() => setConfirmingGiveUp(true)}
       canGiveUp={!finished}
@@ -153,7 +154,12 @@ export function Game({
   return (
     <>
       {layout === "desktop" ? (
-        <Stack gap="lg">
+        /*
+          🔴 **盤面の幅へ揃える**(2026-08-06)。
+          **ヘッダとパッドは器の幅いっぱい、盤面は 32rem で中央**だったので、
+          **左端が 94px ずれて別々に置かれて見えていた**(実測)。
+        */
+        <Stack gap="lg" className={classes.desktop}>
           {header}
           {board}
           <NumberPad {...padProps} />
