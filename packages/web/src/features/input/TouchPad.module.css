@@ -20,13 +20,13 @@
 
 .digits {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--pad-gap);
 }
 
 /* 横向きは幅に余裕があるので 3 列 × 3 行にして、親指の移動を短くする。 */
 .digitsLandscape {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /*
@@ -35,7 +35,7 @@
  */
 .utility {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--pad-gap);
 }
 
@@ -46,7 +46,7 @@
  */
 .utilityLandscape {
   display: grid;
-  grid-template-columns: 1fr 1.6fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--pad-gap);
 }
 

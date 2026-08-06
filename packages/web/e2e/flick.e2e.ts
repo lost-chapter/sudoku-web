@@ -146,6 +146,8 @@ test("設定で切ると、上へはじいてもメモにならない", async ({
   }
 
   // **キーの外まで滑らせたら取り消し。**候補は立たない。
-  await slideUp(30);
+  // ⚠️ **固定の px を使わない。**キーの高さは画面によって変わるので、
+  // **「キーの高さぶん上へ」= 必ず外**、という取り方にする。
+  await slideUp(box!.height);
   await expect.poll(() => stateOf(page, cell)).toBe("空");
 });

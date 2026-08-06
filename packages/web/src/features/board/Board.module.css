@@ -18,7 +18,7 @@
    * 幅だけで決めると縦にはみ出す。既定は従来どおり幅に追従する。
    */
   width: var(--board-size, 100%);
-  max-width: min(100%, 32rem);
+  max-width: min(100%, var(--sudoku-board-max));
   margin-inline: auto;
   border: 3px solid var(--mantine-color-text);
   background: var(--mantine-color-body);
