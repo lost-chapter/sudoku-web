@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useImperativeHandle, useRef, useState, type PointerEvent } from "react";
 import { BOARD_SIZE, CELL_COUNT, candidateDigits, maskOfDigit } from "@sudoku/core";
 
 import {
@@ -80,19 +80,12 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
   const guideTimer = useRef<number | null>(null);
   const [activeSwipe, setActiveSwipe] = useState<ActiveSwipe | null>(null);
 
+  useImperativeHandle(boardRef, () => boardNode.current as HTMLDivElement, []);
+
   const clearGuideTimer = () => {
     if (guideTimer.current !== null) {
       window.clearTimeout(guideTimer.current);
       guideTimer.current = null;
-    }
-  };
-
-  const setBoardRef = (node: HTMLDivElement | null) => {
-    boardNode.current = node;
-    if (typeof boardRef === "function") {
-      boardRef(node);
-    } else if (boardRef) {
-      boardRef.current = node;
     }
   };
 
@@ -207,7 +200,7 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
 
   return (
     <div
-      ref={setBoardRef}
+      ref={boardNode}
       role="grid"
       aria-label="数独の盤面"
       aria-activedescendant={cellId(state.selected)}
