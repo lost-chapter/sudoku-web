@@ -38,6 +38,13 @@
   --pad-key-height: clamp(48px, 11svh, 88px);
 }
 
+/* 子要素側の既定スタイルに負けず、画面全体で文字選択を起こさない。 */
+.screen * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .header {
   flex: 0 0 auto;
   padding: 4px 8px;

@@ -17,5 +17,15 @@
   :global(body) {
     overflow: hidden;
     overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Mantine のモーダルなど、画面コンテナの外へ出る要素も選択不可にする。 */
+  :global(body) * {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 }

@@ -109,29 +109,45 @@ test("盤面からスワイプすると数字ガイドを表示して入力す�
   const box = await target.boundingBox();
   expect(box).not.toBeNull();
 
-  const x = box!.x + box!.width / 2;
-  const y = box!.y + box!.height / 2;
+  // セルの端から触っても、ガイドの基準はタップ位置ではなくセルの中心に固定する。
+  const centerX = box!.x + box!.width / 2;
+  const centerY = box!.y + box!.height / 2;
+  const x = box!.x + box!.width * 0.75;
+  const y = box!.y + box!.height * 0.75;
   const cdp = await context.newCDPSession(page);
 
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
   const map = page.locator('[data-swipe-map="true"]');
   const guide = page.locator('[data-swipe-guide="true"]');
-  // タップ開始直後から地図を表示し、中央エリア(5)を選択状態にする。
+
+  // 短いタップではガイドを出さず、タイマーも解除する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await expect(map).toHaveCount(0);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(map).toHaveCount(0);
+
+  // 少し押し続けると、タップしたセルの中心に地図を表示する。
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  // 開始直後はまだ地図を出さない。
+  await expect(map).toHaveCount(0);
   await expect(map).toHaveText("123456789");
+  const mapBox = await map.boundingBox();
+  expect(mapBox).not.toBeNull();
+  expect(mapBox!.x + mapBox!.width / 2).toBeCloseTo(centerX, 0);
+  expect(mapBox!.y + mapBox!.height / 2).toBeCloseTo(centerY, 0);
   await expect(map).toHaveAttribute("data-active-digit", "5");
   await expect(guide).toHaveAttribute("data-active-digit", "5");
 
   // 斜め方向へ少し動かしても、角度ではなく地図の中央エリア(5)に留まる。
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchMove",
-    touchPoints: [{ x: x + 14, y: y + 14 }],
+    touchPoints: [{ x: centerX + 14, y: centerY + 14 }],
   });
   await expect(map).toHaveAttribute("data-active-digit", "5");
 
   // 表示された右エリアへ指を移すと、数字ガイドも中央右(6)へ切り替わる。
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchMove",
-    touchPoints: [{ x: x + 32, y }],
+    touchPoints: [{ x: centerX + 32, y: centerY }],
   });
   await expect(map).toHaveAttribute("data-active-digit", "6");
   await expect(guide).toHaveAttribute("data-active-digit", "6");

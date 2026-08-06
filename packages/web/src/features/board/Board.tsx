@@ -44,10 +44,12 @@ const ROWS = Array.from({ length: 9 }, (_, row) => CELL_INDEXES.slice(row * 9, r
 
 /** iPhone のキーガイド相当の吹き出し幅は約 64px。盤面の外へはみ出さないよう少し余裕を取る。 */
 const GUIDE_HALF_SIZE = 32;
+/** iPhone のキーガイドに近づけるため、タップ直後ではなく少し押してから表示する。 */
+const SWIPE_GUIDE_DELAY = 180;
 /** 指を開始位置からこの距離以上動かしたら、タップではなくエリア選択とみなす。 */
 const SWIPE_MOVE_DISTANCE = 8;
 /** 3×3 エリアガイドの 1 エリアの一辺。判定領域と表示を同じ寸法にする。 */
-const MAP_AREA_SIZE = 32;
+const MAP_AREA_SIZE = 48;
 /** 3×3 エリアガイドの内側の余白。 */
 const MAP_PADDING = 6;
 /** 開始位置を中心に表示するエリアガイドの半分の幅。 */
@@ -68,13 +70,22 @@ interface SwipeGesture extends ActiveSwipe {
   readonly pointerId: number;
   readonly startX: number;
   readonly startY: number;
+  guideVisible: boolean;
   moved: boolean;
 }
 
 export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: BoardProps) {
   const boardNode = useRef<HTMLDivElement>(null);
   const gesture = useRef<SwipeGesture | null>(null);
+  const guideTimer = useRef<number | null>(null);
   const [activeSwipe, setActiveSwipe] = useState<ActiveSwipe | null>(null);
+
+  const clearGuideTimer = () => {
+    if (guideTimer.current !== null) {
+      window.clearTimeout(guideTimer.current);
+      guideTimer.current = null;
+    }
+  };
 
   const setBoardRef = (node: HTMLDivElement | null) => {
     boardNode.current = node;
@@ -97,27 +108,40 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     }
 
     const box = board.getBoundingClientRect();
-    const localX = event.clientX - box.left;
-    const localY = event.clientY - box.top;
+    const boardLeft = box.left + board.clientLeft;
+    const boardTop = box.top + board.clientTop;
+    const boardWidth = board.clientWidth;
+    const cellBox = event.currentTarget.getBoundingClientRect();
+    const localX = event.clientX - boardLeft;
+    const localY = event.clientY - boardTop;
     const nextGesture: SwipeGesture = {
       index,
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      // ガイドを盤面内へ無理に収めない。開始位置そのものを中央エリア(5)にするため、
-      // 画面端ではガイドが盤面からはみ出すことを許容する。
-      originX: localX,
-      originY: localY,
-      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE),
+      // 指の位置ではなく、タップしたセルの中心を常に中央エリア(5)の基準にする。
+      originX: cellBox.left + cellBox.width / 2 - boardLeft,
+      originY: cellBox.top + cellBox.height / 2 - boardTop,
+      x: Math.min(Math.max(localX, GUIDE_HALF_SIZE), boardWidth - GUIDE_HALF_SIZE),
       y: localY,
       // 開始時は中央エリア(5)を選択状態にする。純粋なタップでは確定しない。
       digit: 5,
       below: localY < 120,
+      guideVisible: false,
       moved: false,
     };
+    clearGuideTimer();
     event.currentTarget.setPointerCapture(event.pointerId);
     gesture.current = nextGesture;
-    setActiveSwipe(nextGesture);
+    guideTimer.current = window.setTimeout(() => {
+      const current = gesture.current;
+      if (!current || current.pointerId !== event.pointerId) {
+        return;
+      }
+      current.guideVisible = true;
+      guideTimer.current = null;
+      setActiveSwipe({ ...current });
+    }, SWIPE_GUIDE_DELAY);
     event.preventDefault();
   };
 
@@ -133,18 +157,20 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     }
 
     const box = board.getBoundingClientRect();
-    const localX = event.clientX - box.left;
-    const localY = event.clientY - box.top;
+    const localX = event.clientX - box.left - board.clientLeft;
+    const localY = event.clientY - box.top - board.clientTop;
     current.moved ||=
       Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >=
       SWIPE_MOVE_DISTANCE;
     // 方向ベクトルではなく、開始時に表示した 3×3 エリアそのものに対して判定する。
     current.digit = digitAtPoint(localX, localY, current.originX, current.originY);
-    current.x = Math.min(Math.max(localX, GUIDE_HALF_SIZE), box.width - GUIDE_HALF_SIZE);
+    current.x = Math.min(Math.max(localX, GUIDE_HALF_SIZE), board.clientWidth - GUIDE_HALF_SIZE);
     current.y = localY;
     // 盤面の上端では指の下へ出す。その他は iPhone のキー候補のように上へ出す。
     current.below = localY < 120;
-    setActiveSwipe({ ...current });
+    if (current.guideVisible) {
+      setActiveSwipe({ ...current });
+    }
     // phone layout の touch-action:none と合わせて、OS のスクロールを確実に止める。
     event.preventDefault();
   };
@@ -155,6 +181,7 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
       return;
     }
 
+    clearGuideTimer();
     if (current.moved && current.digit !== null) {
       onSwipeDigit?.(current.index, current.digit);
     }
@@ -170,6 +197,7 @@ export function Board({ state, highlights, onSelect, onSwipeDigit, boardRef }: B
     if (gesture.current?.pointerId !== event.pointerId) {
       return;
     }
+    clearGuideTimer();
     gesture.current = null;
     setActiveSwipe(null);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
