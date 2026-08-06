@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * **1 画面に収まること**と**盤面が読める大きさであること**。
@@ -16,26 +16,60 @@ import { expect, test } from "@playwright/test";
  * 一緒に動いてしまい、**壊れても落ちない**。
  */
 
-test.beforeEach(async ({ page }) => {
-  await page.goto("/");
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await page.getByRole("button", { name: "やさしい" }).click();
-  await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
+/** ページ全体が縦に流れていないか。**モーダルの中のスクロールは見ない。** */
+async function overflowsVertically(page: Page): Promise<boolean> {
+  return page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight + 1);
+}
+
+test.describe("ホーム画面", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    // 難易度が並ぶまで待つ。**マニフェストを読んでから高さが決まる。**
+    await expect(page.getByRole("button", { name: /^やさしい/ })).toBeVisible();
+  });
+
+  // 🔴 **2026-08-06 に発注者から「スマホではスクロールをできないように」。**
+  // ゲーム画面と同じ扱いにする。⚠️ **PC 版は縦に伸びてよい**(「スマホでは」の指定)。
+  test("縦スクロールしない", async ({ page }) => {
+    expect(await overflowsVertically(page)).toBe(false);
+  });
+
+  // ⚠️ **遊びかけがあると「続きから」の枠がまるごと増える。**
+  // **いちばん背が高くなる状態でも収まること**を見る。
+  test("遊びかけがあっても縦スクロールしない", async ({ page }) => {
+    await page.getByRole("button", { name: /^やさしい/ }).click();
+    await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
+    await page.locator('[role="gridcell"][aria-label$="、空"]').first().click();
+    await page.getByRole("button", { name: /^1 を入力$/ }).click();
+
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "続きから" })).toBeVisible();
+
+    expect(await overflowsVertically(page)).toBe(false);
+  });
 });
 
-test("ゲーム画面が縦スクロールしない", async ({ page }) => {
-  const overflows = await page.evaluate(
-    () => document.documentElement.scrollHeight > window.innerHeight + 1,
-  );
-  expect(overflows).toBe(false);
-});
+test.describe("ゲーム画面", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.getByRole("button", { name: /^やさしい/ }).click();
+    await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
+  });
 
-test("盤面のセルは 24px 四方を下回らない", async ({ page }) => {
-  // ⚠️ 9 列あるので 44px は原理的に満たせない(docs/ui/screens-and-interactions.md)。
-  // 下限は WCAG 2.2 のターゲットサイズ(最小)の 24px。
-  const box = await page.locator('[role="gridcell"]').first().boundingBox();
+  test("縦スクロールしない", async ({ page }) => {
+    expect(await overflowsVertically(page)).toBe(false);
+  });
 
-  expect(box?.width ?? 0).toBeGreaterThanOrEqual(24);
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);
+  test("盤面のセルは 24px 四方を下回らない", async ({ page }) => {
+    // ⚠️ 9 列あるので 44px は原理的に満たせない(docs/ui/screens-and-interactions.md)。
+    // 下限は WCAG 2.2 のターゲットサイズ(最小)の 24px。
+    const box = await page.locator('[role="gridcell"]').first().boundingBox();
+
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(24);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);
+  });
 });
