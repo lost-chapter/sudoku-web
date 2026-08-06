@@ -53,7 +53,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.getByRole("button", { name: "やさしい" }).click();
+  await page.getByRole("button", { name: /^やさしい/ }).click();
   await expect(page.getByRole("grid", { name: "数独の盤面" })).toBeVisible();
 });
 

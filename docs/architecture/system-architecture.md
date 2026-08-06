@@ -47,7 +47,7 @@ pnpm workspaces のモノレポ([ADR 0001](../decisions/0001-project-structure.m
 |-----------|------|----------------|
 | `core` | 盤面の表現・検証・ソルバ・完成盤の生成・穴あけ・難易度評価・**問題ファイルの読み書き** | **何にも依存しない** |
 | `generator` | 大量生成の CLI・並列実行・パックの書き出し・マニフェストの生成 | `core` と Node の標準 API |
-| `web` | 画面・操作・状態管理・進行の保存・問題の取得 | `core` と UI ライブラリ |
+| `web` | 画面・操作・状態管理・進行と正解結果の保存・問題の取得 | `core` と UI ライブラリ |
 
 **依存の向きは一方通行である。** `core` は `web` も `generator` も知らない。
 
@@ -91,7 +91,8 @@ flowchart TB
   manifest --> fetch["該当パックを fetch"]
   fetch --> one["1 問取り出す"]
   one --> reduce["盤面の状態を reducer で進める"]
-  reduce --> save["localStorage へ保存"]
+  reduce --> progress["遊びかけを localStorage へ保存"]
+  reduce -->|正解して完了| result["正解結果を localStorage へ保存"]
 ```
 
 ## `web` の内部構成
@@ -105,6 +106,7 @@ flowchart TB
 | `features/input/` | 数字入力・メモ・取り消し |
 | `features/puzzle/` | 問題の取得(マニフェスト・パックの読み込み) |
 | `features/progress/` | 進行の保存と復元 |
+| `features/results/` | 正解結果の保存と難易度別集計 |
 | `state/` | 盤面の状態管理(`core` の reducer を React へつなぐ) |
 | `ui/` | UI ライブラリのラッパと共通部品 |
 
@@ -138,6 +140,7 @@ flowchart TB
 | 保存するもの | 場所 | 形式 |
 |-------------|------|------|
 | 遊びかけの盤面(入力・メモ) | `localStorage` | 問題 ID + 差分 |
+| 正解した問題 | `localStorage` | 問題パックのパス・行番号・版の一覧 |
 | 設定(テーマ・強調の切替) | `localStorage` | 設定オブジェクト |
 
 ⚠️ **経過時間は 2026-08-06 に削除した**
@@ -146,6 +149,9 @@ flowchart TB
 **盤面そのものを丸ごと保存しない。** 問題 ID と「遊技者が入れた分」だけを持てば復元できる
 (手がかりはパックから引き直せる)。契約は
 [問題ファイルの形式](../api/puzzle-file-format.md) と揃える。
+
+正解結果は `sudoku-web:results` へ保存する。**遊技者が自分で解き終えた場合だけ**問題 ID を追加し、
+同じ ID は重複させない。あきらめて解を表示した場合と、配信パックに属さない退避問題は記録しない。
 
 ## エラーハンドリングの方針
 

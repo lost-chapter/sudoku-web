@@ -8,6 +8,8 @@ import { availableDifficulties } from "../features/puzzle/packSelection";
 import { loadManifest } from "../features/puzzle/loadPuzzle";
 import { ReleaseNotesModal } from "../features/releaseNotes/ReleaseNotesModal";
 import { useReleaseNotes } from "../features/releaseNotes/useReleaseNotes";
+import { countSolvedResults, type SavedResults } from "../features/results/results";
+import { readResults } from "../features/results/resultsStorage";
 import type { Difficulty, Manifest } from "@sudoku/core";
 
 import { Icon } from "../ui/Icon";
@@ -53,12 +55,15 @@ function DifficultyCard({
   difficulty,
   level,
   count,
+  solvedCount,
   onStart,
 }: {
   readonly difficulty: Difficulty;
   /** 1 から始まる段階。塗るマスの数になる。 */
   readonly level: number;
   readonly count: number;
+  /** 現在配信している問題パックで、正解済みの問題数。 */
+  readonly solvedCount: number;
   readonly onStart: () => void;
 }) {
   const name = DIFFICULTY_LABELS[difficulty];
@@ -68,7 +73,7 @@ function DifficultyCard({
       type="button"
       className={classes.card}
       // 読み上げは 1 つの文にまとめる。**盤面のセルと同じ考え方。**
-      aria-label={`${name} ${groupDigits(count)} 問`}
+      aria-label={`${name} 正解 ${groupDigits(solvedCount)} 問 / 全 ${groupDigits(count)} 問`}
       onClick={onStart}
     >
       <span className={classes.meter} aria-hidden="true">
@@ -79,7 +84,9 @@ function DifficultyCard({
 
       <span className={classes.cardBody} aria-hidden="true">
         <span className={classes.cardName}>{name}</span>
-        <span className={classes.cardMeta}>{groupDigits(count)} 問</span>
+        <span className={classes.cardMeta}>
+          正解 {groupDigits(solvedCount)} / {groupDigits(count)} 問
+        </span>
       </span>
 
       <Icon name="play" size={18} className={classes.go} />
@@ -91,6 +98,7 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saved] = useState<SavedProgress | null>(() => readProgress(storage));
+  const [results] = useState<SavedResults | null>(() => readResults(storage));
   const { notes, unread, markRead } = useReleaseNotes({ storage });
   const [releaseNotesOpened, releaseNotes] = useDisclosure(false);
 
@@ -193,6 +201,10 @@ export function HomeScreen({ onStart, storage }: HomeScreenProps) {
             difficulty={difficulty}
             level={index + 1}
             count={manifest?.totals[difficulty] ?? 0}
+            solvedCount={countSolvedResults(results, difficulty, {
+              formatVersion: manifest?.formatVersion ?? 0,
+              generator: manifest?.generatedWith.generator ?? "",
+            })}
             onStart={() => onStart(difficulty, false)}
           />
         ))}

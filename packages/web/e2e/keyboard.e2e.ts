@@ -19,12 +19,12 @@ test.beforeEach(async ({ page }) => {
     localStorage.removeItem("sudoku-web:settings");
   });
   await page.reload();
-  await expect(page.getByRole("button", { name: "やさしい" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^やさしい/ })).toBeVisible();
 });
 
 test("ホームで Tab して Enter を押すと遊び始められる", async ({ page }) => {
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "やさしい" })).toBeFocused();
+  await expect(page.getByRole("button", { name: /^やさしい/ })).toBeFocused();
 
   await page.keyboard.press("Enter");
 
