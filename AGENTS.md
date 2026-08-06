@@ -10,7 +10,8 @@ sudoku-web は、数独を遊べる **Web アプリケーション**。
 ## ディレクトリ構成
 
 - `docs/` — プロジェクトドキュメント一式。入口は [`docs/README.md`](docs/README.md)
-- `.claude/skills/` — このプロジェクトで使うスキル。一覧は [スキル一覧](docs/reference/skills-catalog.md)
+- `.claude/skills/` — このプロジェクトで使うスキルの正本。一覧は [スキル一覧](docs/reference/skills-catalog.md)
+- `.agents/skills` — Codex がプロジェクトスキルを発見する入口。`.claude/skills` への相対シンボリックリンクであり、別のコピーを置かない
 
 ## 作業を始めるとき
 
@@ -36,6 +37,11 @@ sudoku-web は、数独を遊べる **Web アプリケーション**。
 
 スキルを新規作成・改名・削除するときは [スキル命名規則](docs/guides/skill-naming-guidelines.md) に従い、
 [スキル一覧](docs/reference/skills-catalog.md) の表も同時に更新して実態と一致させること。
+
+スキルの正本は `.claude/skills/<skill-name>/SKILL.md` とする。
+Codex からも使えるように `.agents/skills` を正本へのシンボリックリンクとして管理しているため、
+スキルの追加・変更は `.claude/skills/` 側だけで行うこと。
+配置の詳細と確認方法は [エージェント向けカスタマイズの配置](docs/guides/agent-customization.md) にある。
 
 ## 開発上の約束
 

@@ -3,6 +3,7 @@
 sudoku-web のドキュメント入口。プロジェクト内のドキュメントはすべてこの `docs/` 配下に格納する。
 分類・命名・作成手順の詳細は [ドキュメント管理規則](guides/documentation-guidelines.md) に従うこと。
 スキルを作成・改名するときは [スキル命名規則](guides/skill-naming-guidelines.md) に従い、[スキル一覧](reference/skills-catalog.md) を更新すること。
+Claude Code と Codex の入口の同期方法は [エージェント向けカスタマイズの配置](guides/agent-customization.md) にある。
 
 **作業を再開するときは [実装の進め方と現在地](guides/implementation-roadmap.md) から読む。**
 どの工程まで終わっていて次に何をすべきか、未解決の課題が集約してある。
@@ -58,7 +59,8 @@ sudoku-web のドキュメント入口。プロジェクト内のドキュメン
 - [検討: フリック操作](reports/2026-08-06-flick-input-survey.md) —— **4 案のうち 1 案だけ試作した**。盤面は画面の端から 4px しかない
 - [ドキュメント管理規則](guides/documentation-guidelines.md) — ドキュメントの分類・命名・作成手順
 - [スキル命名規則](guides/skill-naming-guidelines.md) — スキル名の形式と開発領域の接頭辞
-- [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` 配下のスキルと目的
+- [エージェント向けカスタマイズの配置](guides/agent-customization.md) — `AGENTS.md` と Claude Code / Codex のスキル入口
+- [スキル一覧](reference/skills-catalog.md) — `.claude/skills/` を正本とするスキルと目的
 
 > **工程 0〜6 が完了している**。同梱パックは 5 クラス 5,000 問。
 > **配信は GitHub Pages に決まった**(2026-08-06。当初は「やらない」としていた)。

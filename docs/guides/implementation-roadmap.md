@@ -25,6 +25,7 @@ pnpm lint
 |------|------|
 | 設計 | ✅ **完了**。[システム構成](../architecture/system-architecture.md) と ADR 0001〜0005 |
 | 開発基盤 | ✅ **完了**。`pnpm install` → `pnpm dev` で動く([ローカル環境の構築](local-setup.md)) |
+| エージェント向けカスタマイズ | ✅ **完了**。`AGENTS.md` と、Claude Code / Codex で共有するプロジェクトスキルの入口を整備 |
 | テスト | **339 件**(core 126 / generator 16 / docs-html 31 / **web 135** / docs-lint 14 / release-notes 17)+ **E2E 56 件**(Playwright・4 project・13.8 秒) |
 | 型チェック / Lint / 整形 | 0 エラー |
 | 本番ビルド | JS 353.97 KB(**gzip 109.24 KB**)/ CSS 67.92 KB(gzip 11.70 KB) |
